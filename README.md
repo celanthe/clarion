@@ -6,7 +6,9 @@ Self-hosted TTS proxy and voice manager. Pick a voice that fits your agent's cha
 
 Built by [celanthe](https://github.com/celanthe). Art & design by [Zabethy](https://zabethy.com) · in progress.
 
-Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://github.com/erikaflowers) framework. Inspired by [Everbloom Reader](https://everbloomreader.com). Based on [zerovector.design](https://zerovector.design) principles.
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/rinoliver)
+
+Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework. Inspired by [Everbloom Reader](https://everbloomreader.com). Based on [zerovector.design](https://zerovector.design) principles.
 
 ---
 
@@ -157,7 +159,7 @@ Built by [celanthe](https://github.com/celanthe)
 
 Art & design by [Zabethy](https://zabethy.com) · in progress
 
-Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://github.com/erikaflowers) framework
+Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework
 
 Inspired by [Everbloom Reader](https://everbloomreader.com), built by celanthe and Zabethy
 
