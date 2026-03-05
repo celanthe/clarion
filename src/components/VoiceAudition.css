@@ -217,6 +217,14 @@
   padding: 0;
 }
 
+/* Offline empty state */
+.audition__offline {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-lg) 0;
+  text-align: center;
+}
+
 /* Voice groups */
 .audition__voices {
   display: flex;

@@ -23,29 +23,39 @@ export default function Waveform({ active }) {
     const W = canvas.width;
     const H = canvas.height;
     const barW = Math.floor((W - GAP * (BAR_COUNT - 1)) / BAR_COUNT);
+    const freqData = new Uint8Array(BAR_COUNT);
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
 
+      const now = Date.now();
+      // Rainbow cycles across the full spectrum over ~8 seconds
+      const hueOffset = (now / 25) % 360;
+
       const analyser = getAnalyser();
       if (analyser) {
-        const data = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(data);
-
+        const raw = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(raw);
         for (let i = 0; i < BAR_COUNT; i++) {
-          const di = Math.floor(i * data.length / BAR_COUNT);
-          const t = data[di] / 255;
-          const barH = Math.max(2, Math.round(t * H));
-          const x = i * (barW + GAP);
-          const y = H - barH;
-
-          // Rainbow: red → orange → yellow → green → cyan → blue → violet
-          const hue = Math.round((i / (BAR_COUNT - 1)) * 270);
-          ctx.shadowColor = `hsl(${hue}, 100%, 75%)`;
-          ctx.shadowBlur = 8;
-          ctx.fillStyle = `hsl(${hue}, 100%, 62%)`;
-          ctx.fillRect(x, y, barW, barH);
+          freqData[i] = raw[Math.floor(i * raw.length / BAR_COUNT)];
         }
+      }
+
+      for (let i = 0; i < BAR_COUNT; i++) {
+        // Real data when analyser is live; gentle ripple while audio is loading
+        const t = analyser
+          ? freqData[i] / 255
+          : 0.08 + 0.07 * Math.sin((i / BAR_COUNT) * Math.PI * 4 + now * 0.003);
+
+        const barH = Math.max(3, Math.round(t * H));
+        const x = i * (barW + GAP);
+        const y = H - barH;
+        const hue = Math.round(((i / (BAR_COUNT - 1)) * 270 + hueOffset) % 360);
+
+        ctx.shadowColor = `hsl(${hue}, 100%, 78%)`;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = `hsl(${hue}, 100%, 64%)`;
+        ctx.fillRect(x, y, barW, barH);
       }
 
       rafRef.current = requestAnimationFrame(draw);

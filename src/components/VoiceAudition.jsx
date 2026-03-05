@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { speak, stop } from '../../services/tts.js';
-import { saveAgent, getServerUrl } from '../../services/storage/agent-storage.js';
+import { saveAgent } from '../../services/storage/agent-storage.js';
 import { createAgent } from '../../core/domain/agent.js';
 import Waveform from './Waveform.jsx';
 import './VoiceAudition.css';
@@ -182,9 +182,6 @@ export default function VoiceAudition({ onSave, health }) {
         })}
       </div>
 
-      {/* Server URL debug */}
-      <p className="audition__server-url">server: {getServerUrl()}</p>
-
       {/* Waveform visualizer */}
       <Waveform active={playing !== null} />
 
@@ -223,7 +220,11 @@ export default function VoiceAudition({ onSave, health }) {
 
       {/* Voice list */}
       <div className="audition__voices">
-        {Object.entries(groups).map(([lang, langVoices]) => (
+        {!backendAvailable(backend) ? (
+          <p className="audition__offline">
+            {backend} is offline — start your server to audition these voices.
+          </p>
+        ) : Object.entries(groups).map(([lang, langVoices]) => (
           <div key={lang} className="audition__group">
             <h3 className="audition__group-label">{lang}</h3>
             <div className="audition__voice-list">
@@ -255,7 +256,7 @@ export default function VoiceAudition({ onSave, health }) {
               ))}
             </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

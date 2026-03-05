@@ -102,8 +102,9 @@ export async function speak(text, options = {}) {
     _source = _audioCtx.createMediaElementSource(audio);
     _source.connect(_analyser);
     _analyser.connect(_audioCtx.destination);
-  } catch {
+  } catch (err) {
     // Non-fatal — audio still plays, visualizer just won't work
+    console.warn('[clarion] Waveform analyser failed to connect:', err.message);
     _analyser = null;
     _source = null;
   }

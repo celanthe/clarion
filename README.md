@@ -71,29 +71,19 @@ Short, characteristic sentences work best. If your agent has a distinctive way o
 
 ---
 
-## CLI — pipe your agent's terminal output
+## CLI *(coming soon)*
+
+Pipe your agent's terminal output through their voice directly from the command line. Planned:
 
 ```sh
-# Speak text directly
-node cli/speak.js "The pattern holds." --backend kokoro --voice bm_george
+# Speak as a saved agent
+echo "The pattern holds." | node cli/speak.js --agent julian
 
-# Use a saved agent profile
-node cli/speak.js --agent julian "Investiture protocol engaged."
-
-# Pipe from stdin
-echo "Hello." | node cli/speak.js --agent julian
-
-# Pipe to a player
-node cli/speak.js "Hello." --agent julian | mpv -
-
-# List saved agents
-node cli/speak.js --list-agents
+# Or directly
+node cli/speak.js "Investiture protocol engaged." --backend kokoro --voice bm_george
 ```
 
-**Agent profiles for the CLI** are stored at `~/.config/clarion/agents.json`.
-Export them from the Clarion UI (Export button on any agent card).
-
-**Server URL**: set `CLARION_SERVER=http://your-server:8787` or use `--server`.
+Agent profiles will export from the UI and be stored at `~/.config/clarion/agents.json`.
 
 ---
 
@@ -117,11 +107,15 @@ GET /health
 
 | Backend | Config needed | Quality | Voices |
 |---------|--------------|---------|--------|
-| Edge TTS | None | Good | 18+ Neural voices (US, UK, AU, IE, CA, IN) |
-| Kokoro | `KOKORO_SERVER=http://...` | Excellent | 11 voices (US + UK English) |
-| Piper | `PIPER_SERVER=http://...` | Lightweight | 6 voices (US + UK English) |
+| **Edge TTS** | None | Good | 18+ Neural voices (US, UK, AU, IE, CA, IN) |
+| **Kokoro** | `KOKORO_SERVER=http://...` | Excellent | 11 voices (US + UK English) |
+| **Piper** | `PIPER_SERVER=http://...` | OK | 6 voices (US + UK English) |
 
-Edge TTS is always available — no API key, no server, works out of the box. Kokoro produces the most natural-sounding voices and runs on CPU with no GPU required.
+**Edge TTS** uses Microsoft's neural voices — no API key, no server, works immediately. Good quality, slight Microsoft TTS character to it.
+
+**Kokoro** is the best option if you're willing to run a server. It's a local ONNX model that produces genuinely natural speech — less "AI voice", more character. Runs on CPU with no GPU required. Use `docker-compose up` to get it running in one command.
+
+**Piper** is lightweight and fully offline. Lower quality than Kokoro but very fast and minimal resource usage.
 
 ---
 
