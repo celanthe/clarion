@@ -125,6 +125,16 @@ Edge TTS is always available — no API key, no server, works out of the box. Ko
 
 ---
 
+## Security notes
+
+Clarion is designed for personal, self-hosted use. A few things to know before exposing it on a network:
+
+- **CORS is open (`*`) by default.** Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict which origins can reach the server.
+- **The Kokoro local server (`kokoro-server.py`) binds to `127.0.0.1` by default**, so it's only reachable from localhost. If you need it accessible across a network, set `KOKORO_HOST=0.0.0.0` — but don't do this unless you trust your network.
+- **There's no authentication.** Don't expose either server to the public internet without adding auth in front (nginx, Cloudflare Access, etc.).
+
+---
+
 ## Deploy
 
 **Cloudflare Worker** (recommended for Edge TTS + proxy):

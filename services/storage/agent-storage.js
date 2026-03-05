@@ -135,8 +135,15 @@ export function getServerUrl() {
 
 /**
  * Persist the server URL.
+ * Rejects non-http(s) URLs to prevent protocol-based attacks.
  * @param {string} url
  */
 export function setServerUrl(url) {
-  localStorage.setItem(SERVER_URL_KEY, url.replace(/\/$/, ''));
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return;
+    localStorage.setItem(SERVER_URL_KEY, url.replace(/\/$/, ''));
+  } catch {
+    // Invalid URL — ignore
+  }
 }

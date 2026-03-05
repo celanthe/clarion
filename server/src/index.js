@@ -16,9 +16,14 @@ import { synthesize as piperSynthesize, checkHealth as piperHealth, getVoices as
 
 const app = new Hono();
 
-// CORS — open by default since this is your own server
+// CORS — defaults to open (*) for self-hosted use.
+// Set ALLOWED_ORIGIN env var to restrict to a specific origin.
 app.use('*', cors({
-  origin: '*',
+  origin: (origin, c) => {
+    const allowed = c.env?.ALLOWED_ORIGIN;
+    if (!allowed || allowed === '*') return '*';
+    return origin === allowed ? origin : null;
+  },
   allowMethods: ['GET', 'POST', 'OPTIONS'],
   allowHeaders: ['Content-Type'],
   maxAge: 86400

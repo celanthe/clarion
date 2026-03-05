@@ -8,6 +8,7 @@ Run: /tmp/kokoro-env12/bin/python3.12 kokoro-server.py
 
 import io
 import json
+import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 _kokoro = None
@@ -84,6 +85,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(500, {'error': str(e)})
 
 if __name__ == '__main__':
-    server = HTTPServer(('0.0.0.0', 8880), Handler)
-    print('[kokoro] Starting on http://localhost:8880')
+    host = os.environ.get('KOKORO_HOST', '127.0.0.1')
+    port = int(os.environ.get('KOKORO_PORT', '8880'))
+    server = HTTPServer((host, port), Handler)
+    print(f'[kokoro] Starting on http://{host}:{port}')
     server.serve_forever()
