@@ -1,8 +1,8 @@
 # Clarion
 
-**Give your AI agent a voice.**
+**Your agents have things to say. Now they have a voice to say them with.**
 
-Self-hosted TTS proxy and voice manager. Pick a voice that fits your agent's character, save it as a profile, and pipe their responses through it — in the browser or from the terminal.
+Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, save the one that fits, and pipe their responses through it — in the browser or from the terminal.
 
 Built by [celanthe](https://github.com/celanthe). Art & design by [Zabethy](https://zabethy.com) · in progress.
 
@@ -16,7 +16,7 @@ Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https:/
 
 If you're building AI agents with distinct characters — a cautious security analyst, a sharp product lead, a warm UX researcher — they probably already have different ways of speaking. Clarion makes that audible.
 
-- **Characters stay consistent.** Julian always sounds like Julian. Different agents sound different from each other.
+- **Characters stay consistent.** Your security analyst always sounds like your security analyst. Different agents sound different from each other.
 - **Demos and podcasts.** Record multi-agent conversations where each voice is distinct. Play back an agent's response in real time.
 - **It changes how you work with them.** Hearing a response lands differently than reading it.
 
@@ -25,7 +25,7 @@ If you're building AI agents with distinct characters — a cautious security an
 ## What it does
 
 - **Audition voices** — paste your agent's actual dialogue, hear each voice read it, find the one that fits
-- **Save agent profiles** — Julian uses Kokoro `bm_george` at 1.0×, Arynna uses Edge `en-GB-SoniaNeural` — saved, exported, shareable as JSON
+- **Save agent profiles** — one agent uses Kokoro `bm_george` at 1.0×, another uses Edge `en-GB-SoniaNeural` — saved, exported, shareable as JSON
 - **Three TTS backends**: Edge TTS (zero config, free), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight)
 - **Terminal integration** — pipe your agent's responses through their voice from the CLI
 
@@ -79,10 +79,10 @@ Pipe your agent's terminal output through their voice directly from the command 
 
 ```sh
 # Speak as a saved agent
-echo "The pattern holds." | node cli/speak.js --agent julian
+echo "The pattern holds." | node cli/speak.js --agent aria
 
 # Or directly
-node cli/speak.js "Investiture protocol engaged." --backend kokoro --voice bm_george
+node cli/speak.js "Running diagnostics now." --backend kokoro --voice bm_george
 ```
 
 Agent profiles will export from the UI and be stored at `~/.config/clarion/agents.json`.
@@ -113,7 +113,7 @@ GET /health
 | **Kokoro** | `KOKORO_SERVER=http://...` | Excellent | 11 voices (US + UK English) |
 | **Piper** | `PIPER_SERVER=http://...` | OK | 6 voices (US + UK English) |
 
-**Edge TTS** uses Microsoft's neural voices — no API key, no server, works immediately. Good quality, slight Microsoft TTS character to it.
+**Edge TTS** uses Microsoft's neural voices — no API key, no server, works immediately. Good quality, slight Microsoft TTS character to it. Note: this uses an undocumented endpoint that isn't officially supported for third-party use — if you need long-term stability, run Kokoro instead.
 
 **Kokoro** is the best option if you're willing to run a server. It's a local ONNX model that produces genuinely natural speech — less "AI voice", more character. Runs on CPU with no GPU required. Use `docker-compose up` to get it running in one command.
 
