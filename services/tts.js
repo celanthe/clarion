@@ -7,7 +7,12 @@
  * gesture and allows the subsequent play() with real audio to succeed.
  */
 
-import { getServerUrl } from './storage/agent-storage.js';
+import { getServerUrl, getApiKey } from './storage/agent-storage.js';
+
+function authHeaders() {
+  const key = getApiKey();
+  return key ? { Authorization: `Bearer ${key}` } : {};
+}
 
 // Minimal silent WAV (8 samples) — used to unlock the audio element
 const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
@@ -73,7 +78,7 @@ export async function speak(text, options = {}) {
   // Fetch the real audio
   const response = await fetch(`${serverUrl}/speak`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ text, backend, voice, speed })
   });
 
@@ -134,7 +139,7 @@ export function stop() {
 
 export async function fetchVoices(backend) {
   const serverUrl = getServerUrl();
-  const res = await fetch(`${serverUrl}/voices?backend=${backend}`);
+  const res = await fetch(`${serverUrl}/voices?backend=${backend}`, { headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to fetch voices: ${res.status}`);
   const data = await res.json();
   return data.voices || [];
@@ -142,7 +147,7 @@ export async function fetchVoices(backend) {
 
 export async function fetchHealth() {
   const serverUrl = getServerUrl();
-  const res = await fetch(`${serverUrl}/health`);
+  const res = await fetch(`${serverUrl}/health`, { headers: authHeaders() });
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }

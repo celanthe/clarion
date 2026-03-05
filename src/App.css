@@ -83,6 +83,13 @@
   letter-spacing: 0.08em;
 }
 
+.app-server-config__optional {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
 .app-server-config__input {
   background: var(--color-background);
   border: 1px solid var(--color-border);

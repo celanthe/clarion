@@ -8,6 +8,7 @@ import { createAgent, validateAgent } from '../../core/domain/agent.js';
 
 const STORAGE_KEY = 'clarion_agents';
 const SERVER_URL_KEY = 'clarion_server_url';
+const API_KEY_KEY = 'clarion_api_key';
 
 // --- Agents ---
 
@@ -131,6 +132,20 @@ export function getServerUrl() {
     return envUrl;
   }
   return stored || envUrl || 'http://localhost:8787';
+}
+
+/** @returns {string} */
+export function getApiKey() {
+  return localStorage.getItem(API_KEY_KEY) || '';
+}
+
+/** @param {string} key */
+export function setApiKey(key) {
+  if (key) {
+    localStorage.setItem(API_KEY_KEY, key);
+  } else {
+    localStorage.removeItem(API_KEY_KEY);
+  }
 }
 
 /**

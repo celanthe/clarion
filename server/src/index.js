@@ -25,9 +25,22 @@ app.use('*', cors({
     return origin === allowed ? origin : null;
   },
   allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type'],
+  allowHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400
 }));
+
+// Optional API key auth — set API_KEY env var to enable.
+// If unset, server is open (zero-config default for local use).
+app.use('*', async (c, next) => {
+  if (c.req.method === 'OPTIONS') return next();
+  const apiKey = c.env?.API_KEY;
+  if (!apiKey) return next();
+  const auth = c.req.header('Authorization');
+  if (auth !== `Bearer ${apiKey}`) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  return next();
+});
 
 // --- Health ---
 

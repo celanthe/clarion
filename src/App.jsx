@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import AgentCard from './components/AgentCard.jsx';
 import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
-import { loadAgents, importAgents, getServerUrl, setServerUrl } from '../services/storage/agent-storage.js';
+import { loadAgents, importAgents, getServerUrl, setServerUrl, getApiKey, setApiKey } from '../services/storage/agent-storage.js';
 import { createAgent } from '../core/domain/agent.js';
 import './App.css';
 
@@ -15,6 +15,7 @@ export default function App() {
   const [tab, setTab] = useState('agents');
   const [agents, setAgents] = useState(() => loadAgents());
   const [serverUrl, setServerUrlState] = useState(() => getServerUrl());
+  const [apiKey, setApiKeyState] = useState(() => getApiKey());
   const [showServerConfig, setShowServerConfig] = useState(false);
   const [importError, setImportError] = useState(null);
   const [health, setHealth] = useState(null);
@@ -43,6 +44,12 @@ export default function App() {
     const url = e.target.value;
     setServerUrlState(url);
     setServerUrl(url);
+  }
+
+  function handleApiKeyChange(e) {
+    const key = e.target.value;
+    setApiKeyState(key);
+    setApiKey(key);
   }
 
   async function handleImport(e) {
@@ -100,6 +107,18 @@ export default function App() {
           <p className="app-server-config__hint" id="server-url-hint">
             Point this at your Clarion server (<code>node src/node-server.js</code> or Cloudflare Worker).
           </p>
+          <label className="app-server-config__label" htmlFor="api-key">
+            API key <span className="app-server-config__optional">(optional)</span>
+          </label>
+          <input
+            id="api-key"
+            className="app-server-config__input"
+            type="password"
+            value={apiKey}
+            onChange={handleApiKeyChange}
+            placeholder="Leave blank if no API_KEY is set on your server"
+            autoComplete="off"
+          />
         </div>
       )}
 

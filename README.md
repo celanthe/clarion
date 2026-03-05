@@ -129,9 +129,10 @@ Edge TTS is always available — no API key, no server, works out of the box. Ko
 
 Clarion is designed for personal, self-hosted use. A few things to know before exposing it on a network:
 
+- **Set an API key** if your server is reachable beyond localhost. Set `API_KEY=your-secret` on the server, then enter the same key in Clarion's Server config panel. All requests will require `Authorization: Bearer <key>`.
 - **CORS is open (`*`) by default.** Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict which origins can reach the server.
-- **The Kokoro local server (`kokoro-server.py`) binds to `127.0.0.1` by default**, so it's only reachable from localhost. If you need it accessible across a network, set `KOKORO_HOST=0.0.0.0` — but don't do this unless you trust your network.
-- **There's no authentication.** Don't expose either server to the public internet without adding auth in front (nginx, Cloudflare Access, etc.).
+- **The Kokoro local server (`kokoro-server.py`) binds to `127.0.0.1` by default**, so it's only reachable from localhost. Set `KOKORO_HOST=0.0.0.0` only if you need it accessible across a trusted network.
+- For public deployments, put Cloudflare Access or an nginx auth proxy in front rather than relying on the API key alone.
 
 ---
 
