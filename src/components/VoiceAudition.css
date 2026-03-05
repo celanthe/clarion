@@ -61,6 +61,17 @@
   color: var(--color-text-muted);
 }
 
+.audition__server-url {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  display: inline-block;
+}
+
 /* Backend tabs */
 .audition__backends {
   display: flex;

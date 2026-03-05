@@ -6,3 +6,7 @@ server/.wrangler/
 server/node_modules/
 *.local
 .DS_Store
+
+# Kokoro model files (large binaries — download separately)
+*.onnx
+*.bin

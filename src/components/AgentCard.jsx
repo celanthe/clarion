@@ -197,11 +197,10 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         <div className="agent-card__test-group">
           <button
             className="agent-card__btn agent-card__btn--test"
-            onClick={handleTest}
-            disabled={testing}
+            onClick={testing ? () => { stop(); setTesting(false); } : handleTest}
             type="button"
           >
-            {testing ? 'Playing…' : 'Test'}
+            {testing ? '■ Stop' : 'Test'}
           </button>
           <button
             className={`agent-card__btn agent-card__btn--ghost agent-card__btn--tiny ${showTestInput ? 'agent-card__btn--ghost-active' : ''}`}

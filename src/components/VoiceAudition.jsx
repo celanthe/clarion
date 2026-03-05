@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { speak, stop } from '../../services/tts.js';
-import { saveAgent } from '../../services/storage/agent-storage.js';
+import { saveAgent, getServerUrl } from '../../services/storage/agent-storage.js';
 import { createAgent } from '../../core/domain/agent.js';
+import Waveform from './Waveform.jsx';
 import './VoiceAudition.css';
 
 const BACKENDS = ['edge', 'kokoro', 'piper'];
@@ -58,7 +59,7 @@ const DEFAULT_TEXT = "The pattern holds. We're moving forward.";
  */
 export default function VoiceAudition({ onSave, health }) {
   const [text, setText] = useState('');
-  const [backend, setBackend] = useState('kokoro');
+  const [backend, setBackend] = useState('edge');
   const [playing, setPlaying] = useState(null); // voice id currently playing
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(null); // { voice, label } just saved
@@ -81,6 +82,7 @@ export default function VoiceAudition({ onSave, health }) {
     try {
       await speak(auditionText, { backend, voice: voice.id, speed: 1.0 });
     } catch (err) {
+      console.error('[clarion] speak error:', err);
       setError(`${voice.label}: ${err.message}`);
     } finally {
       setPlaying(null);
@@ -179,6 +181,12 @@ export default function VoiceAudition({ onSave, health }) {
           );
         })}
       </div>
+
+      {/* Server URL debug */}
+      <p className="audition__server-url">server: {getServerUrl()}</p>
+
+      {/* Waveform visualizer */}
+      <Waveform active={playing !== null} />
 
       {/* Error */}
       {error && <p className="audition__error">{error}</p>}

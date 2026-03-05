@@ -17,7 +17,7 @@ const env = {
 
 // Patch the app to inject env from process.env in Node mode
 const originalFetch = app.fetch.bind(app);
-const patchedFetch = (request, e) => originalFetch(request, { ...e, env: { ...env, ...(e?.env || {}) } });
+const patchedFetch = (request, e) => originalFetch(request, { ...env, ...(e || {}) });
 
 serve({
   fetch: patchedFetch,

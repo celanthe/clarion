@@ -123,9 +123,14 @@ export async function importAgents(file) {
  * @returns {string}
  */
 export function getServerUrl() {
-  return localStorage.getItem(SERVER_URL_KEY)
-    || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SERVER_URL)
-    || 'http://localhost:8787';
+  const stored = localStorage.getItem(SERVER_URL_KEY);
+  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SERVER_URL) || null;
+  // If stored URL is the old stale default, evict it so the env var wins
+  if (stored === 'http://localhost:8787' && envUrl && envUrl !== 'http://localhost:8787') {
+    localStorage.removeItem(SERVER_URL_KEY);
+    return envUrl;
+  }
+  return stored || envUrl || 'http://localhost:8787';
 }
 
 /**

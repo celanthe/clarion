@@ -169,11 +169,11 @@ export default function App() {
           )}
 
           <div className="app-footer__credits">
-            <span>Built on <a href="https://github.com/eflowers" target="_blank" rel="noopener">Erika Flowers</a>' <a href="https://github.com/eflowers" target="_blank" rel="noopener">Investiture</a> framework · inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a></span>
+            <span>Built on <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">Erika Flowers</a>' <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">Investiture</a> framework · inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a></span>
             <span className="app-footer__sep">·</span>
-            <span>Art by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a> · forthcoming</span>
+            <span>Art & design by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a> · in progress</span>
             <span className="app-footer__sep">·</span>
-            <span>Based on <a href="https://zerovector.design" target="_blank" rel="noopener">zerovector.design</a> principles by <a href="https://github.com/eflowers" target="_blank" rel="noopener">@eflowers</a></span>
+            <span>Based on <a href="https://zerovector.design" target="_blank" rel="noopener">zerovector.design</a> principles by <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">@erikaflowers</a></span>
             <span className="app-footer__sep">·</span>
             <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener">GitHub</a>
           </div>

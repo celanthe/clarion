@@ -2,18 +2,28 @@
 
 **Give your AI agent a voice.**
 
-Self-hosted TTS proxy and voice manager. Pick a voice that matches your agent's character, save it as a profile, and pipe their responses through it — in the browser or from the terminal.
+Self-hosted TTS proxy and voice manager. Pick a voice that fits your agent's character, save it as a profile, and pipe their responses through it — in the browser or from the terminal.
 
-For anyone building AI agents who wants to give them a consistent, named voice. Built on [Erika Flowers](https://github.com/eflowers)' [Investiture](https://github.com/eflowers) framework. Inspired by [Everbloom Reader](https://everbloomreader.com), built by [celanthe](https://github.com/celanthe) and [Zabethy](https://zabethy.com).
+Built by [celanthe](https://github.com/celanthe). Art & design by [Zabethy](https://zabethy.com) · in progress.
 
-Art by [Zabethy](https://zabethy.com) · forthcoming.
+Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://github.com/erikaflowers) framework. Inspired by [Everbloom Reader](https://everbloomreader.com). Based on [zerovector.design](https://zerovector.design) principles.
+
+---
+
+## Why give your agent a voice?
+
+If you're building AI agents with distinct characters — a cautious security analyst, a sharp product lead, a warm UX researcher — they probably already have different ways of speaking. Clarion makes that audible.
+
+- **Characters stay consistent.** Julian always sounds like Julian. Different agents sound different from each other.
+- **Demos and podcasts.** Record multi-agent conversations where each voice is distinct. Play back an agent's response in real time.
+- **It changes how you work with them.** Hearing a response lands differently than reading it.
 
 ---
 
 ## What it does
 
-- **Audition voices** — paste your agent's actual dialogue, hear each voice read it, find the one that fits their character
-- **Save agent profiles** — Julian uses Kokoro `bm_george` at 1.0×, your other agent uses Edge `en-GB-RyanNeural` — saved, exported, shareable as JSON
+- **Audition voices** — paste your agent's actual dialogue, hear each voice read it, find the one that fits
+- **Save agent profiles** — Julian uses Kokoro `bm_george` at 1.0×, Arynna uses Edge `en-GB-SoniaNeural` — saved, exported, shareable as JSON
 - **Three TTS backends**: Edge TTS (zero config, free), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight)
 - **Terminal integration** — pipe your agent's responses through their voice from the CLI
 
@@ -21,7 +31,7 @@ Art by [Zabethy](https://zabethy.com) · forthcoming.
 
 ## Quickstart
 
-### UI only (Edge TTS works immediately, no setup)
+### UI only (Edge TTS, no setup needed)
 
 ```sh
 npm install
@@ -44,6 +54,20 @@ Or with Docker (Kokoro included):
 docker-compose up
 # Kokoro at :8880, Clarion server at :8080
 ```
+
+---
+
+## Voice audition
+
+The fastest way to find the right voice:
+
+1. Open the **Audition** tab
+2. Paste your agent's characteristic dialogue — a few lines they'd actually say
+3. Select a backend (Kokoro for the most natural voices)
+4. Click ▶ next to each voice to hear it read your text
+5. Click **Use this voice** → name the agent → saved
+
+Short, characteristic sentences work best. If your agent has a distinctive way of phrasing things, use that.
 
 ---
 
@@ -73,16 +97,6 @@ Export them from the Clarion UI (Export button on any agent card).
 
 ---
 
-## Voice audition
-
-1. Open the **Audition** tab
-2. Paste your agent's characteristic dialogue
-3. Select a backend (Kokoro recommended for natural voices)
-4. Click ▶ next to each voice to hear it read your text
-5. Click **Use this voice** → name the agent → saved
-
----
-
 ## API
 
 ```
@@ -101,11 +115,13 @@ GET /health
 
 ## Backends
 
-| Backend | Config needed | Quality | Notes |
-|---------|--------------|---------|-------|
-| Edge TTS | None | Good | Microsoft Neural voices. Always available. |
-| Kokoro | `KOKORO_SERVER=http://...` | Excellent | Self-hosted. CPU image in docker-compose. |
-| Piper | `PIPER_SERVER=http://...` | OK | Self-hosted. Lightweight. Fewer voices. |
+| Backend | Config needed | Quality | Voices |
+|---------|--------------|---------|--------|
+| Edge TTS | None | Good | 18+ Neural voices (US, UK, AU, IE, CA, IN) |
+| Kokoro | `KOKORO_SERVER=http://...` | Excellent | 11 voices (US + UK English) |
+| Piper | `PIPER_SERVER=http://...` | Lightweight | 6 voices (US + UK English) |
+
+Edge TTS is always available — no API key, no server, works out of the box. Kokoro produces the most natural-sounding voices and runs on CPU with no GPU required.
 
 ---
 
@@ -134,10 +150,10 @@ docker-compose up
 
 Built by [celanthe](https://github.com/celanthe)
 
-For [Erika Flowers](https://github.com/eflowers) and the Investiture framework
+Art & design by [Zabethy](https://zabethy.com) · in progress
 
-Art by [Zabethy](https://zabethy.com) · forthcoming
+Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://github.com/erikaflowers) framework
 
-Based on [zerovector.design](https://zerovector.design) principles by [Erika Flowers](https://github.com/eflowers)
+Inspired by [Everbloom Reader](https://everbloomreader.com), built by celanthe and Zabethy
 
-Inspired by [Everbloom Reader](https://everbloomreader.com)
+Based on [zerovector.design](https://zerovector.design) principles by Erika Flowers
