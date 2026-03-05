@@ -1,0 +1,22 @@
+name = "clarion"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Local dev: wrangler dev
+# Deploy:    wrangler deploy
+
+# Optional: bind a KV namespace for future caching
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"
+
+# Environment variables — set real values with wrangler secret put
+# or in the Cloudflare dashboard under Workers → Settings → Variables
+[vars]
+# KOKORO_SERVER = "http://your-kokoro-server:8880"
+# PIPER_SERVER  = "http://your-piper-server:5000"
+
+# For wrangler dev, create a .dev.vars file (gitignored) with:
+#   KOKORO_SERVER=http://localhost:8880
+#   PIPER_SERVER=http://localhost:5000

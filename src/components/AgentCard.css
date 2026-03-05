@@ -1,0 +1,295 @@
+.agent-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  transition: border-color var(--transition-fast);
+}
+
+.agent-card:hover {
+  border-color: var(--color-border-subtle);
+}
+
+/* Header */
+.agent-card__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.agent-card__name {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  font-family: var(--font-family);
+  font-weight: 600;
+  padding: var(--space-xs) 0;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.agent-card__name:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.agent-card__id {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Body */
+.agent-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.agent-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.agent-card__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Backend buttons */
+.agent-card__backends {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.agent-card__backend-btn {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.agent-card__backend-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.agent-card__backend-btn--active {
+  background: var(--color-accent-dim);
+  border-color: var(--color-accent);
+  color: var(--color-accent-hover);
+}
+
+/* Speed slider */
+.agent-card__speed-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.agent-card__speed {
+  width: 100%;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* Error */
+.agent-card__error {
+  font-size: var(--font-size-sm);
+  color: #e06c75;
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(224, 108, 117, 0.08);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid #e06c75;
+}
+
+/* Unsaved indicator */
+.agent-card__unsaved {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: calc(-1 * var(--space-xs)) 0;
+}
+
+/* Delete confirmation state */
+.agent-card--confirming {
+  border-color: #e06c75;
+  justify-content: center;
+  min-height: 100px;
+  gap: var(--space-md);
+}
+
+.agent-card__confirm-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.agent-card__confirm-text strong {
+  color: var(--color-text-primary);
+}
+
+.agent-card__confirm-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+.agent-card__btn--delete-confirm {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+
+.agent-card__btn--delete-confirm:hover {
+  background: #e74c3c;
+  border-color: #e74c3c;
+}
+
+/* Custom test text area */
+.agent-card__test-input {
+  width: 100%;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  padding: var(--space-sm) var(--space-md);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.agent-card__test-input:focus {
+  border-color: var(--color-accent);
+}
+
+.agent-card__test-input::placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Test group (test button + edit icon) */
+.agent-card__test-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.agent-card__btn--tiny {
+  padding: var(--space-xs);
+  font-size: var(--font-size-xs);
+  min-width: 28px;
+}
+
+.agent-card__btn--ghost-active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Focus rings — global for all buttons in the card */
+.agent-card__btn:focus-visible,
+.agent-card__backend-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Footer */
+.agent-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.agent-card__actions {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+.agent-card__btn {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.agent-card__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.agent-card__btn--test {
+  background: var(--color-accent-dim);
+  color: var(--color-accent-hover);
+  border-color: var(--color-accent);
+}
+
+.agent-card__btn--test:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.agent-card__btn--ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.agent-card__btn--ghost:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-muted);
+}
+
+.agent-card__btn--danger:hover {
+  color: #e06c75;
+  border-color: #e06c75;
+}
+
+.agent-card__btn--save {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.agent-card__btn--save:hover {
+  background: var(--color-accent-hover);
+}
+
+.agent-card__btn--saved {
+  background: transparent;
+  color: var(--color-status-up);
+  border-color: var(--color-status-up);
+}
+
+.agent-card__btn--saved:hover {
+  background: rgba(76, 175, 118, 0.1);
+}

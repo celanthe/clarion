@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "Clarion",
+    "tagline": "Give your agent a voice"
+  },
+  "agents": {
+    "empty": "No agents yet. Create one to get started.",
+    "new": "New agent",
+    "defaultName": "My Agent"
+  },
+  "agentCard": {
+    "name": "Name",
+    "backend": "Backend",
+    "voice": "Voice",
+    "speed": "Speed",
+    "test": "Test voice",
+    "testing": "Playing...",
+    "save": "Save",
+    "saved": "Saved",
+    "delete": "Delete",
+    "export": "Export JSON",
+    "namePlaceholder": "Agent name (e.g. Julian)"
+  },
+  "backend": {
+    "edge": "Edge TTS",
+    "kokoro": "Kokoro",
+    "piper": "Piper",
+    "edgeDesc": "Free, zero config. Microsoft voices.",
+    "kokoroDesc": "Natural voices. Requires your Kokoro server.",
+    "piperDesc": "Local, lightweight. Requires your Piper server."
+  },
+  "backendStatus": {
+    "title": "Backends",
+    "up": "Online",
+    "down": "Unreachable",
+    "unconfigured": "Not configured",
+    "checking": "Checking..."
+  },
+  "serverConfig": {
+    "label": "Server URL",
+    "placeholder": "http://localhost:8787",
+    "hint": "Your Clarion server address"
+  },
+  "testText": "Hello. This is your agent speaking. The voice is configured and ready."
+}
