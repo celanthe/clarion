@@ -4,9 +4,9 @@
 
 Self-hosted TTS proxy and voice manager. Pick a voice that matches your agent's character, save it as a profile, and pipe their responses through it — in the browser or from the terminal.
 
-Built for [Erika Flowers](https://github.com/eflowers) and her [Investiture](https://github.com/eflowers) framework. Inspired by [Everbloom Reader](https://everbloomreader.com).
+For anyone building AI agents who wants to give them a consistent, named voice. Built on [Erika Flowers](https://github.com/eflowers)' [Investiture](https://github.com/eflowers) framework. Inspired by [Everbloom Reader](https://everbloomreader.com), built by [celanthe](https://github.com/celanthe) and [Zabethy](https://zabethy.com).
 
-Human-drawn design by [Zabethy](https://zabethy.com) · forthcoming.
+Art by [Zabethy](https://zabethy.com) · forthcoming.
 
 ---
 
@@ -132,10 +132,12 @@ docker-compose up
 
 ## Credits
 
-Built by [celanthe](https://github.com/celanthe) · [zerovector.design](https://zerovector.design)
+Built by [celanthe](https://github.com/celanthe)
 
 For [Erika Flowers](https://github.com/eflowers) and the Investiture framework
 
-Design by [Zabethy](https://zabethy.com) · forthcoming
+Art by [Zabethy](https://zabethy.com) · forthcoming
+
+Based on [zerovector.design](https://zerovector.design) principles by [Erika Flowers](https://github.com/eflowers)
 
 Inspired by [Everbloom Reader](https://everbloomreader.com)

@@ -98,7 +98,7 @@ export default function App() {
             aria-describedby="server-url-hint"
           />
           <p className="app-server-config__hint" id="server-url-hint">
-            Point this at your Cloudflare Worker or local <code>wrangler dev</code> instance.
+            Point this at your Clarion server (<code>node src/node-server.js</code> or Cloudflare Worker).
           </p>
         </div>
       )}
@@ -169,13 +169,13 @@ export default function App() {
           )}
 
           <div className="app-footer__credits">
-            <span>Inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom</a> &amp; the <a href="https://github.com/eflowers" target="_blank" rel="noopener">Investiture</a> framework</span>
+            <span>Built on <a href="https://github.com/eflowers" target="_blank" rel="noopener">Erika Flowers</a>' <a href="https://github.com/eflowers" target="_blank" rel="noopener">Investiture</a> framework · inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a></span>
             <span className="app-footer__sep">·</span>
-            <span>Design by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
+            <span>Art by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a> · forthcoming</span>
+            <span className="app-footer__sep">·</span>
+            <span>Based on <a href="https://zerovector.design" target="_blank" rel="noopener">zerovector.design</a> principles by <a href="https://github.com/eflowers" target="_blank" rel="noopener">@eflowers</a></span>
             <span className="app-footer__sep">·</span>
             <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener">GitHub</a>
-            <span className="app-footer__sep">·</span>
-            <a href="https://zerovector.design" target="_blank" rel="noopener">zerovector.design</a>
           </div>
         </footer>
       )}
