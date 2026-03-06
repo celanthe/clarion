@@ -2,8 +2,8 @@
 Minimal Kokoro TTS server — no FastAPI, uses Python stdlib http.server.
 Exposes /v1/audio/speech compatible with Clarion's proxy.
 
-Run: /tmp/kokoro-env12/bin/python3.12 kokoro-server.py
-     → http://localhost:8880
+Run: python3 kokoro-server.py
+     → http://127.0.0.1:8880
 """
 
 import io

@@ -216,7 +216,8 @@ app.post('/speak', async (c) => {
     console.error(`[speak] ${backend} error: ${err.message}`);
 
     const status = err.message.includes('not configured') ? 503 :
-                   err.message.includes('unreachable') ? 503 : 500;
+                   err.message.includes('unreachable') ? 503 :
+                   err.message.includes('Unknown') ? 400 : 500;
 
     return c.json({ error: err.message }, status);
   }

@@ -192,6 +192,36 @@ docker-compose up
 
 ---
 
+## Running Kokoro locally
+
+Kokoro is a high-quality ONNX TTS model that runs on CPU — no GPU needed. `kokoro-server.py` wraps it with a minimal HTTP server.
+
+**Install dependencies:**
+```sh
+pip install kokoro-onnx soundfile
+pip install onnxruntime        # or onnxruntime-gpu if you have CUDA
+# macOS Intel only: pip install onnxruntime==1.19.2 --no-deps
+pip install phonemizer-fork==3.3.1
+```
+
+**Download model files** (into the project root):
+```sh
+wget https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.int8.onnx
+wget https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+```
+
+**Start the server:**
+```sh
+python3 kokoro-server.py
+# → http://127.0.0.1:8880
+```
+
+Then set `KOKORO_SERVER=http://localhost:8880` in your `.env`. The model loads at startup — first request is immediate.
+
+> **macOS Intel:** `onnxruntime` is capped at 1.19.2 on x86 macOS. Use `pip install onnxruntime==1.19.2 --no-deps` then install `phonemizer-fork` and `soundfile` separately.
+
+---
+
 ## Running Piper locally
 
 Piper is a lightweight offline ONNX TTS engine. `piper-server.py` wraps the piper CLI and exposes a `/v1/audio/speech` endpoint.
