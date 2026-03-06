@@ -9,10 +9,13 @@ import app from './index.js';
 
 const port = parseInt(process.env.PORT || '8080', 10);
 
-// Inject env vars as a fake CF env object
+// Inject env vars as a fake CF env object — must include all vars that Hono
+// middleware reads from c.env, otherwise auth/CORS are silently disabled.
 const env = {
-  KOKORO_SERVER: process.env.KOKORO_SERVER,
-  PIPER_SERVER: process.env.PIPER_SERVER
+  KOKORO_SERVER:  process.env.KOKORO_SERVER,
+  PIPER_SERVER:   process.env.PIPER_SERVER,
+  API_KEY:        process.env.API_KEY,
+  ALLOWED_ORIGIN: process.env.ALLOWED_ORIGIN,
 };
 
 // Patch the app to inject env from process.env in Node mode

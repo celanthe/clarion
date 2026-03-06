@@ -129,12 +129,40 @@ GET /health
 
 ## Security notes
 
-Clarion is designed for personal, self-hosted use. A few things to know before exposing it on a network:
+Clarion is designed for personal, self-hosted use. If you're deploying it beyond localhost, read this before you do.
 
-- **Set an API key** if your server is reachable beyond localhost. Set `API_KEY=your-secret` on the server, then enter the same key in Clarion's Server config panel. All requests will require `Authorization: Bearer <key>`.
-- **CORS is open (`*`) by default.** Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict which origins can reach the server.
-- **The Kokoro local server (`kokoro-server.py`) binds to `127.0.0.1` by default**, so it's only reachable from localhost. Set `KOKORO_HOST=0.0.0.0` only if you need it accessible across a trusted network.
-- For public deployments, put Cloudflare Access or an nginx auth proxy in front rather than relying on the API key alone.
+### API key authentication
+
+Set `API_KEY=your-secret` in your server environment. All requests will then require `Authorization: Bearer <key>`.
+
+- **Node server** (`npm start`): set `API_KEY` in your shell env or `.env` file — it's injected into the Hono app automatically.
+- **Cloudflare Worker**: use `wrangler secret put API_KEY` — do not put secrets in `wrangler.toml`.
+- In the Clarion UI, enter your key under **Server → API key**. It is stored in browser `localStorage` — accessible to any JavaScript running on the same origin. Use the UI only from a browser you trust, on a machine you control.
+
+### HTTPS
+
+Bearer tokens are sent in plaintext. **Always use HTTPS for non-localhost deployments.** Without TLS, any network observer can steal the API key and make requests in your name.
+
+- For the Node server, terminate TLS at a reverse proxy (nginx, Caddy, Traefik).
+- For the Cloudflare Worker, TLS is handled by Cloudflare automatically.
+
+### CORS
+
+CORS is open (`*`) by default. Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict which browser origins can call the server. This affects both API responses and audio responses.
+
+### Local backend servers
+
+`kokoro-server.py` and `piper-server.py` bind to `127.0.0.1` by default — only reachable from the same machine. Set `KOKORO_HOST` / `PIPER_HOST` to `0.0.0.0` only if you need them on a LAN or VPN you trust.
+
+### For public-facing deployments
+
+The Bearer token is a convenience mechanism, not a full auth layer. For anything exposed on the public internet, add Cloudflare Access or an nginx `auth_basic` / JWT proxy in front. Don't rely solely on the API key.
+
+### What Clarion does NOT do
+
+- No usage-based APIs are called, so there are no surprise bills. Edge TTS uses Microsoft's internal endpoint (no key, no quota). Kokoro and Piper are self-hosted.
+- No telemetry or analytics are collected. Nothing is sent anywhere except your configured TTS backends.
+- No user data is stored server-side. Agent profiles live in browser `localStorage` only.
 
 ---
 

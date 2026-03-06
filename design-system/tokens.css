@@ -38,9 +38,9 @@
   --color-surface-raised:#232335;
   --color-surface-hover: #2c2c42;
 
-  --color-text-primary:  #ddd8f0;
-  --color-text-secondary:#9590b0;
-  --color-text-muted:    #7a7598; /* passes WCAG AA 4.5:1 on surface */
+  --color-text-primary:  #e8e4f4;   /* slightly brighter, still purple-cool */
+  --color-text-secondary:#b0abcc;   /* lifted from #9590b0 — more legible on dark bg */
+  --color-text-muted:    #8880a8;   /* lifted from #7a7598 — passes WCAG AA on bg */
 
   --color-accent:        #7c6aee;
   --color-accent-hover:  #9080f8;

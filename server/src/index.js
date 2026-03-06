@@ -10,6 +10,21 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+
+// Constant-time string comparison to prevent timing side-channel attacks on
+// the Bearer token. Using !== directly leaks key length and prefix via timing.
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const len = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < len; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return diff === 0;
+}
+
+// Valid backend IDs
+const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper']);
 import { synthesize as edgeSynthesize, getVoices as edgeVoices } from './edge.js';
 import { synthesize as kokoroSynthesize, checkHealth as kokoroHealth, getVoices as kokoroVoices } from './kokoro.js';
 import { synthesize as piperSynthesize, checkHealth as piperHealth, getVoices as piperVoices } from './piper.js';
@@ -35,8 +50,8 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return next();
   const apiKey = c.env?.API_KEY;
   if (!apiKey) return next();
-  const auth = c.req.header('Authorization');
-  if (auth !== `Bearer ${apiKey}`) {
+  const auth = c.req.header('Authorization') || '';
+  if (!timingSafeEqual(auth, `Bearer ${apiKey}`)) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
   return next();
@@ -107,35 +122,52 @@ app.post('/speak', async (c) => {
   if (!text || typeof text !== 'string') {
     return c.json({ error: 'Missing or invalid text' }, 400);
   }
-
   if (text.length > 5000) {
     return c.json({ error: 'Text too long. Max 5000 characters.' }, 400);
   }
 
-  console.log(`[speak] backend=${backend} voice=${voice || 'default'} len=${text.length}`);
+  // Whitelist backends before anything else
+  if (!VALID_BACKENDS.has(backend)) {
+    return c.json({ error: `Unknown backend: ${backend}` }, 400);
+  }
+
+  // Clamp speed to a safe finite range
+  const safeSpeed = (typeof speed === 'number' && isFinite(speed))
+    ? Math.max(0.25, Math.min(4.0, speed))
+    : 1.0;
+
+  // Sanitize voice ID — only alphanumeric, hyphen, underscore allowed.
+  // Edge validates against its own whitelist; this prevents junk reaching
+  // Kokoro/Piper regardless.
+  const safeVoice = (typeof voice === 'string')
+    ? voice.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) || undefined
+    : undefined;
+
+  console.log(`[speak] backend=${backend} voice=${safeVoice || 'default'} len=${text.length}`);
 
   try {
     let audioResponse;
 
     switch (backend) {
       case 'edge':
-        audioResponse = await edgeSynthesize(text, voice, speed);
+        audioResponse = await edgeSynthesize(text, safeVoice, safeSpeed);
         break;
 
       case 'kokoro':
-        audioResponse = await kokoroSynthesize(text, voice, speed, c.env?.KOKORO_SERVER);
+        audioResponse = await kokoroSynthesize(text, safeVoice, safeSpeed, c.env?.KOKORO_SERVER);
         break;
 
       case 'piper':
-        audioResponse = await piperSynthesize(text, voice, c.env?.PIPER_SERVER);
+        audioResponse = await piperSynthesize(text, safeVoice, c.env?.PIPER_SERVER);
         break;
-
-      default:
-        return c.json({ error: `Unknown backend: ${backend}` }, 400);
     }
 
-    // Pass CORS header through
-    audioResponse.headers.set('Access-Control-Allow-Origin', '*');
+    // Respect ALLOWED_ORIGIN on audio responses — don't hardcode '*'.
+    const allowedOrigin = c.env?.ALLOWED_ORIGIN;
+    audioResponse.headers.set(
+      'Access-Control-Allow-Origin',
+      allowedOrigin && allowedOrigin !== '*' ? allowedOrigin : '*'
+    );
     return audioResponse;
 
   } catch (err) {
