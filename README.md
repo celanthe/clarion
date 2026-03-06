@@ -98,18 +98,18 @@ node cli/speak.js "Hello." --voice en-GB-RyanNeural > hello.mp3
 Speaks as the text arrives — sentence by sentence, in your agent's voice. Pre-fetches the next sentence while the current one plays so there's no gap. Strips ANSI codes and Markdown automatically.
 
 ```sh
-# Pipe Claude Code output to Julian's voice in real time
-claude "Walk me through this architecture." | node cli/stream.js --agent julian
+# Pipe Claude Code output to your agent's voice in real time
+claude "Walk me through this architecture." | node cli/stream.js --agent my-agent
 
 # Wave terminal, any streaming source
-tail -f agent.log | node cli/stream.js --agent aria
+tail -f agent.log | node cli/stream.js --agent my-agent
 
 # Choose your player (afplay is the default on macOS)
-... | node cli/stream.js --agent julian --player mpv
-... | node cli/stream.js --agent julian --player ffplay
+... | node cli/stream.js --agent my-agent --player mpv
+... | node cli/stream.js --agent my-agent --player ffplay
 
 # Pass raw text without stripping markdown
-... | node cli/stream.js --agent julian --plain
+... | node cli/stream.js --agent my-agent --plain
 ```
 
 `stream.js` uses the same agent profiles and server config as `speak.js`. No extra setup needed.
