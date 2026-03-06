@@ -69,19 +69,29 @@ Short, characteristic sentences work best. If your agent has a distinctive way o
 
 ---
 
-## CLI *(coming soon)*
+## CLI
 
-Pipe your agent's terminal output through their voice directly from the command line. Planned:
+Pipe your agent's responses through their voice from the terminal.
 
 ```sh
-# Speak as a saved agent
+# Speak as a saved agent (by ID or name)
 echo "The pattern holds." | node cli/speak.js --agent aria
 
-# Or directly
-node cli/speak.js "Running diagnostics now." --backend kokoro --voice bm_george
+# Direct voice selection
+node cli/speak.js "Running diagnostics." --backend kokoro --voice bm_george
+
+# List your saved agents
+node cli/speak.js --list-agents
+
+# Save as audio file
+node cli/speak.js "Hello." --voice en-GB-RyanNeural > hello.mp3
 ```
 
-Agent profiles will export from the UI and be stored at `~/.config/clarion/agents.json`.
+**Setup:**
+1. Export agents from the Clarion UI — **Export** on any agent card, or **Export all** in the footer
+2. Save the JSON to `~/.config/clarion/agents.json`
+3. Set `CLARION_SERVER` env var, or add `{ "server": "http://..." }` to `~/.config/clarion/config.json`
+4. Pipe output to a player: `| mpv -`, `| ffplay -nodisp -autoexit -`, `| afplay` (macOS)
 
 ---
 
@@ -146,6 +156,32 @@ wrangler secret put PIPER_SERVER
 ```sh
 docker-compose up
 ```
+
+---
+
+## Running Piper locally
+
+Piper is a lightweight offline ONNX TTS engine. `piper-server.py` wraps the piper CLI and exposes a `/v1/audio/speech` endpoint.
+
+```sh
+# 1. Install the piper binary
+#    → https://github.com/rhasspy/piper/releases
+#    Extract and put `piper` on your PATH
+
+# 2. Download voice models (into ./piper-models/)
+mkdir piper-models
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json
+# Repeat for: kathleen, lessac, ryan (US) and alan, jenny_dioco (GB)
+
+# 3. Start the server
+python3 piper-server.py
+# → http://127.0.0.1:5000
+```
+
+Then set `PIPER_SERVER=http://localhost:5000` in your `.env`.
+
+Available voices: `amy`, `kathleen`, `lessac`, `ryan` (US English), `alan`, `jenny_dioco` (British English). Full model list at [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices).
 
 ---
 

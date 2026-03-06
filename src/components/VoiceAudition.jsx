@@ -60,6 +60,7 @@ const DEFAULT_TEXT = "The pattern holds. We're moving forward.";
 export default function VoiceAudition({ onSave, health }) {
   const [text, setText] = useState('');
   const [backend, setBackend] = useState('edge');
+  const [speed, setSpeed] = useState(1.0);
   const [playing, setPlaying] = useState(null); // voice id currently playing
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(null); // { voice, label } just saved
@@ -80,7 +81,7 @@ export default function VoiceAudition({ onSave, health }) {
     setPlaying(voice.id);
     setError(null);
     try {
-      await speak(auditionText, { backend, voice: voice.id, speed: 1.0 });
+      await speak(auditionText, { backend, voice: voice.id, speed });
     } catch (err) {
       console.error('[clarion] speak error:', err);
       setError(`${voice.label}: ${err.message}`);
@@ -105,7 +106,7 @@ export default function VoiceAudition({ onSave, health }) {
       name: agentName.trim(),
       backend,
       voice: saveTarget.id,
-      speed: 1.0
+      speed
     });
 
     saveAgent(agent);
@@ -181,6 +182,29 @@ export default function VoiceAudition({ onSave, health }) {
           );
         })}
       </div>
+
+      {/* Speed knob (hidden for piper — no speed support) */}
+      {backend !== 'piper' && (
+        <div className="audition__speed">
+          <label className="audition__label" htmlFor="audition-speed">
+            Speed
+            <span className="audition__speed-value">{speed.toFixed(2)}×</span>
+          </label>
+          <input
+            id="audition-speed"
+            type="range"
+            className="audition__speed-range"
+            min="0.5"
+            max="2.0"
+            step="0.05"
+            value={speed}
+            onChange={e => setSpeed(parseFloat(e.target.value))}
+            aria-valuemin="0.5"
+            aria-valuemax="2.0"
+            aria-valuenow={speed.toFixed(2)}
+          />
+        </div>
+      )}
 
       {/* Waveform visualizer */}
       <Waveform active={playing !== null} />

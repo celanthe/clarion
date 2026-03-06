@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import AgentCard from './components/AgentCard.jsx';
 import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
-import { loadAgents, importAgents, getServerUrl, setServerUrl, getApiKey, setApiKey } from '../services/storage/agent-storage.js';
+import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, getApiKey, setApiKey } from '../services/storage/agent-storage.js';
 import { createAgent } from '../core/domain/agent.js';
 import './App.css';
 
@@ -170,34 +170,47 @@ export default function App() {
 
       {tab === 'agents' && (
         <footer className="app-footer">
-          <button className="app-new-btn" onClick={handleNewAgent} type="button">
-            + New agent
-          </button>
+          <div className="app-footer__actions">
+            <button className="app-new-btn" onClick={handleNewAgent} type="button">
+              + New agent
+            </button>
 
-          <label className="app-import-label" title="Import agent profiles from JSON">
-            Import JSON
-            <input
-              type="file"
-              accept=".json,application/json"
-              onChange={handleImport}
-              className="app-import-input"
-            />
-          </label>
+            <label className="app-import-label" title="Import agent profiles from JSON">
+              Import
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImport}
+                className="app-import-input"
+              />
+            </label>
 
-          {importError && (
-            <span className="app-import-error">{importError}</span>
-          )}
+            {agents.length > 0 && (
+              <button className="app-import-label" onClick={() => exportAgents()} type="button">
+                Export all
+              </button>
+            )}
+
+            {importError && (
+              <span className="app-import-error">{importError}</span>
+            )}
+          </div>
 
           <div className="app-footer__credits">
-            <span>Built on <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">Erika Flowers</a>' <a href="https://zerovector.design/investiture" target="_blank" rel="noopener">Investiture</a> framework · inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a> by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> and <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
+            <span>Built by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> · Art by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
             <span className="app-footer__sep">·</span>
-            <span>Art & design by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a> · in progress</span>
+            <a href="https://zerovector.design/investiture" target="_blank" rel="noopener">Investiture</a>
             <span className="app-footer__sep">·</span>
-            <span>Based on <a href="https://zerovector.design" target="_blank" rel="noopener">zerovector.design</a> principles by <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">@erikaflowers</a></span>
+            <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a>
             <span className="app-footer__sep">·</span>
             <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener">GitHub</a>
             <span className="app-footer__sep">·</span>
-            <a href="https://ko-fi.com/rinoliver" target="_blank" rel="noopener">Ko-fi</a>
+            <a href="https://ko-fi.com/rinoliver" target="_blank" rel="noopener" className="app-footer__kofi">
+              <svg className="app-footer__kofi-heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 21.6C5.8 17.7 2 13.7 2 9.5 2 6.4 4.4 4 7.5 4c1.7 0 3.3.8 4.5 2.1C13.2 4.8 14.8 4 16.5 4 19.6 4 22 6.4 22 9.5c0 4.2-3.8 8.2-10 12.1z"/>
+              </svg>
+              Ko-fi
+            </a>
           </div>
         </footer>
       )}

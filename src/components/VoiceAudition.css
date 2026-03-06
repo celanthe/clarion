@@ -26,6 +26,9 @@
 }
 
 .audition__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -70,6 +73,29 @@
   border-radius: var(--radius-sm);
   padding: var(--space-xs) var(--space-sm);
   display: inline-block;
+}
+
+/* Speed */
+.audition__speed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.audition__speed-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.audition__speed-range {
+  width: 100%;
+  max-width: 280px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
 }
 
 /* Backend tabs */
