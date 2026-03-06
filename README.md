@@ -4,11 +4,7 @@
 
 Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, save the one that fits, and pipe their responses through it — in the browser or from the terminal.
 
-Built by [celanthe](https://github.com/celanthe). Art & design by [Zabethy](https://zabethy.com) · in progress.
-
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/rinoliver)
-
-Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework. Inspired by [Everbloom Reader](https://everbloomreader.com). Based on [zerovector.design](https://zerovector.design) principles.
 
 ---
 
@@ -155,12 +151,6 @@ docker-compose up
 
 ## Credits
 
-Built by [celanthe](https://github.com/celanthe)
+Built by [celanthe](https://github.com/celanthe) · Art & design by [Zabethy](https://zabethy.com) · in progress
 
-Art & design by [Zabethy](https://zabethy.com) · in progress
-
-Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework
-
-Inspired by [Everbloom Reader](https://everbloomreader.com), built by celanthe and Zabethy
-
-Based on [zerovector.design](https://zerovector.design) principles by Erika Flowers
+Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework · inspired by [Everbloom Reader](https://everbloomreader.com)
