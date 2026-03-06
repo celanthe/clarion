@@ -42,6 +42,13 @@
   }
 }
 
+@media (max-width: 599px) {
+  .backend-status {
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

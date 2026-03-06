@@ -9,6 +9,20 @@ export default function Waveform({ active }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
 
+  // Keep canvas pixel resolution in sync with its CSS display width
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const sync = () => {
+      const w = canvas.offsetWidth;
+      if (w > 0 && canvas.width !== w) canvas.width = w;
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -20,13 +34,13 @@ export default function Waveform({ active }) {
       return;
     }
 
-    const W = canvas.width;
-    const H = canvas.height;
-    const barW = Math.floor((W - GAP * (BAR_COUNT - 1)) / BAR_COUNT);
     const freqData = new Uint8Array(BAR_COUNT);
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function draw() {
+      const W = canvas.width;
+      const H = canvas.height;
+      const barW = Math.floor((W - GAP * (BAR_COUNT - 1)) / BAR_COUNT);
       ctx.clearRect(0, 0, W, H);
 
       const now = Date.now();
@@ -68,7 +82,7 @@ export default function Waveform({ active }) {
 
   return (
     <div className={`waveform-wrap${active ? ' waveform-wrap--active' : ''}`}>
-      <canvas ref={canvasRef} className="waveform" width={640} height={80} aria-hidden="true" />
+      <canvas ref={canvasRef} className="waveform" height={80} aria-hidden="true" />
     </div>
   );
 }

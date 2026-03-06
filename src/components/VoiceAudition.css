@@ -102,6 +102,7 @@
 .audition__backends {
   display: flex;
   gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 
 .audition__backend-btn {
@@ -360,6 +361,13 @@
 .audition__voice--playing .audition__use-btn,
 .audition__voice:focus-within .audition__use-btn {
   opacity: 1;
+}
+
+/* Touch devices: no hover, so always show the button */
+@media (hover: none) {
+  .audition__use-btn {
+    opacity: 1;
+  }
 }
 
 .audition__use-btn:hover {

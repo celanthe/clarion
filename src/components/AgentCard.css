@@ -75,6 +75,7 @@
 .agent-card__backends {
   display: flex;
   gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 
 .agent-card__backend-btn {
