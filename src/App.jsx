@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import AgentCard from './components/AgentCard.jsx';
 import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
-import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, getApiKey, setApiKey } from '../services/storage/agent-storage.js';
+import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, hasApiKey, setApiKey } from '../services/storage/agent-storage.js';
+import { migrateApiKey } from '../services/crypto.js';
 import { createAgent } from '../core/domain/agent.js';
 import './App.css';
 
@@ -15,7 +16,8 @@ export default function App() {
   const [tab, setTab] = useState('agents');
   const [agents, setAgents] = useState(() => loadAgents());
   const [serverUrl, setServerUrlState] = useState(() => getServerUrl());
-  const [apiKey, setApiKeyState] = useState(() => getApiKey());
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
+  const [newApiKey, setNewApiKey] = useState('');
   const [showServerConfig, setShowServerConfig] = useState(false);
   const [importError, setImportError] = useState(null);
   const [health, setHealth] = useState(null);
@@ -40,16 +42,28 @@ export default function App() {
     setAgents(prev => prev.filter(a => a.id !== id));
   }, []);
 
+  // Migrate any plaintext key from localStorage → IndexedDB on first load.
+  // Then check whether a signing key is already stored.
+  useEffect(() => {
+    migrateApiKey().then(() => hasApiKey().then(setApiKeyConfigured));
+  }, []);
+
   function handleServerUrlChange(e) {
     const url = e.target.value;
     setServerUrlState(url);
     setServerUrl(url);
   }
 
-  function handleApiKeyChange(e) {
-    const key = e.target.value;
-    setApiKeyState(key);
-    setApiKey(key);
+  async function handleSetApiKey() {
+    const key = newApiKey.trim();
+    await setApiKey(key);
+    setApiKeyConfigured(!!key);
+    setNewApiKey('');
+  }
+
+  async function handleClearApiKey() {
+    await setApiKey('');
+    setApiKeyConfigured(false);
   }
 
   async function handleImport(e) {
@@ -110,15 +124,42 @@ export default function App() {
           <label className="app-server-config__label" htmlFor="api-key">
             API key <span className="app-server-config__optional">(optional)</span>
           </label>
-          <input
-            id="api-key"
-            className="app-server-config__input"
-            type="password"
-            value={apiKey}
-            onChange={handleApiKeyChange}
-            placeholder="Leave blank if no API_KEY is set on your server"
-            autoComplete="off"
-          />
+          {apiKeyConfigured ? (
+            <div className="app-server-config__key-status">
+              <span className="app-server-config__key-set">Key configured — requests are HMAC-signed</span>
+              <button
+                className="app-server-config__key-clear"
+                type="button"
+                onClick={handleClearApiKey}
+              >
+                Clear
+              </button>
+            </div>
+          ) : (
+            <div className="app-server-config__key-row">
+              <input
+                id="api-key"
+                className="app-server-config__input"
+                type="password"
+                value={newApiKey}
+                onChange={e => setNewApiKey(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSetApiKey(); }}
+                placeholder="Enter API key to configure"
+                autoComplete="off"
+              />
+              <button
+                className="app-server-config__key-set-btn"
+                type="button"
+                onClick={handleSetApiKey}
+                disabled={!newApiKey.trim()}
+              >
+                Set
+              </button>
+            </div>
+          )}
+          <p className="app-server-config__hint">
+            Stored securely in your browser — the key never leaves your device. Requests are signed with HMAC-SHA256.
+          </p>
         </div>
       )}
 
@@ -197,11 +238,7 @@ export default function App() {
           </div>
 
           <div className="app-footer__credits">
-            <span>Built by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> · Art by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
-            <span className="app-footer__sep">·</span>
-            <a href="https://zerovector.design/investiture" target="_blank" rel="noopener">Investiture</a>
-            <span className="app-footer__sep">·</span>
-            <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a>
+            <span>by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> &amp; <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
             <span className="app-footer__sep">·</span>
             <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener">GitHub</a>
             <span className="app-footer__sep">·</span>

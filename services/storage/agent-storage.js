@@ -5,10 +5,10 @@
  */
 
 import { createAgent, validateAgent } from '../../core/domain/agent.js';
+import { storeSigningKey, hasSigningKey } from '../crypto.js';
 
-const STORAGE_KEY = 'clarion_agents';
+const STORAGE_KEY    = 'clarion_agents';
 const SERVER_URL_KEY = 'clarion_server_url';
-const API_KEY_KEY = 'clarion_api_key';
 
 // --- Agents ---
 
@@ -134,18 +134,23 @@ export function getServerUrl() {
   return stored || envUrl || 'http://localhost:8787';
 }
 
-/** @returns {string} */
-export function getApiKey() {
-  return localStorage.getItem(API_KEY_KEY) || '';
+/**
+ * Returns true if an API signing key is stored in IndexedDB.
+ * The raw key value is not accessible.
+ * @returns {Promise<boolean>}
+ */
+export async function hasApiKey() {
+  return hasSigningKey();
 }
 
-/** @param {string} key */
-export function setApiKey(key) {
-  if (key) {
-    localStorage.setItem(API_KEY_KEY, key);
-  } else {
-    localStorage.removeItem(API_KEY_KEY);
-  }
+/**
+ * Store a new API key as a non-extractable HMAC CryptoKey in IndexedDB.
+ * Pass an empty string to clear the key.
+ * @param {string} key
+ * @returns {Promise<void>}
+ */
+export async function setApiKey(key) {
+  await storeSigningKey(key);
 }
 
 /**

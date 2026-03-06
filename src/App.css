@@ -119,6 +119,66 @@
   color: var(--color-accent);
 }
 
+/* API key status / set row */
+.app-server-config__key-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.app-server-config__key-set {
+  font-size: var(--font-size-sm);
+  color: var(--color-status-up);
+}
+
+.app-server-config__key-clear {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  padding: 2px var(--space-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.app-server-config__key-clear:hover {
+  border-color: #e06c75;
+  color: #e06c75;
+}
+
+.app-server-config__key-row {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.app-server-config__key-row .app-server-config__input {
+  flex: 1;
+}
+
+.app-server-config__key-set-btn {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  white-space: nowrap;
+}
+
+.app-server-config__key-set-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.app-server-config__key-set-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Tabs */
 .app-tabs {
   display: flex;

@@ -11,8 +11,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
-// Constant-time string comparison to prevent timing side-channel attacks on
-// the Bearer token. Using !== directly leaks key length and prefix via timing.
+// Constant-time string comparison — prevents timing side-channel on token verification.
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const len = Math.max(a.length, b.length);
@@ -21,6 +20,40 @@ function timingSafeEqual(a, b) {
     diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
   }
   return diff === 0;
+}
+
+function toBase64url(bytes) {
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+/**
+ * Verify a Clarion HMAC-SHA256 signature.
+ * Header format: "Clarion ts=<unix>,sig=<base64url>"
+ * Signed payload: "METHOD\n/path\ntimestamp"
+ * Rejects signatures older than 5 minutes (replay protection).
+ */
+async function verifyClarionSig(apiKey, authHeader, method, url) {
+  const match = authHeader.match(/^Clarion ts=(\d+),sig=([A-Za-z0-9_-]+)$/);
+  if (!match) return false;
+
+  const ts  = parseInt(match[1], 10);
+  const sig = match[2];
+
+  // Reject stale or future-dated requests (±5 min clock skew tolerance)
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - ts) > 300) return false;
+
+  const path    = new URL(url).pathname;
+  const toSign  = `${method}\n${path}\n${ts}`;
+  const enc     = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', enc.encode(apiKey), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const expected    = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(toSign));
+  const expectedSig = toBase64url(new Uint8Array(expected));
+
+  return timingSafeEqual(sig, expectedSig);
 }
 
 // Valid backend IDs
@@ -45,15 +78,24 @@ app.use('*', cors({
 }));
 
 // Optional API key auth — set API_KEY env var to enable.
-// If unset, server is open (zero-config default for local use).
+// Browser UI sends HMAC-SHA256 signatures (raw key never transmitted).
+// CLI and other non-browser clients may use Bearer <key> as a fallback.
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return next();
   const apiKey = c.env?.API_KEY;
   if (!apiKey) return next();
+
   const auth = c.req.header('Authorization') || '';
-  if (!timingSafeEqual(auth, `Bearer ${apiKey}`)) {
-    return c.json({ error: 'Unauthorized' }, 401);
+  let authed = false;
+
+  if (auth.startsWith('Clarion ')) {
+    authed = await verifyClarionSig(apiKey, auth, c.req.method, c.req.url);
+  } else {
+    // Bearer fallback — CLI and scripts. Still timing-safe.
+    authed = timingSafeEqual(auth, `Bearer ${apiKey}`);
   }
+
+  if (!authed) return c.json({ error: 'Unauthorized' }, 401);
   return next();
 });
 

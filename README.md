@@ -133,11 +133,14 @@ Clarion is designed for personal, self-hosted use. If you're deploying it beyond
 
 ### API key authentication
 
-Set `API_KEY=your-secret` in your server environment. All requests will then require `Authorization: Bearer <key>`.
+Set `API_KEY=your-secret` in your server environment.
 
-- **Node server** (`npm start`): set `API_KEY` in your shell env or `.env` file — it's injected into the Hono app automatically.
-- **Cloudflare Worker**: use `wrangler secret put API_KEY` — do not put secrets in `wrangler.toml`.
-- In the Clarion UI, enter your key under **Server → API key**. It is stored in browser `localStorage` — accessible to any JavaScript running on the same origin. Use the UI only from a browser you trust, on a machine you control.
+- **Node server** (`npm start`): set `API_KEY` in your `.env` — it's injected automatically.
+- **Cloudflare Worker**: use `wrangler secret put API_KEY` — never put secrets in `wrangler.toml`.
+
+**The browser UI never sends the raw key.** When you enter a key in the Server config panel, it is immediately imported as a non-extractable HMAC-SHA256 `CryptoKey` in `IndexedDB` — the raw bytes are gone. Every request is then signed with `HMAC-SHA256(key, "METHOD\n/path\ntimestamp")`. The server verifies the signature and rejects anything older than 5 minutes, making replay attacks impractical.
+
+The CLI (`cli/speak.js`) uses `Authorization: Bearer <key>` as a fallback — acceptable for local/LAN use, but use HTTPS if the server is remote.
 
 ### HTTPS
 
