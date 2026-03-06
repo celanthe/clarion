@@ -32,22 +32,22 @@
   --transition-fast: 100ms ease;
   --transition-base: 180ms ease;
 
-  /* Colors — dark, cool, minimal */
-  --color-background:    #11111c;
-  --color-surface:       #1b1b28;
-  --color-surface-raised:#232335;
-  --color-surface-hover: #2c2c42;
+  /* Colors — dark, lavender-tinted */
+  --color-background:    #14141f;
+  --color-surface:       #1e1d2e;
+  --color-surface-raised:#272638;
+  --color-surface-hover: #302e48;
 
-  --color-text-primary:  #e8e4f4;   /* slightly brighter, still purple-cool */
-  --color-text-secondary:#b0abcc;   /* lifted from #9590b0 — more legible on dark bg */
-  --color-text-muted:    #8880a8;   /* lifted from #7a7598 — passes WCAG AA on bg */
+  --color-text-primary:  #eae6f6;
+  --color-text-secondary:#c0bad8;   /* lavender, not neutral gray */
+  --color-text-muted:    #a09abc;   /* muted lavender — passes WCAG AA */
 
-  --color-accent:        #7c6aee;
-  --color-accent-hover:  #9080f8;
-  --color-accent-dim:    rgba(124, 106, 238, 0.14);
+  --color-accent:        #8272f0;
+  --color-accent-hover:  #9888ff;
+  --color-accent-dim:    rgba(130, 114, 240, 0.15);
 
-  --color-border:        #2e2c44;
-  --color-border-subtle: #211f32;
+  --color-border:        #332f4e;
+  --color-border-subtle: #242238;
 
   /* Status dots */
   --color-status-up:           #4caf76;
