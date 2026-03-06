@@ -357,7 +357,8 @@
 }
 
 .audition__voice:hover .audition__use-btn,
-.audition__voice--playing .audition__use-btn {
+.audition__voice--playing .audition__use-btn,
+.audition__voice:focus-within .audition__use-btn {
   opacity: 1;
 }
 

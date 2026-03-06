@@ -79,6 +79,42 @@ export const VOICES = {
     // British English
     { id: 'alan',        label: 'Alan',     lang: 'en-GB', gender: 'M' },
     { id: 'jenny_dioco', label: 'Jenny',    lang: 'en-GB', gender: 'F' },
+  ],
+  elevenlabs: [
+    // American English
+    { id: '21m00Tcm4TlvDq8ikWAM', label: 'Rachel',  lang: 'en-US', gender: 'F' },
+    { id: 'MF3mGyEYCl7XYWbV9V6O', label: 'Elli',    lang: 'en-US', gender: 'F' },
+    { id: 'XrExE9yKIg1WjnnlVkGX', label: 'Matilda', lang: 'en-US', gender: 'F' },
+    { id: 'pNInz6obpgDQGcFmaJgB', label: 'Adam',    lang: 'en-US', gender: 'M' },
+    { id: 'TxGEqnHWrfWFTfGW9XjX', label: 'Josh',    lang: 'en-US', gender: 'M' },
+    { id: 'SOYHLrjzK2X1ezoPC6cr', label: 'Harry',   lang: 'en-US', gender: 'M' },
+    { id: 'TX3LPaxmHKxFdv7VOQHJ', label: 'Liam',    lang: 'en-US', gender: 'M' },
+    // British English
+    { id: 'onwK4e9ZLuTAKqWW03F9', label: 'Daniel',  lang: 'en-GB', gender: 'M' },
+    { id: 'ThT5KcBeYPX3keUQqHPh', label: 'Dorothy', lang: 'en-GB', gender: 'F' },
+    { id: 'LcfcDJNUP1GQjkzn1xUU', label: 'Emily',   lang: 'en-GB', gender: 'F' },
+    // Australian English
+    { id: 'IKne3meq5aSn9XLyUdCD', label: 'Charlie', lang: 'en-AU', gender: 'M' },
+  ],
+  google: [
+    // American English — Chirp 3 HD
+    { id: 'en-US-Chirp3-HD-Achernar',     label: 'Achernar',     lang: 'en-US', gender: 'F' },
+    { id: 'en-US-Chirp3-HD-Aoede',        label: 'Aoede',        lang: 'en-US', gender: 'F' },
+    { id: 'en-US-Chirp3-HD-Kore',         label: 'Kore',         lang: 'en-US', gender: 'F' },
+    { id: 'en-US-Chirp3-HD-Leda',         label: 'Leda',         lang: 'en-US', gender: 'F' },
+    { id: 'en-US-Chirp3-HD-Vindemiatrix', label: 'Vindemiatrix', lang: 'en-US', gender: 'F' },
+    { id: 'en-US-Chirp3-HD-Charon',       label: 'Charon',       lang: 'en-US', gender: 'M' },
+    { id: 'en-US-Chirp3-HD-Fenrir',       label: 'Fenrir',       lang: 'en-US', gender: 'M' },
+    { id: 'en-US-Chirp3-HD-Orus',         label: 'Orus',         lang: 'en-US', gender: 'M' },
+    { id: 'en-US-Chirp3-HD-Puck',         label: 'Puck',         lang: 'en-US', gender: 'M' },
+    { id: 'en-US-Chirp3-HD-Rasalgethi',   label: 'Rasalgethi',   lang: 'en-US', gender: 'M' },
+    // British English — Chirp 3 HD
+    { id: 'en-GB-Chirp3-HD-Achernar',     label: 'Achernar (UK)', lang: 'en-GB', gender: 'F' },
+    { id: 'en-GB-Chirp3-HD-Aoede',        label: 'Aoede (UK)',    lang: 'en-GB', gender: 'F' },
+    { id: 'en-GB-Chirp3-HD-Leda',         label: 'Leda (UK)',     lang: 'en-GB', gender: 'F' },
+    { id: 'en-GB-Chirp3-HD-Charon',       label: 'Charon (UK)',   lang: 'en-GB', gender: 'M' },
+    { id: 'en-GB-Chirp3-HD-Fenrir',       label: 'Fenrir (UK)',   lang: 'en-GB', gender: 'M' },
+    { id: 'en-GB-Chirp3-HD-Puck',         label: 'Puck (UK)',     lang: 'en-GB', gender: 'M' },
   ]
 };
 

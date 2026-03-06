@@ -6,9 +6,11 @@ import VoiceSelector from './VoiceSelector.jsx';
 import './AgentCard.css';
 
 const BACKENDS = [
-  { id: 'edge',   label: 'Edge TTS',  desc: 'Free, zero config' },
-  { id: 'kokoro', label: 'Kokoro',    desc: 'Natural voices' },
-  { id: 'piper',  label: 'Piper',     desc: 'Local, lightweight' }
+  { id: 'edge',       label: 'Edge TTS',    desc: 'Free, zero config' },
+  { id: 'kokoro',     label: 'Kokoro',      desc: 'Natural voices, self-hosted' },
+  { id: 'piper',      label: 'Piper',       desc: 'Local, lightweight' },
+  { id: 'elevenlabs', label: 'ElevenLabs',  desc: 'Premium voices, requires API key' },
+  { id: 'google',     label: 'Google',      desc: 'Chirp 3 HD, requires API key' }
 ];
 
 const DEFAULT_TEST = "The pattern holds. We're moving forward.";
@@ -133,9 +135,9 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         <span className="agent-card__id" title="Agent ID (used by CLI)">{agent.id}</span>
       </header>
 
-      {!saved && (
-        <p className="agent-card__unsaved">Unsaved changes</p>
-      )}
+      <p className="agent-card__unsaved" role="status">
+        {!saved ? 'Unsaved changes' : ''}
+      </p>
 
       <div className="agent-card__body">
         <fieldset className="agent-card__field">
@@ -147,6 +149,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
                 className={`agent-card__backend-btn ${agent.backend === b.id ? 'agent-card__backend-btn--active' : ''}`}
                 onClick={() => handleBackendChange(b.id)}
                 type="button"
+                aria-pressed={agent.backend === b.id}
                 title={b.desc}
               >
                 {b.label}
@@ -164,7 +167,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
           />
         </div>
 
-        {agent.backend !== 'piper' && (
+        {agent.backend !== 'piper' && agent.backend !== 'elevenlabs' && (
           <div className="agent-card__field">
             <label className="agent-card__label">
               Speed
@@ -182,6 +185,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
               aria-valuemin="0.5"
               aria-valuemax="2.0"
               aria-valuenow={agent.speed.toFixed(2)}
+              aria-valuetext={`${agent.speed.toFixed(2)}× speed`}
             />
           </div>
         )}

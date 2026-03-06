@@ -225,15 +225,21 @@ GET /health
 
 | Backend | Config needed | Quality | Voices |
 |---------|--------------|---------|--------|
-| **Edge TTS** | None | Good | 18+ Neural voices (US, UK, AU, IE, CA, IN) |
+| **Edge TTS** | None | Good | 27 Neural voices (US, UK, AU, IE, CA, ZA, NZ, IN) |
 | **Kokoro** | `KOKORO_SERVER=http://...` | Excellent | 11 voices (US + UK English) |
 | **Piper** | `PIPER_SERVER=http://...` | OK | 6 voices (US + UK English) |
+| **ElevenLabs** | `ELEVENLABS_API_KEY=...` | Excellent | 11 voices (US, UK, AU) — paid |
+| **Google** | `GOOGLE_TTS_API_KEY=...` | Excellent | 16 Chirp 3 HD voices (US + UK) — paid |
 
 **Edge TTS** uses Microsoft's neural voices — no API key, no server, works immediately. Good quality, slight Microsoft TTS character to it. Note: this uses an undocumented endpoint that isn't officially supported for third-party use — if you need long-term stability, run Kokoro instead.
 
 **Kokoro** is the best option if you're willing to run a server. It's a local ONNX model that produces genuinely natural speech — less "AI voice", more character. Runs on CPU with no GPU required. Use `docker-compose up` to get it running in one command.
 
 **Piper** is lightweight and fully offline. Lower quality than Kokoro but very fast and minimal resource usage.
+
+**ElevenLabs** uses the `eleven_turbo_v2_5` model — fast and high quality. Requires an API key and usage is billed per character. Set `ELEVENLABS_API_KEY` in your `.env`. Speed control is not available (model limitation). Any voice from your ElevenLabs library can be used by passing its ID directly via the API or CLI with `--voice <id>`.
+
+**Google Chirp 3 HD** are Google's highest-quality neural voices. Requires a Cloud TTS API key with the Text-to-Speech API enabled. Set `GOOGLE_TTS_API_KEY` in your `.env`. Supports speed control. See the [full voice list](https://cloud.google.com/text-to-speech/docs/chirp3-hd).
 
 ---
 

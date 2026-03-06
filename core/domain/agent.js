@@ -7,7 +7,7 @@
  * @typedef {Object} Agent
  * @property {string} id       - Unique slug (e.g. "julian")
  * @property {string} name     - Display name (e.g. "Julian")
- * @property {'edge'|'kokoro'|'piper'} backend
+ * @property {'edge'|'kokoro'|'piper'|'elevenlabs'|'google'} backend
  * @property {string} voice    - Backend-specific voice ID
  * @property {number} speed    - Playback speed multiplier (0.5–2.0, default 1.0)
  * @property {string} createdAt - ISO timestamp
@@ -44,7 +44,7 @@ export function validateAgent(obj) {
 
   if (!obj.id || typeof obj.id !== 'string') errors.push('Missing id');
   if (!obj.name || typeof obj.name !== 'string') errors.push('Missing name');
-  if (!['edge', 'kokoro', 'piper'].includes(obj.backend)) errors.push('Invalid backend');
+  if (!['edge', 'kokoro', 'piper', 'elevenlabs', 'google'].includes(obj.backend)) errors.push('Invalid backend');
   if (!obj.voice || typeof obj.voice !== 'string') errors.push('Missing voice');
   if (typeof obj.speed !== 'number' || obj.speed < 0.25 || obj.speed > 4.0) {
     errors.push('Speed must be a number between 0.25 and 4.0');
@@ -64,14 +64,16 @@ export function slugify(name) {
 
 /**
  * Default voice for each backend.
- * @param {'edge'|'kokoro'|'piper'} backend
+ * @param {'edge'|'kokoro'|'piper'|'elevenlabs'|'google'} backend
  * @returns {string}
  */
 export function defaultVoice(backend) {
   switch (backend) {
-    case 'kokoro': return 'af_heart';
-    case 'piper':  return 'amy';
+    case 'kokoro':     return 'af_heart';
+    case 'piper':      return 'amy';
+    case 'elevenlabs': return '21m00Tcm4TlvDq8ikWAM'; // Rachel
+    case 'google':     return 'en-US-Chirp3-HD-Achernar';
     case 'edge':
-    default:       return 'en-US-JennyNeural';
+    default:           return 'en-US-JennyNeural';
   }
 }

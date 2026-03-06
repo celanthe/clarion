@@ -59,9 +59,11 @@ async function verifyClarionSig(apiKey, authHeader, method, url) {
 import { synthesize as edgeSynthesize, getVoices as edgeVoices } from './edge.js';
 import { synthesize as kokoroSynthesize, checkHealth as kokoroHealth, getVoices as kokoroVoices } from './kokoro.js';
 import { synthesize as piperSynthesize, checkHealth as piperHealth, getVoices as piperVoices } from './piper.js';
+import { synthesize as elevenlabsSynthesize, checkHealth as elevenlabsHealth, getVoices as elevenlabsVoices } from './elevenlabs.js';
+import { synthesize as googleSynthesize, checkHealth as googleHealth, getVoices as googleVoices } from './google.js';
 
 // Valid backend IDs
-const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper']);
+const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper', 'elevenlabs', 'google']);
 
 // Rate limiting — opt-in via RATE_LIMIT env var (max requests per minute per IP).
 // Set RATE_LIMIT=20 to allow 20 /speak requests per minute per IP.
@@ -128,17 +130,23 @@ app.get('/', (c) => c.json({ service: 'clarion', status: 'ok' }));
 
 app.get('/health', async (c) => {
   const kokoroServer = c.env?.KOKORO_SERVER;
-  const piperServer = c.env?.PIPER_SERVER;
+  const piperServer  = c.env?.PIPER_SERVER;
+  const elevenKey    = c.env?.ELEVENLABS_API_KEY;
+  const googleKey    = c.env?.GOOGLE_TTS_API_KEY;
 
-  const [kokoro, piper] = await Promise.all([
+  const [kokoro, piper, elevenlabs, google] = await Promise.all([
     kokoroHealth(kokoroServer),
-    piperHealth(piperServer)
+    piperHealth(piperServer),
+    elevenlabsHealth(elevenKey),
+    googleHealth(googleKey)
   ]);
 
   return c.json({
     edge: 'up',    // Edge TTS is always available (Microsoft-hosted, no config needed)
     kokoro,
     piper,
+    elevenlabs,
+    google,
     timestamp: new Date().toISOString()
   });
 });
@@ -151,12 +159,14 @@ app.get('/voices', (c) => {
   const voiceMap = {
     edge: edgeVoices,
     kokoro: kokoroVoices,
-    piper: piperVoices
+    piper: piperVoices,
+    elevenlabs: elevenlabsVoices,
+    google: googleVoices
   };
 
   const fn = voiceMap[backend];
   if (!fn) {
-    return c.json({ error: `Unknown backend: ${backend}. Use edge, kokoro, or piper.` }, 400);
+    return c.json({ error: `Unknown backend: ${backend}. Use edge, kokoro, piper, elevenlabs, or google.` }, 400);
   }
 
   return c.json({ backend, voices: fn() });
@@ -168,9 +178,9 @@ app.get('/voices', (c) => {
  * POST /speak
  * Body: { text, backend, voice, speed }
  *   text    — required, string, max 5000 chars
- *   backend — "edge" (default) | "kokoro" | "piper"
+ *   backend — "edge" (default) | "kokoro" | "piper" | "elevenlabs" | "google"
  *   voice   — backend-specific voice ID (uses backend default if omitted)
- *   speed   — number, default 1.0 (edge and kokoro only)
+ *   speed   — number, default 1.0 (not supported by elevenlabs or piper)
  *
  * Returns audio/mpeg (edge/kokoro) or audio/wav (piper) directly.
  */
@@ -235,6 +245,14 @@ app.post('/speak', async (c) => {
 
       case 'piper':
         audioResponse = await piperSynthesize(text, safeVoice, c.env?.PIPER_SERVER);
+        break;
+
+      case 'elevenlabs':
+        audioResponse = await elevenlabsSynthesize(text, safeVoice, c.env?.ELEVENLABS_API_KEY);
+        break;
+
+      case 'google':
+        audioResponse = await googleSynthesize(text, safeVoice, safeSpeed, c.env?.GOOGLE_TTS_API_KEY);
         break;
     }
 

@@ -6,7 +6,7 @@ import { VOICES, LANG_LABELS, groupByLang } from '../../core/voices.js';
 import Waveform from './Waveform.jsx';
 import './VoiceAudition.css';
 
-const BACKENDS = ['edge', 'kokoro', 'piper'];
+const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
 
 const DEFAULT_TEXT = "The pattern holds. We're moving forward.";
 
@@ -126,6 +126,7 @@ export default function VoiceAudition({ onSave, health }) {
               onClick={() => { if (available) setBackend(b); }}
               disabled={!available}
               type="button"
+              aria-pressed={backend === b}
               title={!available ? `${b} not configured or unreachable` : undefined}
             >
               {b}
@@ -135,8 +136,8 @@ export default function VoiceAudition({ onSave, health }) {
         })}
       </div>
 
-      {/* Speed knob (hidden for piper — no speed support) */}
-      {backend !== 'piper' && (
+      {/* Speed knob (hidden for piper and elevenlabs — no speed support) */}
+      {backend !== 'piper' && backend !== 'elevenlabs' && (
         <div className="audition__speed">
           <label className="audition__label" htmlFor="audition-speed">
             Speed
@@ -154,6 +155,7 @@ export default function VoiceAudition({ onSave, health }) {
             aria-valuemin="0.5"
             aria-valuemax="2.0"
             aria-valuenow={speed.toFixed(2)}
+            aria-valuetext={`${speed.toFixed(2)}× speed`}
           />
         </div>
       )}
