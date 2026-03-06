@@ -28,7 +28,7 @@ export default function VoiceSelector({ backend, value, onChange }) {
           <optgroup key={groupLabel} label={groupLabel}>
             {groupVoices.map(v => (
               <option key={v.id} value={v.id}>
-                {v.label} ({v.gender === 'F' ? 'F' : 'M'})
+                {v.label} ({v.gender === 'F' ? 'Female' : 'Male'})
               </option>
             ))}
           </optgroup>

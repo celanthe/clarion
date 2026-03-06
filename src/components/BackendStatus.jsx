@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchHealth } from '../../services/tts.js';
 import './BackendStatus.css';
 
-const BACKENDS = ['edge', 'kokoro', 'piper'];
+const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
 
 const STATUS_LABEL = {
   up:           'Online',

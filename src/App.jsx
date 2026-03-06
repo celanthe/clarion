@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import AgentCard from './components/AgentCard.jsx';
 import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
@@ -22,6 +22,8 @@ export default function App() {
   const [showServerConfig, setShowServerConfig] = useState(false);
   const [importError, setImportError] = useState(null);
   const [health, setHealth] = useState(null);
+  const [urlError, setUrlError] = useState(null);
+  const fileInputRef = useRef(null);
 
   function handleNewAgent() {
     const agent = createAgent({ name: 'New Agent' });
@@ -65,7 +67,17 @@ export default function App() {
   function handleServerUrlChange(e) {
     const url = e.target.value;
     setServerUrlState(url);
-    setServerUrl(url);
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        setUrlError('URL must start with http:// or https://');
+      } else {
+        setUrlError(null);
+        setServerUrl(url);
+      }
+    } catch {
+      setUrlError('Enter a valid URL (e.g. http://localhost:8787)');
+    }
   }
 
   async function handleSetApiKey() {
@@ -132,6 +144,9 @@ export default function App() {
             placeholder="http://localhost:8787"
             aria-describedby="server-url-hint"
           />
+          {urlError && (
+            <p className="app-server-config__url-error" role="alert">{urlError}</p>
+          )}
           <p className="app-server-config__hint" id="server-url-hint">
             Point this at your Clarion server (<code>node src/node-server.js</code> or Cloudflare Worker).
           </p>
@@ -177,6 +192,19 @@ export default function App() {
         </div>
       )}
 
+      {health !== null && health?.edge === 'error' && (
+        <div className="app-offline-banner" role="alert">
+          Can't reach server at <code>{serverUrl}</code>.{' '}
+          <button
+            className="app-offline-banner__action"
+            type="button"
+            onClick={() => setShowServerConfig(true)}
+          >
+            Check configuration
+          </button>
+        </div>
+      )}
+
       <nav className="app-tabs" aria-label="Views" role="tablist">
         {TABS.map(t => (
           <button
@@ -199,12 +227,13 @@ export default function App() {
           <>
             {agents.length === 0 ? (
               <div className="app-empty">
-                <p>No agents yet.</p>
+                <p className="app-empty__headline">Give your agent a voice.</p>
                 <p className="app-empty__hint">
-                  Create one here, or use <button className="app-empty__tab-link" onClick={() => setTab('audition')} type="button">Audition</button> to match a voice to your agent's dialogue first.
+                  Go to <button className="app-empty__tab-link" onClick={() => setTab('audition')} type="button">Audition</button> — paste a few lines of your agent's dialogue, hear each voice read them, and save the one that fits.
                 </p>
+                <p className="app-empty__hint">Or create a profile directly and pick a voice from the list.</p>
                 <button className="app-new-btn" onClick={handleNewAgent} type="button">
-                  Create your first agent
+                  Create an agent
                 </button>
               </div>
             ) : (
@@ -230,15 +259,21 @@ export default function App() {
               + New agent
             </button>
 
-            <label className="app-import-label" title="Import agent profiles from JSON">
+            <button
+              className="app-import-label"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Import agent profiles from JSON"
+            >
               Import
-              <input
-                type="file"
-                accept=".json,application/json"
-                onChange={handleImport}
-                className="app-import-input"
-              />
-            </label>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleImport}
+              className="app-import-input"
+            />
 
             {agents.length > 0 && (
               <button className="app-import-label" onClick={() => exportAgents()} type="button">

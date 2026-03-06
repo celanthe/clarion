@@ -24,6 +24,9 @@ const CONFIG_DIR  = join(homedir(), '.config', 'clarion');
 const AGENTS_FILE = join(CONFIG_DIR, 'agents.json');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
+// Ensure config directory exists on first run
+mkdirSync(CONFIG_DIR, { recursive: true });
+
 // --- Config ---
 
 function loadConfig() {

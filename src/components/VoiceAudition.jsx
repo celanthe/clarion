@@ -18,7 +18,8 @@ export default function VoiceAudition({ onSave, health }) {
   const [text, setText] = useState('');
   const [backend, setBackend] = useState('edge');
   const [speed, setSpeed] = useState(1.0);
-  const [playing, setPlaying] = useState(null); // voice id currently playing
+  const [loading, setLoading] = useState(null); // voice id being fetched from server
+  const [playing, setPlaying] = useState(null); // voice id currently playing audio
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(null); // { voice, label } just saved
   const [agentName, setAgentName] = useState('');
@@ -29,20 +30,27 @@ export default function VoiceAudition({ onSave, health }) {
   const voices = VOICES[backend] || [];
 
   async function handlePlay(voice) {
-    if (playing === voice.id) {
+    if (loading === voice.id || playing === voice.id) {
       stop();
+      setLoading(null);
       setPlaying(null);
       return;
     }
     stop();
-    setPlaying(voice.id);
+    setLoading(voice.id);
+    setPlaying(null);
     setError(null);
     try {
-      await speak(auditionText, { backend, voice: voice.id, speed });
+      await speak(
+        auditionText,
+        { backend, voice: voice.id, speed },
+        () => { setLoading(null); setPlaying(voice.id); }
+      );
     } catch (err) {
       console.error('[clarion] speak error:', err);
       setError(`${voice.label}: ${err.message}`);
     } finally {
+      setLoading(null);
       setPlaying(null);
     }
   }
@@ -161,7 +169,7 @@ export default function VoiceAudition({ onSave, health }) {
       )}
 
       {/* Waveform visualizer */}
-      <Waveform active={playing !== null} />
+      <Waveform active={loading !== null || playing !== null} />
 
       {/* Error */}
       {error && <p className="audition__error" role="alert">{error}</p>}
@@ -175,11 +183,13 @@ export default function VoiceAudition({ onSave, health }) {
           <div className="audition__save-row">
             <input
               ref={nameInputRef}
+              id="audition-agent-name"
               className="audition__save-input"
               type="text"
               value={agentName}
               onChange={e => setAgentName(e.target.value)}
-              placeholder="Agent name (e.g. Julian)"
+              placeholder="Agent name"
+              aria-label="Agent name"
               required
             />
             <button className="audition__save-btn" type="submit">Save</button>
@@ -209,15 +219,19 @@ export default function VoiceAudition({ onSave, health }) {
               {langVoices.map(voice => (
                 <div
                   key={voice.id}
-                  className={`audition__voice ${playing === voice.id ? 'audition__voice--playing' : ''}`}
+                  className={`audition__voice ${(loading === voice.id || playing === voice.id) ? 'audition__voice--playing' : ''}`}
                 >
                   <button
-                    className="audition__play-btn"
+                    className={`audition__play-btn${loading === voice.id ? ' audition__play-btn--loading' : ''}`}
                     onClick={() => handlePlay(voice)}
                     type="button"
-                    aria-label={playing === voice.id ? `Stop ${voice.label}` : `Play ${voice.label}`}
+                    aria-label={
+                      loading === voice.id ? `Loading ${voice.label}` :
+                      playing === voice.id ? `Stop ${voice.label}` :
+                      `Play ${voice.label}`
+                    }
                   >
-                    {playing === voice.id ? '■' : '▶'}
+                    {loading === voice.id ? '…' : playing === voice.id ? '■' : '▶'}
                   </button>
                   <div className="audition__voice-info">
                     <span className="audition__voice-name">{voice.label}</span>

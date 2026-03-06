@@ -169,11 +169,12 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
 
         {agent.backend !== 'piper' && agent.backend !== 'elevenlabs' && (
           <div className="agent-card__field">
-            <label className="agent-card__label">
+            <label className="agent-card__label" htmlFor="agent-card-speed">
               Speed
               <span className="agent-card__speed-value">{agent.speed.toFixed(2)}×</span>
             </label>
             <input
+              id="agent-card-speed"
               type="range"
               className="agent-card__speed"
               min="0.5"
@@ -181,7 +182,6 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
               step="0.05"
               value={agent.speed}
               onChange={handleSpeedChange}
-              aria-label="Speed"
               aria-valuemin="0.5"
               aria-valuemax="2.0"
               aria-valuenow={agent.speed.toFixed(2)}
@@ -193,8 +193,9 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         {/* Custom test text */}
         {showTestInput && (
           <div className="agent-card__field">
-            <label className="agent-card__label">Test text</label>
+            <label className="agent-card__label" htmlFor="agent-card-test-text">Test text</label>
             <textarea
+              id="agent-card-test-text"
               className="agent-card__test-input"
               value={testText}
               onChange={e => setTestText(e.target.value)}

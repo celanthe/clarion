@@ -79,7 +79,13 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         model_name = VOICE_MAP.get(voice_id, VOICE_MAP[DEFAULT_VOICE])
-        model_path = Path(MODELS_DIR) / f'{model_name}.onnx'
+        models_root = Path(MODELS_DIR).resolve()
+        model_path = (models_root / f'{model_name}.onnx').resolve()
+
+        # Ensure path is inside the models directory (defense against symlink attacks)
+        if not str(model_path).startswith(str(models_root)):
+            self.send_json(400, {'error': 'Invalid model path'})
+            return
 
         if not model_path.exists():
             self.send_json(404, {

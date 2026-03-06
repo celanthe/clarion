@@ -55,7 +55,7 @@ function cleanup() {
   }
 }
 
-export async function speak(text, options = {}) {
+export async function speak(text, options = {}, onStart) {
   cleanup();
 
   const serverUrl = getServerUrl();
@@ -112,6 +112,7 @@ export async function speak(text, options = {}) {
 
   try {
     await audio.play();
+    onStart?.(); // Audio is now playing — notify caller (e.g. to switch loading → playing state)
   } catch (err) {
     cleanup();
     throw new Error(`Playback blocked: ${err.message}`);
