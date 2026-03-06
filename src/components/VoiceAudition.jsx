@@ -256,7 +256,7 @@ export default function VoiceAudition({ onSave, health }) {
               ))}
             </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
