@@ -144,10 +144,12 @@ The CLI (`cli/speak.js`) uses `Authorization: Bearer <key>` as a fallback — ac
 
 ### HTTPS
 
-Bearer tokens are sent in plaintext. **Always use HTTPS for non-localhost deployments.** Without TLS, any network observer can steal the API key and make requests in your name.
+The browser UI signs requests with HMAC-SHA256 — the raw key never travels the wire at all. The text you're synthesizing does, though, so **use HTTPS for non-localhost deployments** to keep your content private.
 
-- For the Node server, terminate TLS at a reverse proxy (nginx, Caddy, Traefik).
-- For the Cloudflare Worker, TLS is handled by Cloudflare automatically.
+The CLI uses `Bearer <key>` which is plaintext — keep CLI use to localhost or VPN, or run it behind a TLS-terminating proxy.
+
+- Node server: terminate TLS at nginx, Caddy, or Traefik.
+- Cloudflare Worker: TLS is automatic.
 
 ### CORS
 
@@ -159,7 +161,7 @@ CORS is open (`*`) by default. Set `ALLOWED_ORIGIN=https://your-domain.com` to r
 
 ### For public-facing deployments
 
-The Bearer token is a convenience mechanism, not a full auth layer. For anything exposed on the public internet, add Cloudflare Access or an nginx `auth_basic` / JWT proxy in front. Don't rely solely on the API key.
+HMAC signing handles authentication well, but for anything on the public internet add Cloudflare Access or an nginx auth proxy in front. Defense in depth.
 
 ### What Clarion does NOT do
 
@@ -218,6 +220,4 @@ Available voices: `amy`, `kathleen`, `lessac`, `ryan` (US English), `alan`, `jen
 
 ## Credits
 
-Built by [celanthe](https://github.com/celanthe) · Art & design by [Zabethy](https://zabethy.com) · in progress
-
-Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework · inspired by [Everbloom Reader](https://everbloomreader.com) by [celanthe](https://github.com/celanthe) and [Zabethy](https://zabethy.com)
+Built by [celanthe](https://github.com/celanthe) · Design by [Zabethy](https://zabethy.com) · Built on [Investiture](https://zerovector.design/investiture) · Inspired by [Everbloom Reader](https://everbloomreader.com)
