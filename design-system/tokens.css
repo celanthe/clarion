@@ -40,7 +40,7 @@
 
   --color-text-primary:  #ddd8f0;
   --color-text-secondary:#8e88a8;
-  --color-text-muted:    #5a5570;
+  --color-text-muted:    #7a7598; /* lightened from #5a5570 to pass WCAG 4.5:1 */
 
   --color-accent:        #7c6aee;
   --color-accent-hover:  #9080f8;

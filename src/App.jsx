@@ -122,14 +122,15 @@ export default function App() {
         </div>
       )}
 
-      <nav className="app-tabs" aria-label="Views">
+      <nav className="app-tabs" aria-label="Views" role="tablist">
         {TABS.map(t => (
           <button
             key={t.id}
             className={`app-tab ${tab === t.id ? 'app-tab--active' : ''}`}
             onClick={() => setTab(t.id)}
             type="button"
-            aria-current={tab === t.id ? 'page' : undefined}
+            role="tab"
+            aria-selected={tab === t.id}
           >
             {t.label}
           </button>
@@ -188,7 +189,7 @@ export default function App() {
           )}
 
           <div className="app-footer__credits">
-            <span>Built on <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">Erika Flowers</a>' <a href="https://zerovector.design/investiture" target="_blank" rel="noopener">Investiture</a> framework · inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a></span>
+            <span>Built on <a href="https://github.com/erikaflowers" target="_blank" rel="noopener">Erika Flowers</a>' <a href="https://zerovector.design/investiture" target="_blank" rel="noopener">Investiture</a> framework · inspired by <a href="https://everbloomreader.com" target="_blank" rel="noopener">Everbloom Reader</a> by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> and <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
             <span className="app-footer__sep">·</span>
             <span>Art & design by <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a> · in progress</span>
             <span className="app-footer__sep">·</span>

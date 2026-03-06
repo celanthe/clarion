@@ -85,6 +85,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(500, {'error': str(e)})
 
 if __name__ == '__main__':
+    # Eager-load the model at startup so the first request doesn't stall
+    get_kokoro()
+
     host = os.environ.get('KOKORO_HOST', '127.0.0.1')
     port = int(os.environ.get('KOKORO_PORT', '8880'))
     server = HTTPServer((host, port), Handler)

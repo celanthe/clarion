@@ -153,4 +153,4 @@ docker-compose up
 
 Built by [celanthe](https://github.com/celanthe) · Art & design by [Zabethy](https://zabethy.com) · in progress
 
-Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework · inspired by [Everbloom Reader](https://everbloomreader.com)
+Built on [Erika Flowers](https://github.com/erikaflowers)' [Investiture](https://zerovector.design/investiture) framework · inspired by [Everbloom Reader](https://everbloomreader.com) by [celanthe](https://github.com/celanthe) and [Zabethy](https://zabethy.com)

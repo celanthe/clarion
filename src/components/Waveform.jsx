@@ -24,13 +24,14 @@ export default function Waveform({ active }) {
     const H = canvas.height;
     const barW = Math.floor((W - GAP * (BAR_COUNT - 1)) / BAR_COUNT);
     const freqData = new Uint8Array(BAR_COUNT);
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
 
       const now = Date.now();
-      // Rainbow cycles across the full spectrum over ~8 seconds
-      const hueOffset = (now / 25) % 360;
+      // Rainbow cycles over ~8s unless user prefers reduced motion
+      const hueOffset = prefersReduced ? 0 : (now / 25) % 360;
 
       const analyser = getAnalyser();
       if (analyser) {
@@ -42,10 +43,10 @@ export default function Waveform({ active }) {
       }
 
       for (let i = 0; i < BAR_COUNT; i++) {
-        // Real data when analyser is live; gentle ripple while audio is loading
+        // Real data when analyser is live; gentle ripple while loading (skipped if reduced motion)
         const t = analyser
           ? freqData[i] / 255
-          : 0.08 + 0.07 * Math.sin((i / BAR_COUNT) * Math.PI * 4 + now * 0.003);
+          : prefersReduced ? 0.08 : 0.08 + 0.07 * Math.sin((i / BAR_COUNT) * Math.PI * 4 + now * 0.003);
 
         const barH = Math.max(3, Math.round(t * H));
         const x = i * (barW + GAP);
@@ -67,7 +68,7 @@ export default function Waveform({ active }) {
 
   return (
     <div className={`waveform-wrap${active ? ' waveform-wrap--active' : ''}`}>
-      <canvas ref={canvasRef} className="waveform" width={640} height={80} />
+      <canvas ref={canvasRef} className="waveform" width={640} height={80} aria-hidden="true" />
     </div>
   );
 }

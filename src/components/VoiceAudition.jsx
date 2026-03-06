@@ -186,7 +186,7 @@ export default function VoiceAudition({ onSave, health }) {
       <Waveform active={playing !== null} />
 
       {/* Error */}
-      {error && <p className="audition__error">{error}</p>}
+      {error && <p className="audition__error" role="alert">{error}</p>}
 
       {/* Save as agent form */}
       {saveTarget && (
@@ -212,9 +212,9 @@ export default function VoiceAudition({ onSave, health }) {
 
       {/* Success flash */}
       {saved && (
-        <p className="audition__saved-notice">
+        <p className="audition__saved-notice" role="status">
           Saved <strong>{saved.label}</strong> with {saved.voice.label} ({saved.voice.lang}).
-          {' '}<button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)}>×</button>
+          {' '}<button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)} aria-label="Dismiss">×</button>
         </p>
       )}
 
