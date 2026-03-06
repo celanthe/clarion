@@ -220,4 +220,4 @@ Available voices: `amy`, `kathleen`, `lessac`, `ryan` (US English), `alan`, `jen
 
 ## Credits
 
-Built by [celanthe](https://github.com/celanthe) · Design by [Zabethy](https://zabethy.com) · Built on [Investiture](https://zerovector.design/investiture) · Inspired by [Everbloom Reader](https://everbloomreader.com)
+Built by [celanthe](https://github.com/celanthe) · Design by [Zabethy](https://zabethy.com) · Inspired by [Investiture](https://zerovector.design/investiture) and [Everbloom Reader](https://everbloomreader.com)

@@ -240,6 +240,8 @@ export default function App() {
           <div className="app-footer__credits">
             <span>by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> &amp; <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
             <span className="app-footer__sep">·</span>
+            <a href="https://zerovector.design/investiture" target="_blank" rel="noopener">Investiture</a>
+            <span className="app-footer__sep">·</span>
             <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener">GitHub</a>
             <span className="app-footer__sep">·</span>
             <a href="https://ko-fi.com/rinoliver" target="_blank" rel="noopener" className="app-footer__kofi">
