@@ -93,6 +93,27 @@ node cli/speak.js "Hello." --voice en-GB-RyanNeural > hello.mp3
 3. Set `CLARION_SERVER` env var, or add `{ "server": "http://..." }` to `~/.config/clarion/config.json`
 4. Pipe output to a player: `| mpv -`, `| ffplay -nodisp -autoexit -`, `| afplay` (macOS)
 
+### Real-time streaming (`cli/stream.js`)
+
+Speaks as the text arrives — sentence by sentence, in your agent's voice. Pre-fetches the next sentence while the current one plays so there's no gap. Strips ANSI codes and Markdown automatically.
+
+```sh
+# Pipe Claude Code output to Julian's voice in real time
+claude "Walk me through this architecture." | node cli/stream.js --agent julian
+
+# Wave terminal, any streaming source
+tail -f agent.log | node cli/stream.js --agent aria
+
+# Choose your player (afplay is the default on macOS)
+... | node cli/stream.js --agent julian --player mpv
+... | node cli/stream.js --agent julian --player ffplay
+
+# Pass raw text without stripping markdown
+... | node cli/stream.js --agent julian --plain
+```
+
+`stream.js` uses the same agent profiles and server config as `speak.js`. No extra setup needed.
+
 ---
 
 ## API
@@ -250,4 +271,4 @@ Available voices: `amy`, `kathleen`, `lessac`, `ryan` (US English), `alan`, `jen
 
 ## Credits
 
-Built by [celanthe](https://github.com/celanthe) · Design by [Zabethy](https://zabethy.com) · Inspired by [Investiture](https://zerovector.design/investiture) and [Everbloom Reader](https://everbloomreader.com)
+Built by [celanthe](https://github.com/celanthe) · Design by [Zabethy](https://zabethy.com) · Inspired by [Investiture](https://zerovector.design/investiture) by [Erika Flowers](https://github.com/erikaflowers) and [Everbloom Reader](https://everbloomreader.com)
