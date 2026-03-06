@@ -114,6 +114,95 @@ tail -f agent.log | node cli/stream.js --agent my-agent
 
 `stream.js` uses the same agent profiles and server config as `speak.js`. No extra setup needed.
 
+### Claude Code hook — speak every reply automatically
+
+Set this up once and every Claude Code response will be spoken in your agent's voice without any manual piping.
+
+**1. Create the hook script at `~/.claude/clarion-hook.js`:**
+
+```js
+#!/path/to/node   ← update to your Node 18+ path (e.g. ~/.nvm/versions/node/v22.11.0/bin/node)
+import { readFileSync, existsSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
+import { spawn } from 'child_process';
+
+// ← Update these two lines to match your setup
+const NODE_BIN    = '/path/to/node';                    // same as shebang above
+const CLARION_DIR = join(homedir(), 'path/to/clarion'); // where you cloned Clarion
+const AGENT       = 'my-agent';                         // your agent ID
+
+const STREAM = join(CLARION_DIR, 'cli', 'stream.js');
+
+async function main() {
+  let raw = '';
+  for await (const chunk of process.stdin) raw += chunk;
+  const { session_id, cwd, stop_hook_active } = JSON.parse(raw);
+  if (stop_hook_active) process.exit(0);
+
+  const transcript = join(homedir(), '.claude', 'projects',
+    cwd.replace(/\//g, '-'), `${session_id}.jsonl`);
+  if (!existsSync(transcript)) process.exit(0);
+
+  const lines = readFileSync(transcript, 'utf8').trim().split('\n');
+  let text = null;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    let e; try { e = JSON.parse(lines[i]); } catch { continue; }
+    if (e.type !== 'assistant') continue;
+    const t = (e.message?.content || [])
+      .filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    if (t) { text = t; break; }
+  }
+  if (!text) process.exit(0);
+
+  const proc = spawn(NODE_BIN, [STREAM, '--agent', AGENT],
+    { stdio: ['pipe', 'ignore', 'inherit'] });
+  proc.stdin.write(text);
+  proc.stdin.end();
+  await new Promise(r => proc.on('close', r));
+}
+
+main().catch(() => process.exit(0));
+```
+
+```sh
+chmod +x ~/.claude/clarion-hook.js
+echo '{"type":"module"}' > ~/.claude/package.json
+```
+
+**2. Register it in `~/.claude/settings.json`:**
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/you/.claude/clarion-hook.js"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**3. Keep Clarion running.** The hook is silent if the server isn't up — no errors, just no audio. Add this to your `~/.zshrc` to auto-start on every new shell:
+
+```sh
+# Clarion — auto-start TTS server
+if ! curl -s --max-time 1 http://localhost:8080/health &>/dev/null; then
+  KOKORO_SERVER=http://localhost:8880 \
+    /path/to/node ~/path/to/clarion/server/src/node-server.js \
+    &>/tmp/clarion-server.log &
+  disown
+fi
+```
+
+**How it works:** Claude Code fires the `Stop` event after every reply. The hook reads the session transcript JSONL at `~/.claude/projects/`, extracts the last assistant message, strips Markdown and ANSI, and streams it sentence by sentence to your Clarion server — speaking each sentence as it's synthesized, with the next one pre-fetching in the background.
+
 ---
 
 ## API

@@ -46,8 +46,7 @@ export async function synthesize(text, voice, speed = 1.0, serverUrl) {
     throw new Error(`Kokoro server error ${res.status}: ${errText}`);
   }
 
-  const audioBuffer = await res.arrayBuffer();
-  return new Response(audioBuffer, {
+  return new Response(res.body, {
     headers: {
       'Content-Type': 'audio/mpeg',
       'X-Backend': 'kokoro'

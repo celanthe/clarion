@@ -56,11 +56,34 @@ async function verifyClarionSig(apiKey, authHeader, method, url) {
   return timingSafeEqual(sig, expectedSig);
 }
 
-// Valid backend IDs
-const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper']);
 import { synthesize as edgeSynthesize, getVoices as edgeVoices } from './edge.js';
 import { synthesize as kokoroSynthesize, checkHealth as kokoroHealth, getVoices as kokoroVoices } from './kokoro.js';
 import { synthesize as piperSynthesize, checkHealth as piperHealth, getVoices as piperVoices } from './piper.js';
+
+// Valid backend IDs
+const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper']);
+
+// Rate limiting — opt-in via RATE_LIMIT env var (max requests per minute per IP).
+// Set RATE_LIMIT=20 to allow 20 /speak requests per minute per IP.
+// Default is 0 (no limit) — it's your server.
+const _rateBuckets = new Map();
+
+function checkRateLimit(ip, maxPerMinute) {
+  if (!maxPerMinute) return true;
+  const now = Date.now();
+  let timestamps = _rateBuckets.get(ip) || [];
+  timestamps = timestamps.filter(t => now - t < 60000);
+  if (timestamps.length >= maxPerMinute) return false;
+  timestamps.push(now);
+  _rateBuckets.set(ip, timestamps);
+  // Prune stale IPs to prevent unbounded memory growth
+  if (_rateBuckets.size > 10000) {
+    for (const [k, v] of _rateBuckets) {
+      if (v.every(t => now - t >= 60000)) _rateBuckets.delete(k);
+    }
+  }
+  return true;
+}
 
 const app = new Hono();
 
@@ -166,6 +189,17 @@ app.post('/speak', async (c) => {
   }
   if (text.length > 5000) {
     return c.json({ error: 'Text too long. Max 5000 characters.' }, 400);
+  }
+
+  // Rate limiting (opt-in)
+  const rateLimit = parseInt(c.env?.RATE_LIMIT || '0', 10);
+  if (rateLimit > 0) {
+    const ip = c.req.header('CF-Connecting-IP')
+      || c.req.header('X-Forwarded-For')?.split(',')[0]?.trim()
+      || 'unknown';
+    if (!checkRateLimit(ip, rateLimit)) {
+      return c.json({ error: 'Rate limit exceeded. Try again in a minute.' }, 429);
+    }
   }
 
   // Whitelist backends before anything else

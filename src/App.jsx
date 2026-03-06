@@ -4,6 +4,7 @@ import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
 import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, hasApiKey, setApiKey } from '../services/storage/agent-storage.js';
 import { migrateApiKey } from '../services/crypto.js';
+import { stop } from '../services/tts.js';
 import { createAgent } from '../core/domain/agent.js';
 import './App.css';
 
@@ -46,6 +47,19 @@ export default function App() {
   // Then check whether a signing key is already stored.
   useEffect(() => {
     migrateApiKey().then(() => hasApiKey().then(setApiKeyConfigured));
+  }, []);
+
+  // Space key stops playback globally (ignored when focus is in a text input)
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.code !== 'Space') return;
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || e.target.isContentEditable) return;
+      e.preventDefault();
+      stop();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   function handleServerUrlChange(e) {

@@ -39,8 +39,7 @@ export async function synthesize(text, voice, serverUrl) {
     throw new Error(`Piper server error ${res.status}: ${errText}`);
   }
 
-  const audioBuffer = await res.arrayBuffer();
-  return new Response(audioBuffer, {
+  return new Response(res.body, {
     headers: {
       'Content-Type': 'audio/wav',
       'X-Backend': 'piper'
@@ -76,7 +75,6 @@ export function getVoices() {
     { id: 'kathleen',    label: 'Kathleen', lang: 'en-US', gender: 'F' },
     { id: 'lessac',      label: 'Lessac',   lang: 'en-US', gender: 'F' },
     { id: 'ryan',        label: 'Ryan',     lang: 'en-US', gender: 'M' },
-    { id: 'hfc_male',    label: 'HFC Male', lang: 'en-US', gender: 'M' },
     { id: 'alan',        label: 'Alan',     lang: 'en-GB', gender: 'M' },
     { id: 'jenny_dioco', label: 'Jenny',    lang: 'en-GB', gender: 'F' },
   ];

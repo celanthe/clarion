@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createAgent, slugify, defaultVoice } from '../../core/domain/agent.js';
 import { saveAgent, deleteAgent, exportAgents } from '../../services/storage/agent-storage.js';
 import { speakAsAgent, stop } from '../../services/tts.js';
@@ -21,6 +21,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   const [testText, setTestText] = useState('');
   const [showTestInput, setShowTestInput] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const previewTimerRef = useRef(null);
 
   function update(fields) {
     setAgent(prev => ({ ...prev, ...fields }));
@@ -38,6 +39,16 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
 
   function handleVoiceChange(voice) {
     update({ voice });
+    // Auto-preview with 600ms debounce
+    clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = setTimeout(async () => {
+      stop();
+      try {
+        await speakAsAgent(testText.trim() || DEFAULT_TEST, { ...agent, voice });
+      } catch {
+        // Silently ignore preview errors — user can test manually
+      }
+    }, 600);
   }
 
   function handleSpeedChange(e) {

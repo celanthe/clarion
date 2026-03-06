@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "server:dev": "cd server && wrangler dev",
-    "server:deploy": "cd server && wrangler deploy"
+    "server:start": "cd server && node src/node-server.js",
+    "server:deploy": "cd server && wrangler deploy",
+    "test": "node test/hmac-auth.js"
   },
   "dependencies": {
     "react": "^19.0.0",

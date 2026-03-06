@@ -59,8 +59,7 @@ export async function synthesize(text, voice, speed = 1.0) {
     throw new Error(`Edge TTS API error ${response.status}: ${errorText}`);
   }
 
-  const audioBuffer = await response.arrayBuffer();
-  return new Response(audioBuffer, {
+  return new Response(response.body, {
     headers: {
       'Content-Type': 'audio/mpeg',
       'X-Backend': 'edge'

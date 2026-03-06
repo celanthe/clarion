@@ -2,54 +2,11 @@ import { useState, useRef } from 'react';
 import { speak, stop } from '../../services/tts.js';
 import { saveAgent } from '../../services/storage/agent-storage.js';
 import { createAgent } from '../../core/domain/agent.js';
+import { VOICES, LANG_LABELS, groupByLang } from '../../core/voices.js';
 import Waveform from './Waveform.jsx';
 import './VoiceAudition.css';
 
 const BACKENDS = ['edge', 'kokoro', 'piper'];
-
-const VOICES = {
-  edge: [
-    { id: 'en-US-JennyNeural',       label: 'Jenny',       lang: 'American English',  gender: 'F' },
-    { id: 'en-US-AriaNeural',        label: 'Aria',        lang: 'American English',  gender: 'F' },
-    { id: 'en-US-GuyNeural',         label: 'Guy',         lang: 'American English',  gender: 'M' },
-    { id: 'en-US-ChristopherNeural', label: 'Christopher', lang: 'American English',  gender: 'M' },
-    { id: 'en-US-EricNeural',        label: 'Eric',        lang: 'American English',  gender: 'M' },
-    { id: 'en-US-RyanNeural',        label: 'Ryan',        lang: 'American English',  gender: 'M' },
-    { id: 'en-GB-SoniaNeural',       label: 'Sonia',       lang: 'British English',   gender: 'F' },
-    { id: 'en-GB-LibbyNeural',       label: 'Libby',       lang: 'British English',   gender: 'F' },
-    { id: 'en-GB-RyanNeural',        label: 'Ryan',        lang: 'British English',   gender: 'M' },
-    { id: 'en-GB-ThomasNeural',      label: 'Thomas',      lang: 'British English',   gender: 'M' },
-    { id: 'en-AU-NatashaNeural',     label: 'Natasha',     lang: 'Australian English',gender: 'F' },
-    { id: 'en-AU-WilliamNeural',     label: 'William',     lang: 'Australian English',gender: 'M' },
-    { id: 'en-IE-EmilyNeural',       label: 'Emily',       lang: 'Irish English',     gender: 'F' },
-    { id: 'en-IE-ConnorNeural',      label: 'Connor',      lang: 'Irish English',     gender: 'M' },
-    { id: 'en-CA-ClaraNeural',       label: 'Clara',       lang: 'Canadian English',  gender: 'F' },
-    { id: 'en-CA-LiamNeural',        label: 'Liam',        lang: 'Canadian English',  gender: 'M' },
-    { id: 'en-IN-NeerjaNeural',      label: 'Neerja',      lang: 'Indian English',    gender: 'F' },
-    { id: 'en-IN-PrabhatNeural',     label: 'Prabhat',     lang: 'Indian English',    gender: 'M' },
-  ],
-  kokoro: [
-    { id: 'af_heart',    label: 'Heart',    lang: 'American English', gender: 'F' },
-    { id: 'af_bella',    label: 'Bella',    lang: 'American English', gender: 'F' },
-    { id: 'af_nicole',   label: 'Nicole',   lang: 'American English', gender: 'F' },
-    { id: 'af_sarah',    label: 'Sarah',    lang: 'American English', gender: 'F' },
-    { id: 'af_sky',      label: 'Sky',      lang: 'American English', gender: 'F' },
-    { id: 'am_adam',     label: 'Adam',     lang: 'American English', gender: 'M' },
-    { id: 'am_michael',  label: 'Michael',  lang: 'American English', gender: 'M' },
-    { id: 'bf_emma',     label: 'Emma',     lang: 'British English',  gender: 'F' },
-    { id: 'bf_isabella', label: 'Isabella', lang: 'British English',  gender: 'F' },
-    { id: 'bm_george',   label: 'George',   lang: 'British English',  gender: 'M' },
-    { id: 'bm_lewis',    label: 'Lewis',    lang: 'British English',  gender: 'M' },
-  ],
-  piper: [
-    { id: 'amy',         label: 'Amy',     lang: 'American English', gender: 'F' },
-    { id: 'kathleen',    label: 'Kathleen', lang: 'American English', gender: 'F' },
-    { id: 'lessac',      label: 'Lessac',  lang: 'American English', gender: 'F' },
-    { id: 'ryan',        label: 'Ryan',    lang: 'American English', gender: 'M' },
-    { id: 'alan',        label: 'Alan',    lang: 'British English',  gender: 'M' },
-    { id: 'jenny_dioco', label: 'Jenny',   lang: 'British English',  gender: 'F' },
-  ]
-};
 
 const DEFAULT_TEXT = "The pattern holds. We're moving forward.";
 
@@ -121,12 +78,7 @@ export default function VoiceAudition({ onSave, health }) {
     setAgentName('');
   }
 
-  // Group voices by lang
-  const groups = {};
-  for (const v of voices) {
-    if (!groups[v.lang]) groups[v.lang] = [];
-    groups[v.lang].push(v);
-  }
+  const groups = groupByLang(voices);
 
   const backendAvailable = (b) => {
     if (!health) return true;
@@ -216,7 +168,7 @@ export default function VoiceAudition({ onSave, health }) {
       {saveTarget && (
         <form className="audition__save-form" onSubmit={handleSaveAgent}>
           <p className="audition__save-prompt">
-            Save <strong>{saveTarget.label}</strong> ({saveTarget.lang}) as an agent:
+            Save <strong>{saveTarget.label}</strong> ({LANG_LABELS[saveTarget.lang] || saveTarget.lang}) as an agent:
           </p>
           <div className="audition__save-row">
             <input
@@ -237,7 +189,7 @@ export default function VoiceAudition({ onSave, health }) {
       {/* Success flash */}
       {saved && (
         <p className="audition__saved-notice" role="status">
-          Saved <strong>{saved.label}</strong> with {saved.voice.label} ({saved.voice.lang}).
+          Saved <strong>{saved.label}</strong> with {saved.voice.label} ({LANG_LABELS[saved.voice.lang] || saved.voice.lang}).
           {' '}<button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)} aria-label="Dismiss">×</button>
         </p>
       )}
