@@ -22,7 +22,7 @@ If you're building AI agents with distinct characters — a cautious security an
 
 - **Audition voices** — paste your agent's actual dialogue, hear each voice read it, find the one that fits
 - **Save agent profiles** — one agent uses Kokoro `bm_george` at 1.0×, another uses Edge `en-GB-SoniaNeural` — saved, exported, shareable as JSON
-- **Three TTS backends**: Edge TTS (zero config, free), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight)
+- **Five TTS backends**: Edge TTS (zero config), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight), ElevenLabs and Google Chirp 3 HD (paid APIs)
 - **Terminal integration** — pipe your agent's responses through their voice from the CLI
 
 ---
@@ -40,9 +40,7 @@ npm run dev
 ### With server (required for Kokoro/Piper)
 
 ```sh
-cd server
-npm install
-npm run dev        # Cloudflare Worker via wrangler
+cd server && npm install && npm run dev
 # → http://localhost:8787
 ```
 
@@ -57,151 +55,27 @@ docker-compose up
 
 ## Voice audition
 
-The fastest way to find the right voice:
-
 1. Open the **Audition** tab
 2. Paste your agent's characteristic dialogue — a few lines they'd actually say
 3. Select a backend (Kokoro for the most natural voices)
 4. Click ▶ next to each voice to hear it read your text
 5. Click **Use this voice** → name the agent → saved
 
-Short, characteristic sentences work best. If your agent has a distinctive way of phrasing things, use that.
+Short, characteristic sentences work best.
 
 ---
 
 ## CLI
 
-Pipe your agent's responses through their voice from the terminal.
-
 ```sh
-# Speak as a saved agent (by ID or name)
-echo "The pattern holds." | node cli/speak.js --agent aria
+# Speak as a saved agent
+echo "The pattern holds." | node cli/speak.js --agent my-agent
 
-# Direct voice selection
-node cli/speak.js "Running diagnostics." --backend kokoro --voice bm_george
-
-# List your saved agents
-node cli/speak.js --list-agents
-
-# Save as audio file
-node cli/speak.js "Hello." --voice en-GB-RyanNeural > hello.mp3
+# Real-time streaming — speaks sentence by sentence as text arrives
+claude "Walk me through this." | node cli/stream.js --agent my-agent
 ```
 
-**Setup:**
-1. Export agents from the Clarion UI — **Export** on any agent card, or **Export all** in the footer
-2. Save the JSON to `~/.config/clarion/agents.json`
-3. Set `CLARION_SERVER` env var, or add `{ "server": "http://..." }` to `~/.config/clarion/config.json`
-4. Pipe output to a player: `| mpv -`, `| ffplay -nodisp -autoexit -`, `| afplay` (macOS)
-
-### Real-time streaming (`cli/stream.js`)
-
-Speaks as the text arrives — sentence by sentence, in your agent's voice. Pre-fetches the next sentence while the current one plays so there's no gap. Strips ANSI codes and Markdown automatically.
-
-```sh
-# Pipe Claude Code output to your agent's voice in real time
-claude "Walk me through this architecture." | node cli/stream.js --agent my-agent
-
-# Wave terminal, any streaming source
-tail -f agent.log | node cli/stream.js --agent my-agent
-
-# Choose your player (afplay is the default on macOS)
-... | node cli/stream.js --agent my-agent --player mpv
-... | node cli/stream.js --agent my-agent --player ffplay
-
-# Pass raw text without stripping markdown
-... | node cli/stream.js --agent my-agent --plain
-```
-
-`stream.js` uses the same agent profiles and server config as `speak.js`. No extra setup needed.
-
-### Claude Code hook — speak every reply automatically
-
-Set this up once and every Claude Code response will be spoken in your agent's voice without any manual piping.
-
-**1. Create the hook script at `~/.claude/clarion-hook.js`:**
-
-```js
-#!/path/to/node   ← update to your Node 18+ path (e.g. ~/.nvm/versions/node/v22.11.0/bin/node)
-import { readFileSync, existsSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
-import { spawn } from 'child_process';
-
-// ← Update these two lines to match your setup
-const NODE_BIN    = '/path/to/node';                    // same as shebang above
-const CLARION_DIR = join(homedir(), 'path/to/clarion'); // where you cloned Clarion
-const AGENT       = 'my-agent';                         // your agent ID
-
-const STREAM = join(CLARION_DIR, 'cli', 'stream.js');
-
-async function main() {
-  let raw = '';
-  for await (const chunk of process.stdin) raw += chunk;
-  const { session_id, cwd, stop_hook_active } = JSON.parse(raw);
-  if (stop_hook_active) process.exit(0);
-
-  const transcript = join(homedir(), '.claude', 'projects',
-    cwd.replace(/\//g, '-'), `${session_id}.jsonl`);
-  if (!existsSync(transcript)) process.exit(0);
-
-  const lines = readFileSync(transcript, 'utf8').trim().split('\n');
-  let text = null;
-  for (let i = lines.length - 1; i >= 0; i--) {
-    let e; try { e = JSON.parse(lines[i]); } catch { continue; }
-    if (e.type !== 'assistant') continue;
-    const t = (e.message?.content || [])
-      .filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-    if (t) { text = t; break; }
-  }
-  if (!text) process.exit(0);
-
-  const proc = spawn(NODE_BIN, [STREAM, '--agent', AGENT],
-    { stdio: ['pipe', 'ignore', 'inherit'] });
-  proc.stdin.write(text);
-  proc.stdin.end();
-  await new Promise(r => proc.on('close', r));
-}
-
-main().catch(() => process.exit(0));
-```
-
-```sh
-chmod +x ~/.claude/clarion-hook.js
-echo '{"type":"module"}' > ~/.claude/package.json
-```
-
-**2. Register it in `~/.claude/settings.json`:**
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/you/.claude/clarion-hook.js"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-**3. Keep Clarion running.** The hook is silent if the server isn't up — no errors, just no audio. Add this to your `~/.zshrc` to auto-start on every new shell:
-
-```sh
-# Clarion — auto-start TTS server
-if ! curl -s --max-time 1 http://localhost:8080/health &>/dev/null; then
-  KOKORO_SERVER=http://localhost:8880 \
-    /path/to/node ~/path/to/clarion/server/src/node-server.js \
-    &>/tmp/clarion-server.log &
-  disown
-fi
-```
-
-**How it works:** Claude Code fires the `Stop` event after every reply. The hook reads the session transcript JSONL at `~/.claude/projects/`, extracts the last assistant message, strips Markdown and ANSI, and streams it sentence by sentence to your Clarion server — speaking each sentence as it's synthesized, with the next one pre-fetching in the background.
+**[Full CLI guide →](docs/cli.md)** — speak.js, stream.js, and the Claude Code hook (speak every reply automatically).
 
 ---
 
@@ -212,11 +86,11 @@ POST /speak
 { "text": "Hello.", "backend": "edge", "voice": "en-GB-RyanNeural", "speed": 1.0 }
 → audio/mpeg
 
-GET /voices?backend=edge|kokoro|piper
+GET /voices?backend=edge|kokoro|piper|elevenlabs|google
 → { voices: [{ id, label, lang, gender }] }
 
 GET /health
-→ { edge: "up", kokoro: "up|down|unconfigured", piper: "up|down|unconfigured" }
+→ { edge: "up", kokoro: "up|down|unconfigured", ... }
 ```
 
 ---
@@ -231,74 +105,17 @@ GET /health
 | **ElevenLabs** | `ELEVENLABS_API_KEY=...` | Excellent | 11 voices (US, UK, AU) — paid |
 | **Google** | `GOOGLE_TTS_API_KEY=...` | Excellent | 16 Chirp 3 HD voices (US + UK) — paid |
 
-**Edge TTS** uses Microsoft's neural voices — no API key, no server, works immediately. Good quality, slight Microsoft TTS character to it. Note: this uses an undocumented endpoint that isn't officially supported for third-party use — if you need long-term stability, run Kokoro instead.
-
-**Kokoro** is the best option if you're willing to run a server. It's a local ONNX model that produces genuinely natural speech — less "AI voice", more character. Runs on CPU with no GPU required. Use `docker-compose up` to get it running in one command.
-
-**Piper** is lightweight and fully offline. Lower quality than Kokoro but very fast and minimal resource usage.
-
-**ElevenLabs** uses the `eleven_turbo_v2_5` model — fast and high quality. Requires an API key and usage is billed per character. Set `ELEVENLABS_API_KEY` in your `.env`. Speed control is not available (model limitation). Any voice from your ElevenLabs library can be used by passing its ID directly via the API or CLI with `--voice <id>`.
-
-**Google Chirp 3 HD** are Google's highest-quality neural voices. Requires a Cloud TTS API key with the Text-to-Speech API enabled. Set `GOOGLE_TTS_API_KEY` in your `.env`. Supports speed control. See the [full voice list](https://cloud.google.com/text-to-speech/docs/chirp3-hd).
-
----
-
-## Security notes
-
-Clarion is designed for personal, self-hosted use. If you're deploying it beyond localhost, read this before you do.
-
-### API key authentication
-
-Set `API_KEY=your-secret` in your server environment.
-
-- **Node server** (`npm start`): set `API_KEY` in your `.env` — it's injected automatically.
-- **Cloudflare Worker**: use `wrangler secret put API_KEY` — never put secrets in `wrangler.toml`.
-
-**The browser UI never sends the raw key.** When you enter a key in the Server config panel, it is immediately imported as a non-extractable HMAC-SHA256 `CryptoKey` in `IndexedDB` — the raw bytes are gone. Every request is then signed with `HMAC-SHA256(key, "METHOD\n/path\ntimestamp")`. The server verifies the signature and rejects anything older than 5 minutes, making replay attacks impractical.
-
-The CLI (`cli/speak.js`) uses `Authorization: Bearer <key>` as a fallback — acceptable for local/LAN use, but use HTTPS if the server is remote.
-
-### HTTPS
-
-The browser UI signs requests with HMAC-SHA256 — the raw key never travels the wire at all. The text you're synthesizing does, though, so **use HTTPS for non-localhost deployments** to keep your content private.
-
-The CLI uses `Bearer <key>` which is plaintext — keep CLI use to localhost or VPN, or run it behind a TLS-terminating proxy.
-
-- Node server: terminate TLS at nginx, Caddy, or Traefik.
-- Cloudflare Worker: TLS is automatic.
-
-### CORS
-
-CORS is open (`*`) by default. Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict which browser origins can call the server. This affects both API responses and audio responses.
-
-### Local backend servers
-
-`kokoro-server.py` and `piper-server.py` bind to `127.0.0.1` by default — only reachable from the same machine. Set `KOKORO_HOST` / `PIPER_HOST` to `0.0.0.0` only if you need them on a LAN or VPN you trust.
-
-### For public-facing deployments
-
-HMAC signing handles authentication well, but for anything on the public internet add Cloudflare Access or an nginx auth proxy in front. Defense in depth.
-
-### What Clarion does NOT do
-
-- No usage-based APIs are called, so there are no surprise bills. Edge TTS uses Microsoft's internal endpoint (no key, no quota). Kokoro and Piper are self-hosted.
-- No telemetry or analytics are collected. Nothing is sent anywhere except your configured TTS backends.
-- No user data is stored server-side. Agent profiles live in browser `localStorage` only.
+**[Backend setup guide →](docs/backends.md)** — local Kokoro and Piper install, Docker, ElevenLabs and Google API key setup.
 
 ---
 
 ## Deploy
 
-**Cloudflare Worker** (recommended for Edge TTS + proxy):
+**Cloudflare Worker** (recommended for Edge TTS):
 ```sh
-cd server
-wrangler deploy
-```
-
-Set `KOKORO_SERVER` and `PIPER_SERVER` as Worker secrets:
-```sh
+cd server && wrangler deploy
 wrangler secret put KOKORO_SERVER
-wrangler secret put PIPER_SERVER
+wrangler secret put ELEVENLABS_API_KEY
 ```
 
 **Docker Compose** (for Kokoro self-hosters):
@@ -308,59 +125,16 @@ docker-compose up
 
 ---
 
-## Running Kokoro locally
+## Security notes
 
-Kokoro is a high-quality ONNX TTS model that runs on CPU — no GPU needed. `kokoro-server.py` wraps it with a minimal HTTP server.
+Clarion is designed for personal, self-hosted use. If you're deploying it beyond localhost:
 
-**Install dependencies:**
-```sh
-pip install kokoro-onnx soundfile
-pip install onnxruntime        # or onnxruntime-gpu if you have CUDA
-# macOS Intel only: pip install onnxruntime==1.19.2 --no-deps
-pip install phonemizer-fork==3.3.1
-```
+- Set `API_KEY=your-secret` in your server environment. The browser UI never sends the raw key — requests are signed with HMAC-SHA256. The CLI uses `Bearer <key>` — fine for localhost/LAN, use HTTPS for remote.
+- Use HTTPS for non-localhost deployments. The text you're synthesizing travels the wire unencrypted otherwise.
+- CORS is open (`*`) by default. Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict it.
+- `kokoro-server.py` and `piper-server.py` bind to `127.0.0.1` by default. Don't expose them on `0.0.0.0` unless you trust your network.
 
-**Download model files** (into the project root):
-```sh
-wget https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.int8.onnx
-wget https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
-```
-
-**Start the server:**
-```sh
-python3 kokoro-server.py
-# → http://127.0.0.1:8880
-```
-
-Then set `KOKORO_SERVER=http://localhost:8880` in your `.env`. The model loads at startup — first request is immediate.
-
-> **macOS Intel:** `onnxruntime` is capped at 1.19.2 on x86 macOS. Use `pip install onnxruntime==1.19.2 --no-deps` then install `phonemizer-fork` and `soundfile` separately.
-
----
-
-## Running Piper locally
-
-Piper is a lightweight offline ONNX TTS engine. `piper-server.py` wraps the piper CLI and exposes a `/v1/audio/speech` endpoint.
-
-```sh
-# 1. Install the piper binary
-#    → https://github.com/rhasspy/piper/releases
-#    Extract and put `piper` on your PATH
-
-# 2. Download voice models (into ./piper-models/)
-mkdir piper-models
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json
-# Repeat for: kathleen, lessac, ryan (US) and alan, jenny_dioco (GB)
-
-# 3. Start the server
-python3 piper-server.py
-# → http://127.0.0.1:5000
-```
-
-Then set `PIPER_SERVER=http://localhost:5000` in your `.env`.
-
-Available voices: `amy`, `kathleen`, `lessac`, `ryan` (US English), `alan`, `jenny_dioco` (British English). Full model list at [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices).
+For vulnerability reports, see [SECURITY.md](SECURITY.md).
 
 ---
 
