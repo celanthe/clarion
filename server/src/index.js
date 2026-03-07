@@ -134,6 +134,12 @@ app.get('/health', async (c) => {
   const elevenKey    = c.env?.ELEVENLABS_API_KEY;
   const googleKey    = c.env?.GOOGLE_TTS_API_KEY;
 
+  // Warn if paid backends are configured without rate limiting — cost attack surface.
+  const rateLimit = parseInt(c.env?.RATE_LIMIT || '0', 10);
+  if (!rateLimit && (elevenKey || googleKey)) {
+    console.warn('[clarion] WARNING: Paid backend configured (ElevenLabs/Google) with RATE_LIMIT=0. Set RATE_LIMIT to cap requests per minute per IP.');
+  }
+
   const [kokoro, piper, elevenlabs, google] = await Promise.all([
     kokoroHealth(kokoroServer),
     piperHealth(piperServer),
@@ -236,7 +242,7 @@ app.post('/speak', async (c) => {
 
     switch (backend) {
       case 'edge':
-        audioResponse = await edgeSynthesize(text, safeVoice, safeSpeed);
+        audioResponse = await edgeSynthesize(text, safeVoice, safeSpeed, c.env);
         break;
 
       case 'kokoro':

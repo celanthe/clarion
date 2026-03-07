@@ -29,8 +29,8 @@ const VALID_VOICES = new Set([
   'en-IN-NeerjaNeural','en-IN-PrabhatNeural',
 ]);
 
-export async function synthesize(text, voice, speed = 1.0) {
-  const endpoint = await getEndpoint();
+export async function synthesize(text, voice, speed = 1.0, env = {}) {
+  const endpoint = await getEndpoint(env);
 
   const voiceName = voice || 'en-US-JennyNeural';
 
@@ -114,7 +114,7 @@ export function getVoices() {
 
 // --- Internal helpers ---
 
-async function getEndpoint() {
+async function getEndpoint(env = {}) {
   const now = Date.now() / 1000;
 
   if (tokenCache.token && tokenCache.expiredAt &&
@@ -133,7 +133,7 @@ async function getEndpoint() {
       'X-UserId': '0f04d16a175c411e',
       'X-HomeGeographicRegion': 'en-US',
       'X-ClientTraceId': clientId,
-      'X-MT-Signature': await sign(endpointUrl),
+      'X-MT-Signature': await sign(endpointUrl, env),
       'User-Agent': 'okhttp/4.5.0',
       'Content-Type': 'application/json; charset=utf-8',
       'Content-Length': '0',
@@ -158,14 +158,17 @@ async function getEndpoint() {
   return data;
 }
 
-async function sign(urlStr) {
+async function sign(urlStr, env = {}) {
   const url = urlStr.split('://')[1];
   const encodedUrl = encodeURIComponent(url);
   const uuid = crypto.randomUUID().replace(/-/g, '');
   const date = (new Date()).toUTCString().replace(/GMT/, '').trim() + ' GMT';
   const toSign = `MSTranslatorAndroidApp${encodedUrl}${date}${uuid}`.toLowerCase();
 
-  const keyBase64 = 'oik6PdDdMnOXemTbwvMn9de/h9lFnfBaCWbGMMZqqoSaQaqUOqjVGm5NqsmjcBI1x+sS9ugjB55HEJWRiFXYFw==';
+  // This is the publicly reverse-engineered MSTranslatorAndroidApp HMAC key.
+  // It's not a secret — it ships in Microsoft's Android app and is used by all
+  // open-source edge-tts implementations. Set EDGE_TTS_KEY to override if needed.
+  const keyBase64 = env.EDGE_TTS_KEY || 'oik6PdDdMnOXemTbwvMn9de/h9lFnfBaCWbGMMZqqoSaQaqUOqjVGm5NqsmjcBI1x+sS9ugjB55HEJWRiFXYFw==';
   const keyBytes = base64ToBytes(keyBase64);
   const sig = await hmacSha256(keyBytes, toSign);
 

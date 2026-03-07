@@ -45,7 +45,10 @@ function loadConfig() {
   if (existsSync(CONFIG_FILE)) {
     try { Object.assign(cfg, JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))); } catch {}
   }
-  return { server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8787' };
+  return {
+    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8787',
+    apiKey: process.env.CLARION_API_KEY || cfg.apiKey || null
+  };
 }
 
 function loadAgents() {
@@ -167,10 +170,13 @@ class SentenceBuffer {
 
 // --- Audio fetch + play ---
 
-async function fetchAudio(text, { server, backend, voice, speed }) {
+async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
   const res = await fetch(`${server}/speak`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 })
   });
   if (!res.ok) {
@@ -304,7 +310,7 @@ async function main() {
     console.error(`[clarion] Speaking as ${agent.name} (${backend}/${voice})`);
   }
 
-  const doFetch = (text) => fetchAudio(text, { server, backend, voice, speed });
+  const doFetch = (text) => fetchAudio(text, { server, apiKey: config.apiKey, backend, voice, speed });
   const doPlay  = (buf)  => playBuffer(buf, player);
 
   const queue   = new SpeakerQueue(doFetch, doPlay);
