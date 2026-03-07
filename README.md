@@ -1,29 +1,19 @@
 # Clarion
 
-**Your agents have things to say. Now they have a voice to say them with.**
+**Give your AI agent a voice.**
 
-Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, save the one that fits, and pipe their responses through it — in the browser or from the terminal.
+Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, pick one, and pipe responses through it from the browser or CLI.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/rinoliver)
 
 ---
 
-## Why give your agent a voice?
-
-If you're building AI agents with distinct characters — a cautious security analyst, a sharp product lead, a warm UX researcher — they probably already have different ways of speaking. Clarion makes that audible.
-
-- **Characters stay consistent.** Your security analyst always sounds like your security analyst. Different agents sound different from each other.
-- **Demos and podcasts.** Record multi-agent conversations where each voice is distinct. Play back an agent's response in real time.
-- **It changes how you work with them.** Hearing a response lands differently than reading it.
-
----
-
 ## What it does
 
-- **Audition voices** — paste your agent's actual dialogue, hear each voice read it, find the one that fits
-- **Save agent profiles** — one agent uses Kokoro `bm_george` at 1.0×, another uses Edge `en-GB-SoniaNeural` — saved, exported, shareable as JSON
-- **Five TTS backends**: Edge TTS (zero config), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight), ElevenLabs and Google Chirp 3 HD (paid APIs)
-- **Terminal integration** — pipe your agent's responses through their voice from the CLI
+- **Audition voices.** Paste your agent's characteristic dialogue. Hear each voice read it. Pick the one that fits.
+- **Save agent profiles.** One agent uses Kokoro `bm_george` at 1.0x, another uses Edge `en-GB-SoniaNeural`. Both saved, both exportable as JSON.
+- **Five TTS backends.** Edge TTS (zero config), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight), ElevenLabs (paid), Google Chirp 3 HD (paid).
+- **Terminal integration.** Pipe agent responses through their voice from the CLI. Works with Claude Code via stop hook.
 
 ---
 
@@ -34,14 +24,14 @@ If you're building AI agents with distinct characters — a cautious security an
 ```sh
 npm install
 npm run dev
-# → http://localhost:5173
+# http://localhost:5173
 ```
 
-### With server (required for Kokoro/Piper)
+### With server (required for Kokoro, Piper, ElevenLabs, Google)
 
 ```sh
 cd server && npm install && npm run dev
-# → http://localhost:8787
+# http://localhost:8787
 ```
 
 Or with Docker (Kokoro included):
@@ -55,13 +45,15 @@ docker-compose up
 
 ## Voice audition
 
-1. Open the **Audition** tab
-2. Paste your agent's characteristic dialogue — a few lines they'd actually say
-3. Select a backend (Kokoro for the most natural voices)
-4. Click ▶ next to each voice to hear it read your text
-5. Click **Use this voice** → name the agent → saved
+![Clarion voice audition with rainbow waveform](docs/img/clarion-waveform.png)
 
-Short, characteristic sentences work best.
+1. Open the **Audition** tab
+2. Paste your agent's characteristic dialogue
+3. Select a backend (Kokoro for the most natural voices)
+4. Click play next to a voice to hear it read your text
+5. Click **Use this voice**, name the agent, done
+
+Short, characteristic sentences work best. Paste what your agent would actually say, not generic test text.
 
 ---
 
@@ -71,11 +63,11 @@ Short, characteristic sentences work best.
 # Speak as a saved agent
 echo "The pattern holds." | node cli/speak.js --agent my-agent
 
-# Real-time streaming — speaks sentence by sentence as text arrives
+# Stream in real time, sentence by sentence
 claude "Walk me through this." | node cli/stream.js --agent my-agent
 ```
 
-**[Full CLI guide →](docs/cli.md)** — speak.js, stream.js, and the Claude Code hook (speak every reply automatically).
+[Full CLI guide](docs/cli.md): speak.js, stream.js, and the Claude Code stop hook.
 
 ---
 
@@ -83,14 +75,14 @@ claude "Walk me through this." | node cli/stream.js --agent my-agent
 
 ```
 POST /speak
-{ "text": "Hello.", "backend": "edge", "voice": "en-GB-RyanNeural", "speed": 1.0 }
-→ audio/mpeg
+Body: { "text": "Hello.", "backend": "edge", "voice": "en-GB-RyanNeural", "speed": 1.0 }
+Returns: audio/mpeg
 
 GET /voices?backend=edge|kokoro|piper|elevenlabs|google
-→ { voices: [{ id, label, lang, gender }] }
+Returns: { voices: [{ id, label, lang, gender }] }
 
 GET /health
-→ { edge: "up", kokoro: "up|down|unconfigured", ... }
+Returns: { edge: "up", kokoro: "up|down|unconfigured", ... }
 ```
 
 ---
@@ -99,42 +91,62 @@ GET /health
 
 | Backend | Config needed | Quality | Voices |
 |---------|--------------|---------|--------|
-| **Edge TTS** | None | Good | 27 Neural voices (US, UK, AU, IE, CA, ZA, NZ, IN) |
-| **Kokoro** | `KOKORO_SERVER=http://...` | Excellent | 11 voices (US + UK English) |
-| **Piper** | `PIPER_SERVER=http://...` | OK | 6 voices (US + UK English) |
-| **ElevenLabs** | `ELEVENLABS_API_KEY=...` | Excellent | 11 voices (US, UK, AU) — paid |
-| **Google** | `GOOGLE_TTS_API_KEY=...` | Excellent | 16 Chirp 3 HD voices (US + UK) — paid |
+| Edge TTS | None | Good | 27 Neural (US, UK, AU, IE, CA, ZA, NZ, IN) |
+| Kokoro | `KOKORO_SERVER=http://...` | Excellent | 11 (US + UK English) |
+| Piper | `PIPER_SERVER=http://...` | OK | 6 (US + UK English) |
+| ElevenLabs | `ELEVENLABS_API_KEY=...` | Excellent | 11 (US, UK, AU) |
+| Google Chirp 3 HD | `GOOGLE_TTS_API_KEY=...` | Excellent | 16 (US + UK) |
 
-**[Backend setup guide →](docs/backends.md)** — local Kokoro and Piper install, Docker, ElevenLabs and Google API key setup.
+[Backend setup guide](docs/backends.md): local Kokoro and Piper install, Docker, API key setup.
+
+---
+
+## Agent profiles
+
+Profiles are stored in `localStorage` and exportable as JSON.
+
+```json
+{
+  "id": "julian",
+  "name": "Julian",
+  "backend": "kokoro",
+  "voice": "bm_george",
+  "speed": 1.0
+}
+```
+
+Export from the UI (Export all button) or share a single agent profile as a `.json` file. Import via the Import button.
 
 ---
 
 ## Deploy
 
-**Cloudflare Worker** (recommended for Edge TTS):
+**Cloudflare Worker** (Edge TTS only, or with secrets for paid backends):
+
 ```sh
 cd server && wrangler deploy
 wrangler secret put KOKORO_SERVER
 wrangler secret put ELEVENLABS_API_KEY
+wrangler secret put GOOGLE_TTS_API_KEY
 ```
 
-**Docker Compose** (for Kokoro self-hosters):
+**Docker Compose** (for local Kokoro):
+
 ```sh
 docker-compose up
 ```
 
 ---
 
-## Security notes
+## Security
 
-Clarion is designed for personal, self-hosted use. If you're deploying it beyond localhost:
+Clarion is designed for personal, self-hosted use. For deployments beyond localhost:
 
-- Set `API_KEY=your-secret` in your server environment. The browser UI never sends the raw key — requests are signed with HMAC-SHA256. The CLI uses `Bearer <key>` — fine for localhost/LAN, use HTTPS for remote.
-- Use HTTPS for non-localhost deployments. The text you're synthesizing travels the wire unencrypted otherwise.
+- Set `API_KEY=your-secret` in the server environment. The browser UI signs requests with HMAC-SHA256. The CLI uses `Bearer <key>`. Use HTTPS for remote deployments.
 - CORS is open (`*`) by default. Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict it.
-- `kokoro-server.py` and `piper-server.py` bind to `127.0.0.1` by default. Don't expose them on `0.0.0.0` unless you trust your network.
+- `kokoro-server.py` and `piper-server.py` bind to `127.0.0.1` by default. Do not expose them on `0.0.0.0` unless you trust the network.
 
-For vulnerability reports, see [SECURITY.md](SECURITY.md).
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ---
 
