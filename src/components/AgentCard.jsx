@@ -204,7 +204,9 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
               placeholder={DEFAULT_TEST}
               rows={3}
               spellCheck={false}
+              maxLength={2000}
             />
+            <span className="agent-card__char-hint">{testText.length}/2000</span>
           </div>
         )}
       </div>

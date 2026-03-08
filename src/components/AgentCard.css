@@ -194,6 +194,14 @@
   font-style: italic;
 }
 
+.agent-card__char-hint {
+  display: block;
+  text-align: right;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-xs);
+}
+
 /* Test group (test button + edit icon) */
 .agent-card__test-group {
   display: flex;
