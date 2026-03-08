@@ -4,6 +4,14 @@ import './BackendStatus.css';
 
 const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
 
+const BACKEND_LABELS = {
+  edge: 'Edge TTS',
+  kokoro: 'Kokoro',
+  piper: 'Piper',
+  elevenlabs: 'ElevenLabs',
+  google: 'Google'
+};
+
 const STATUS_LABEL = {
   up:           'Online',
   down:         'Unreachable',
@@ -64,7 +72,7 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
             className={`backend-status__dot backend-status__dot--${status[backend]}`}
             aria-hidden="true"
           />
-          <span className="backend-status__label">{backend}</span>
+          <span className="backend-status__label">{BACKEND_LABELS[backend] || backend}</span>
           <span className="backend-status__state">
             {STATUS_LABEL[status[backend]] || status[backend]}
           </span>

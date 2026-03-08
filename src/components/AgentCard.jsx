@@ -80,7 +80,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
         msg = `Can't reach server. Is Clarion running? (${agent.backend})`;
       } else if (msg.includes('not configured')) {
-        msg = `${agent.backend} backend not configured on this server.`;
+        msg = `${agent.backend} backend is not configured on this server.`;
       }
       setError(msg);
     } finally {
