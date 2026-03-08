@@ -15,7 +15,7 @@ const STATUS_LABEL = {
 const HEALTH_TIMEOUT_MS = 6000;
 
 export default function BackendStatus({ serverUrl, onHealthChange }) {
-  const [status, setStatus] = useState({ edge: 'checking', kokoro: 'checking', piper: 'checking' });
+  const [status, setStatus] = useState({ edge: 'checking', kokoro: 'checking', piper: 'checking', elevenlabs: 'checking', google: 'checking' });
   const [lastChecked, setLastChecked] = useState(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
       // Timeout if health check hangs
       const timer = setTimeout(() => {
         if (!cancelled) {
-          const timedOut = { edge: 'error', kokoro: 'error', piper: 'error' };
+          const timedOut = { edge: 'error', kokoro: 'error', piper: 'error', elevenlabs: 'error', google: 'error' };
           setStatus(timedOut);
           onHealthChange?.(timedOut);
           setLastChecked(new Date());
@@ -43,7 +43,7 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
       } catch {
         clearTimeout(timer);
         if (!cancelled) {
-          const err = { edge: 'error', kokoro: 'error', piper: 'error' };
+          const err = { edge: 'error', kokoro: 'error', piper: 'error', elevenlabs: 'error', google: 'error' };
           setStatus(err);
           onHealthChange?.(err);
           setLastChecked(new Date());

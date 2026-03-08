@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createAgent, slugify, defaultVoice } from '../../core/domain/agent.js';
 import { saveAgent, deleteAgent, exportAgents } from '../../services/storage/agent-storage.js';
 import { speakAsAgent, stop } from '../../services/tts.js';
@@ -24,6 +24,8 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   const [showTestInput, setShowTestInput] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const previewTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(previewTimerRef.current), []);
 
   function update(fields) {
     setAgent(prev => ({ ...prev, ...fields }));
@@ -169,12 +171,12 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
 
         {agent.backend !== 'piper' && agent.backend !== 'elevenlabs' && (
           <div className="agent-card__field">
-            <label className="agent-card__label" htmlFor="agent-card-speed">
+            <label className="agent-card__label" htmlFor={`agent-card-speed-${agent.id}`}>
               Speed
               <span className="agent-card__speed-value">{agent.speed.toFixed(2)}×</span>
             </label>
             <input
-              id="agent-card-speed"
+              id={`agent-card-speed-${agent.id}`}
               type="range"
               className="agent-card__speed"
               min="0.5"
@@ -193,9 +195,9 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         {/* Custom test text */}
         {showTestInput && (
           <div className="agent-card__field">
-            <label className="agent-card__label" htmlFor="agent-card-test-text">Test text</label>
+            <label className="agent-card__label" htmlFor={`agent-card-test-text-${agent.id}`}>Test text</label>
             <textarea
-              id="agent-card-test-text"
+              id={`agent-card-test-text-${agent.id}`}
               className="agent-card__test-input"
               value={testText}
               onChange={e => setTestText(e.target.value)}
