@@ -113,6 +113,7 @@ node cli/speak.js "Hello." --agent my-agent > /tmp/out.mp3 && afplay /tmp/out.mp
 | `--voice <id>` | Voice ID for the selected backend |
 | `--speed <n>` | Speed multiplier (default: `1.0`, range: `0.25`-`4.0`) |
 | `--server <url>` | Clarion server URL (overrides `CLARION_SERVER`) |
+| `--export` | Print saved agents as JSON to stdout and exit |
 | `--list-agents` | Print all saved agent profiles and exit |
 | `--help` | Show usage and exit |
 

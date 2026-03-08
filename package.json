@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "bin": {
+    "clarion-speak": "./cli/speak.js",
+    "clarion-stream": "./cli/stream.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

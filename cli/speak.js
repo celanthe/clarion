@@ -12,7 +12,8 @@
  *   CLARION_SERVER=http://localhost:8787
  *
  * Agent profiles (~/.config/clarion/agents.json):
- *   Export from the Clarion UI, or use: clarion --export > ~/.config/clarion/agents.json
+ *   Export from the Clarion UI and save to ~/.config/clarion/agents.json, or
+ *   print the current agent list: node cli/speak.js --export
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -127,6 +128,7 @@ Options:
   --voice  <id>      Voice ID for the backend
   --speed  <n>       Playback speed multiplier (default: 1.0)
   --server <url>     Clarion server URL (default: $CLARION_SERVER or localhost:8787)
+  --export           Print saved agents as JSON to stdout
   --list-agents      Show saved agent profiles
   --help             This message
 
@@ -151,6 +153,13 @@ Agent profiles:
     for (const a of agents) {
       console.error(`  ${a.id.padEnd(20)} ${a.backend.padEnd(8)} ${a.voice.padEnd(20)} ${a.name}`);
     }
+    process.exit(0);
+  }
+
+  // --export: print agents JSON to stdout
+  if (flags.export) {
+    const agents = loadAgents();
+    process.stdout.write(JSON.stringify(agents, null, 2) + '\n');
     process.exit(0);
   }
 
