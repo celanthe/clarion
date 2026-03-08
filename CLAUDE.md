@@ -5,7 +5,7 @@ Created for Erika Flowers (Investiture author) to give Julian a consistent podca
 
 ## What it does
 
-- **Multi-backend TTS**: Edge TTS (zero-config), Kokoro (self-hosted), Piper (self-hosted)
+- **Multi-backend TTS**: Edge TTS (zero-config), Kokoro (self-hosted), Piper (self-hosted), ElevenLabs (paid API), Google Chirp 3 HD (paid API)
 - **Agent profiles**: Named agents (e.g. Julian) with saved backend + voice + speed
 - **Export/import**: Share your Julian config as JSON
 
@@ -74,11 +74,11 @@ POST /speak
 { "text": "Hello.", "voice": "en-GB-RyanNeural", "backend": "edge", "speed": 1.0 }
 → audio/mpeg
 
-GET /voices?backend=edge|kokoro|piper
+GET /voices?backend=edge|kokoro|piper|elevenlabs|google
 → { backend, voices: [{ id, label, lang, gender }] }
 
 GET /health
-→ { edge: "up", kokoro: "up|down|unconfigured", piper: "up|down|unconfigured" }
+→ { edge: "up", kokoro: "up|down|unconfigured", piper: "up|down|unconfigured", elevenlabs: "up|down|unconfigured", google: "up|down|unconfigured" }
 ```
 
 ## Key decisions
@@ -117,3 +117,31 @@ GET /health
 ```
 
 Import via the UI's "Import JSON" button or export an existing agent.
+
+---
+
+## Workflow Orchestration
+
+### 1. Plan Node Default
+- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
+- If something goes sideways, STOP and re-plan immediately — don't keep pushing
+- Use plan mode for verification steps, not just building
+- Write detailed specs upfront to reduce ambiguity
+
+### 2. Subagent Strategy
+- Use subagents liberally to keep main context window clean
+- Offload research, exploration, and parallel analysis to subagents
+- For complex problems, throw more compute at it via subagents
+- One task per subagent for focused execution
+
+### 3. Self-Improvement Loop
+- After ANY correction from the user: update `tasks/lessons.md` with the pattern
+- Write rules for yourself that prevent the same mistake
+- Ruthlessly iterate on these lessons until mistake rate drops
+- Review lessons at session start for relevant project
+
+### 4. Verification Before Done
+- Never mark a task complete without proving it works
+- Diff behavior between main and your changes when relevant
+- Ask yourself: "Would a staff engineer approve this?"
+- Run tests, check logs, demonstrate correctness
