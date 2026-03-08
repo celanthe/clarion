@@ -16,7 +16,7 @@
   transition: border-color var(--transition-fast);
 }
 
-.voice-selector__select:focus {
+.voice-selector__select:focus-visible {
   outline: none;
   border-color: var(--color-accent);
 }

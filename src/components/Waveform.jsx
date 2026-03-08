@@ -83,6 +83,7 @@ export default function Waveform({ active }) {
   return (
     <div className={`waveform-wrap${active ? ' waveform-wrap--active' : ''}`}>
       <canvas ref={canvasRef} className="waveform" height={80} aria-hidden="true" />
+      <span role="status" className="sr-only">{active ? 'Playing' : ''}</span>
     </div>
   );
 }

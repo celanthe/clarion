@@ -64,6 +64,25 @@ export default function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Arrow key navigation between tabs when focus is on a tab button
+  useEffect(() => {
+    function handleTabArrowKey(e) {
+      if (e.target.getAttribute('role') !== 'tab') return;
+      if (e.code !== 'ArrowLeft' && e.code !== 'ArrowRight') return;
+      e.preventDefault();
+      const currentIndex = TABS.findIndex(t => t.id === tab);
+      const nextIndex = e.code === 'ArrowRight'
+        ? (currentIndex + 1) % TABS.length
+        : (currentIndex - 1 + TABS.length) % TABS.length;
+      setTab(TABS[nextIndex].id);
+      // Move focus to the newly active tab button
+      const tabButtons = document.querySelectorAll('[role="tab"]');
+      if (tabButtons[nextIndex]) tabButtons[nextIndex].focus();
+    }
+    document.addEventListener('keydown', handleTabArrowKey);
+    return () => document.removeEventListener('keydown', handleTabArrowKey);
+  }, [tab]);
+
   function handleServerUrlChange(e) {
     const url = e.target.value;
     setServerUrlState(url);

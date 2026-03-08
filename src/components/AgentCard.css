@@ -34,7 +34,7 @@
   transition: border-color var(--transition-fast);
 }
 
-.agent-card__name:focus {
+.agent-card__name:focus-visible {
   border-bottom-color: var(--color-accent);
 }
 
