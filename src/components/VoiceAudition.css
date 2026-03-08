@@ -144,10 +144,10 @@
 /* Error */
 .audition__error {
   font-size: var(--font-size-sm);
-  color: #e06c75;
+  color: var(--color-error);
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(224, 108, 117, 0.08);
-  border-left: 2px solid #e06c75;
+  background: var(--color-error-bg);
+  border-left: 2px solid var(--color-error);
   border-radius: var(--radius-sm);
 }
 
@@ -199,7 +199,7 @@
   background: var(--color-accent);
   border: none;
   border-radius: var(--radius-sm);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   cursor: pointer;
@@ -321,7 +321,7 @@
 .audition__voice--playing .audition__play-btn {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .audition__voice-info {

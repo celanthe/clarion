@@ -118,12 +118,12 @@
 /* Error */
 .agent-card__error {
   font-size: var(--font-size-sm);
-  color: #e06c75;
+  color: var(--color-error);
   margin: 0;
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(224, 108, 117, 0.08);
+  background: var(--color-error-bg);
   border-radius: var(--radius-sm);
-  border-left: 2px solid #e06c75;
+  border-left: 2px solid var(--color-error);
 }
 
 /* Unsaved indicator */
@@ -136,7 +136,7 @@
 
 /* Delete confirmation state */
 .agent-card--confirming {
-  border-color: #e06c75;
+  border-color: var(--color-error);
   justify-content: center;
   min-height: 100px;
   gap: var(--space-md);
@@ -159,14 +159,14 @@
 }
 
 .agent-card__btn--delete-confirm {
-  background: #c0392b;
-  color: #fff;
-  border-color: #c0392b;
+  background: var(--color-danger);
+  color: var(--color-text-on-accent);
+  border-color: var(--color-danger);
 }
 
 .agent-card__btn--delete-confirm:hover {
-  background: #e74c3c;
-  border-color: #e74c3c;
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
 }
 
 /* Custom test text area */
@@ -256,7 +256,7 @@
 
 .agent-card__btn--test:hover:not(:disabled) {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .agent-card__btn--ghost {
@@ -271,13 +271,13 @@
 }
 
 .agent-card__btn--danger:hover {
-  color: #e06c75;
-  border-color: #e06c75;
+  color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .agent-card__btn--save {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border-color: var(--color-accent);
 }
 

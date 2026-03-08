@@ -24,7 +24,7 @@
 .backend-status__dot--down    { background: var(--color-status-down); }
 .backend-status__dot--unconfigured { background: var(--color-status-unconfigured); }
 .backend-status__dot--checking { background: var(--color-status-checking); animation: pulse 1.5s ease infinite; }
-.backend-status__dot--error   { background: #c0392b; }
+.backend-status__dot--error   { background: var(--color-danger); }
 
 .backend-status__label {
   font-family: var(--font-mono);

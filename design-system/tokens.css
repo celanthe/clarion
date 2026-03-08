@@ -55,6 +55,15 @@
   --color-status-unconfigured: #4a4860;
   --color-status-checking:     #8e88a8;
 
+  /* Error / danger */
+  --color-error:        #e06c75;
+  --color-error-bg:     rgba(224, 108, 117, 0.08);
+  --color-danger:       #c0392b;
+  --color-danger-hover: #e74c3c;
+
+  /* Text on solid accent/danger backgrounds (buttons) */
+  --color-text-on-accent: #fff;
+
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
