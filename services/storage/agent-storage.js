@@ -39,7 +39,14 @@ export function saveAgent(agent) {
   } else {
     agents.push(agent);
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(agents));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(agents));
+  } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      throw new Error('Storage full: delete some agents to continue');
+    }
+    throw err;
+  }
 }
 
 /**

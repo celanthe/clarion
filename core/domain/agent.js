@@ -59,7 +59,7 @@ export function validateAgent(obj) {
  * @returns {string}
  */
 export function slugify(name) {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+$/, '') || 'agent';
 }
 
 /**

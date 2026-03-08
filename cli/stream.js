@@ -14,7 +14,7 @@
  *
  * Options:
  *   --agent   <id>    Agent profile by ID or name (~/.config/clarion/agents.json)
- *   --backend <name>  edge | kokoro | piper  (default: edge)
+ *   --backend <name>  edge | kokoro | piper | elevenlabs | google  (default: edge)
  *   --voice   <id>    Voice ID for the backend
  *   --speed   <n>     Speed multiplier (default: 1.0)
  *   --server  <url>   Clarion server URL (default: $CLARION_SERVER or localhost:8787)
@@ -161,9 +161,9 @@ class SentenceBuffer {
     if (this.buf.length > 300) {
       // Find the last space to break cleanly
       const cut = this.buf.lastIndexOf(' ', 280);
-      const s = (cut > 0 ? this.buf.slice(0, cut) : this.buf).trim();
+      const s = (cut > 0 ? this.buf.slice(0, cut) : this.buf.slice(0, 300)).trim();
       if (s) this.onSentence(s);
-      this.buf = cut > 0 ? this.buf.slice(cut + 1) : '';
+      this.buf = cut > 0 ? this.buf.slice(cut + 1) : this.buf.slice(300);
     }
   }
 }

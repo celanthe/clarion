@@ -116,10 +116,12 @@ export default function VoiceAudition({ onSave, health }) {
           placeholder={DEFAULT_TEXT}
           rows={5}
           spellCheck={false}
+          maxLength={2000}
         />
         <p className="audition__hint">
           Paste a few lines. Short, characteristic sentences work best —
           the kind your agent actually says.
+          {' '}<span className="audition__char-count">{text.length}/2000</span>
         </p>
       </div>
 
@@ -241,6 +243,7 @@ export default function VoiceAudition({ onSave, health }) {
                     className="audition__use-btn"
                     onClick={() => handleUseVoice(voice)}
                     type="button"
+                    aria-label={`Use ${voice.label}`}
                   >
                     Use this voice
                   </button>

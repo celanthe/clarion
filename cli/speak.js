@@ -123,7 +123,7 @@ Usage:
 
 Options:
   --agent  <id>      Use a saved agent profile (by ID or name)
-  --backend <name>   edge | kokoro | piper  (default: edge)
+  --backend <name>   edge | kokoro | piper | elevenlabs | google  (default: edge)
   --voice  <id>      Voice ID for the backend
   --speed  <n>       Playback speed multiplier (default: 1.0)
   --server <url>     Clarion server URL (default: $CLARION_SERVER or localhost:8787)
@@ -158,12 +158,12 @@ Agent profiles:
 
   // Resolve text from args or stdin
   const stdinText = await readStdin();
-  const text = argText || stdinText;
+  const text = (argText || stdinText || '').trim();
 
   if (!text) {
-    console.error('Error: provide text as argument or via stdin');
-    console.error('  node cli/speak.js "Hello."');
-    console.error('  echo "Hello." | node cli/speak.js --agent julian');
+    console.error('[clarion] Error: provide text as argument or via stdin');
+    console.error('[clarion]   node cli/speak.js "Hello."');
+    console.error('[clarion]   echo "Hello." | node cli/speak.js --agent julian');
     process.exit(1);
   }
 
@@ -175,8 +175,8 @@ Agent profiles:
   if (flags.agent) {
     const agent = findAgent(flags.agent);
     if (!agent) {
-      console.error(`Agent not found: ${flags.agent}`);
-      console.error(`Run --list-agents to see saved profiles, or export from the UI.`);
+      console.error(`[clarion] Agent not found: ${flags.agent}`);
+      console.error(`[clarion] Run --list-agents to see saved profiles, or export from the UI.`);
       process.exit(1);
     }
     backend = backend || agent.backend;
