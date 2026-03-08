@@ -146,8 +146,6 @@ Clarion is designed for personal, self-hosted use. For deployments beyond localh
 - CORS is open (`*`) by default. Set `ALLOWED_ORIGIN=https://your-domain.com` to restrict it.
 - `kokoro-server.py` and `piper-server.py` bind to `127.0.0.1` by default. Do not expose them on `0.0.0.0` unless you trust the network.
 
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
-
 ---
 
 ## Credits
