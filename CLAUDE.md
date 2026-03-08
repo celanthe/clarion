@@ -103,6 +103,8 @@ GET /health
 - Edge: `en-US-JennyNeural`
 - Kokoro: `af_heart`
 - Piper: `amy`
+- ElevenLabs: `21m00Tcm4TlvDq8ikWAM` (Rachel)
+- Google: `en-US-Chirp3-HD-Achernar`
 
 ## Julian's recommended config
 
