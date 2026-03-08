@@ -159,23 +159,28 @@ app.get('/health', async (c) => {
 
 // --- Voices ---
 
-app.get('/voices', (c) => {
+app.get('/voices', async (c) => {
   const backend = c.req.query('backend') || 'edge';
 
   const voiceMap = {
     edge: edgeVoices,
     kokoro: kokoroVoices,
     piper: piperVoices,
-    elevenlabs: elevenlabsVoices,
     google: googleVoices
   };
 
-  const fn = voiceMap[backend];
-  if (!fn) {
+  if (!voiceMap[backend] && backend !== 'elevenlabs') {
     return c.json({ error: `Unknown backend: ${backend}. Use edge, kokoro, piper, elevenlabs, or google.` }, 400);
   }
 
-  return c.json({ backend, voices: fn() });
+  let voices;
+  if (backend === 'elevenlabs') {
+    voices = await elevenlabsVoices(c.env?.ELEVENLABS_API_KEY);
+  } else {
+    voices = voiceMap[backend]();
+  }
+
+  return c.json({ backend, voices });
 });
 
 // --- Speak ---
