@@ -169,7 +169,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
           />
         </div>
 
-        {agent.backend !== 'piper' && agent.backend !== 'elevenlabs' && (
+        {agent.backend !== 'piper' && (
           <div className="agent-card__field">
             <label className="agent-card__label" htmlFor={`agent-card-speed-${agent.id}`}>
               Speed
