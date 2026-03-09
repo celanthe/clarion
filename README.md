@@ -130,8 +130,8 @@ By default (`proseOnly: true`), Clarion strips non-conversational markdown befor
 | Fenced code blocks (` ``` `) | No — removed |
 | Inline code (`` `like this` ``) | No — removed |
 | Indented code blocks | No — removed |
-| Bullet lists (`- item`) | No — removed |
-| Numbered lists (`1. item`) | No — removed |
+| Bullet lists (`- item`) | Yes — markers stripped |
+| Numbered lists (`1. item`) | Yes — markers stripped |
 
 Toggle **Prose only** off on any agent card if you want everything spoken verbatim — useful for agents that narrate code reviews or read structured output.
 

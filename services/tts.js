@@ -57,8 +57,8 @@ function cleanup() {
 
 /**
  * Strip non-prose markdown before TTS so the agent only speaks conversational
- * text — not code blocks, inline code, or bullet/numbered lists.
- * Heading text is kept (markers stripped). Bold/italic markers are stripped.
+ * text — code blocks and inline code are removed. List markers, heading markers,
+ * and bold/italic markers are stripped but their text content is kept.
  */
 function extractProse(text) {
   return text
@@ -69,10 +69,10 @@ function extractProse(text) {
     .replace(/`[^`\n]+`/g, '')
     // Indented code blocks (4-space or tab-prefixed lines)
     .replace(/^( {4}|\t).+$/gm, '')
-    // Bullet list items (-, *, +)
-    .replace(/^[ \t]*[-*+][ \t]+.+$/gm, '')
-    // Numbered list items
-    .replace(/^[ \t]*\d+\.[ \t]+.+$/gm, '')
+    // Bullet list items (-, *, +) — keep text, drop markers
+    .replace(/^[ \t]*[-*+][ \t]+/gm, '')
+    // Numbered list items — keep text, drop markers
+    .replace(/^[ \t]*\d+\.[ \t]+/gm, '')
     // Heading markers — keep the text, drop the #s
     .replace(/^#{1,6}\s+/gm, '')
     // Bold and italic markers
