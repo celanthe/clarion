@@ -22,6 +22,12 @@ let _audio = null;
 let _blobUrl = null;
 let _pageUnlocked = false;
 
+// Serial speech queue — ensures agents never talk over each other.
+// Each speak() call chains onto the previous one.
+// _generation increments on stop() to cancel any queued items.
+let _queue = Promise.resolve();
+let _generation = 0;
+
 // Web Audio API — for the waveform visualizer
 let _audioCtx = null;
 let _analyser = null;
@@ -85,7 +91,7 @@ function extractProse(text) {
     .trim();
 }
 
-export async function speak(text, options = {}, onStart) {
+async function _speak(text, options = {}, onStart) {
   cleanup();
 
   if (options.proseOnly !== false) {
@@ -172,7 +178,16 @@ export async function speakAsAgent(text, agent) {
   });
 }
 
+export function speak(text, options = {}, onStart) {
+  const gen = ++_generation;
+  _queue = _queue
+    .then(() => gen === _generation ? _speak(text, options, onStart) : undefined)
+    .catch(() => {});
+  return _queue;
+}
+
 export function stop() {
+  _generation++; // cancel any queued speaks
   cleanup();
 }
 
