@@ -169,6 +169,30 @@
   border-color: var(--color-danger-hover);
 }
 
+/* Prose-only toggle */
+.agent-card__field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.agent-card__label--inline {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.agent-card__checkbox {
+  accent-color: var(--color-accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* Custom test text area */
 .agent-card__test-input {
   width: 100%;

@@ -192,6 +192,19 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
           </div>
         )}
 
+        <div className="agent-card__field agent-card__field--inline">
+          <input
+            id={`agent-card-prose-only-${agent.id}`}
+            type="checkbox"
+            className="agent-card__checkbox"
+            checked={agent.proseOnly ?? true}
+            onChange={e => update({ proseOnly: e.target.checked })}
+          />
+          <label className="agent-card__label agent-card__label--inline" htmlFor={`agent-card-prose-only-${agent.id}`}>
+            Prose only — skip code blocks and lists
+          </label>
+        </div>
+
         {/* Custom test text */}
         {showTestInput && (
           <div className="agent-card__field">

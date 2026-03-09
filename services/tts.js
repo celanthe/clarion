@@ -55,8 +55,43 @@ function cleanup() {
   }
 }
 
+/**
+ * Strip non-prose markdown before TTS so the agent only speaks conversational
+ * text — not code blocks, inline code, or bullet/numbered lists.
+ * Heading text is kept (markers stripped). Bold/italic markers are stripped.
+ */
+function extractProse(text) {
+  return text
+    // Fenced code blocks (``` or ~~~)
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/~~~[\s\S]*?~~~/g, '')
+    // Inline code
+    .replace(/`[^`\n]+`/g, '')
+    // Indented code blocks (4-space or tab-prefixed lines)
+    .replace(/^( {4}|\t).+$/gm, '')
+    // Bullet list items (-, *, +)
+    .replace(/^[ \t]*[-*+][ \t]+.+$/gm, '')
+    // Numbered list items
+    .replace(/^[ \t]*\d+\.[ \t]+.+$/gm, '')
+    // Heading markers — keep the text, drop the #s
+    .replace(/^#{1,6}\s+/gm, '')
+    // Bold and italic markers
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/__([^_\n]+)__/g, '$1')
+    .replace(/_([^_\n]+)_/g, '$1')
+    // Collapse excess blank lines left behind
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export async function speak(text, options = {}, onStart) {
   cleanup();
+
+  if (options.proseOnly !== false) {
+    text = extractProse(text);
+    if (!text) return; // nothing left to speak
+  }
 
   const serverUrl = getServerUrl();
   const { backend = 'edge', voice, speed = 1.0 } = options;
@@ -132,7 +167,8 @@ export async function speakAsAgent(text, agent) {
   return speak(text, {
     backend: agent.backend,
     voice: agent.voice,
-    speed: agent.speed
+    speed: agent.speed,
+    proseOnly: agent.proseOnly ?? true
   });
 }
 

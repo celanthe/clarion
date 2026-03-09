@@ -111,11 +111,29 @@ Profiles are stored in `localStorage` and exportable as JSON.
   "name": "Julian",
   "backend": "kokoro",
   "voice": "bm_george",
-  "speed": 1.0
+  "speed": 1.0,
+  "proseOnly": true
 }
 ```
 
 Export from the UI (Export all button) or share a single agent profile as a `.json` file. Import via the Import button.
+
+### What gets spoken
+
+By default (`proseOnly: true`), Clarion strips non-conversational markdown before sending text to the TTS backend — so your agent only speaks what it would actually say, not the structure around it.
+
+| Content | Spoken? |
+|---|---|
+| Prose paragraphs | Yes |
+| Heading text (`## Like this`) | Yes — markers stripped |
+| Bold / italic text | Yes — markers stripped |
+| Fenced code blocks (` ``` `) | No — removed |
+| Inline code (`` `like this` ``) | No — removed |
+| Indented code blocks | No — removed |
+| Bullet lists (`- item`) | No — removed |
+| Numbered lists (`1. item`) | No — removed |
+
+Toggle **Prose only** off on any agent card if you want everything spoken verbatim — useful for agents that narrate code reviews or read structured output.
 
 ---
 

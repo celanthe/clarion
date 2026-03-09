@@ -26,6 +26,7 @@ export function createAgent(fields = {}) {
     backend: fields.backend || 'edge',
     voice: fields.voice || defaultVoice(fields.backend || 'edge'),
     speed: fields.speed ?? 1.0,
+    proseOnly: fields.proseOnly ?? true,
     createdAt: fields.createdAt || new Date().toISOString()
   };
 }
