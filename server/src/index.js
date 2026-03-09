@@ -191,7 +191,7 @@ app.get('/voices', async (c) => {
  *   text    — required, string, max 5000 chars
  *   backend — "edge" (default) | "kokoro" | "piper" | "elevenlabs" | "google"
  *   voice   — backend-specific voice ID (uses backend default if omitted)
- *   speed   — number, default 1.0 (not supported by elevenlabs or piper)
+ *   speed   — number, default 1.0 (not supported by piper)
  *
  * Returns audio/mpeg (edge/kokoro) or audio/wav (piper) directly.
  */
@@ -259,7 +259,7 @@ app.post('/speak', async (c) => {
         break;
 
       case 'elevenlabs':
-        audioResponse = await elevenlabsSynthesize(text, safeVoice, c.env?.ELEVENLABS_API_KEY);
+        audioResponse = await elevenlabsSynthesize(text, safeVoice, c.env?.ELEVENLABS_API_KEY, safeSpeed);
         break;
 
       case 'google':

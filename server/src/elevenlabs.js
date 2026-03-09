@@ -7,7 +7,7 @@
 
 const API_BASE = 'https://api.elevenlabs.io/v1';
 
-export async function synthesize(text, voice, apiKey) {
+export async function synthesize(text, voice, apiKey, speed = 1.0) {
   if (!apiKey) {
     throw new Error('ElevenLabs not configured. Set ELEVENLABS_API_KEY in your environment.');
   }
@@ -31,7 +31,8 @@ export async function synthesize(text, voice, apiKey) {
         model_id: 'eleven_turbo_v2_5',
         voice_settings: {
           stability: 0.5,
-          similarity_boost: 0.75
+          similarity_boost: 0.75,
+          speed
         }
       }),
       signal: controller.signal
