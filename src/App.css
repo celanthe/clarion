@@ -43,26 +43,47 @@
 .app-header__right {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .app-header__config-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-family: var(--font-family);
-  padding: var(--space-xs) var(--space-sm);
+  color: var(--color-text-muted);
   cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
 
 .app-header__config-btn:hover {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+.app-header__config-btn[aria-expanded="true"] {
   border-color: var(--color-accent);
   color: var(--color-accent);
+  background: var(--color-accent-dim);
+}
+
+.app-header__config-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.app-header__config-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 /* Server config panel */

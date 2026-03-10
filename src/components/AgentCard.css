@@ -192,6 +192,9 @@
   height: 14px;
   cursor: pointer;
   flex-shrink: 0;
+  /* Extend tap target to 44px minimum without changing visual size */
+  padding: 15px;
+  margin: -15px;
 }
 
 /* Custom test text area */

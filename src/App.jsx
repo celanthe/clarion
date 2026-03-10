@@ -142,10 +142,32 @@ export default function App() {
             className="app-header__config-btn"
             onClick={() => setShowServerConfig(v => !v)}
             type="button"
+            aria-label="Server settings"
             aria-expanded={showServerConfig}
             aria-controls="server-config-panel"
           >
-            Server settings
+            <svg
+              className="app-header__config-icon"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M16.2 12.3c.1-.2.1-.5.1-.8 0-.2 0-.5-.1-.7l1.5-1.2a.4.4 0 0 0 .1-.4l-1.4-2.4a.4.4 0 0 0-.4-.2l-1.7.7a5.2 5.2 0 0 0-1.3-.7L12.7 5a.4.4 0 0 0-.4-.3H9.7a.4.4 0 0 0-.4.3l-.3 1.7a5.2 5.2 0 0 0-1.3.7L6 6.6a.4.4 0 0 0-.4.2L4.2 9.2a.4.4 0 0 0 .1.4l1.5 1.2c0 .2-.1.5-.1.7s0 .5.1.8L4.3 13.5a.4.4 0 0 0-.1.4l1.4 2.4c.1.1.3.2.4.2l1.7-.7c.4.3.8.5 1.3.7l.3 1.7c0 .2.2.3.4.3h2.6c.2 0 .4-.1.4-.3l.3-1.7c.5-.2.9-.4 1.3-.7l1.7.7c.2 0 .3 0 .4-.2l1.4-2.4a.4.4 0 0 0-.1-.4l-1.5-1.2Z"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
         </div>
       </header>

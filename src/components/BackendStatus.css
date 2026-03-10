@@ -42,10 +42,23 @@
   }
 }
 
+/* Mobile aggregate dot — hidden on desktop */
+.backend-status__aggregate {
+  display: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background-color var(--transition-base);
+}
+
 @media (max-width: 599px) {
-  .backend-status {
-    gap: var(--space-sm);
-    flex-wrap: wrap;
+  .backend-status__aggregate {
+    display: inline-block;
+  }
+
+  .backend-status__item {
+    display: none;
   }
 }
 

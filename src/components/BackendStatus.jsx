@@ -22,6 +22,19 @@ const STATUS_LABEL = {
 
 const HEALTH_TIMEOUT_MS = 6000;
 
+function getAggregateStatus(status) {
+  if (status.edge === 'checking') return 'unconfigured';
+  if (status.edge === 'up') return 'up';
+  return 'down';
+}
+
+function getAggregateAriaLabel(status) {
+  const total = BACKENDS.length;
+  const up = BACKENDS.filter(b => status[b] === 'up').length;
+  if (status.edge === 'checking') return 'TTS backends: loading';
+  return `TTS backends: ${up} of ${total} available`;
+}
+
 export default function BackendStatus({ serverUrl, onHealthChange }) {
   const [status, setStatus] = useState({ edge: 'checking', kokoro: 'checking', piper: 'checking', elevenlabs: 'checking', google: 'checking' });
   const [lastChecked, setLastChecked] = useState(null);
@@ -64,8 +77,18 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
     return () => { cancelled = true; clearInterval(interval); };
   }, [serverUrl]);
 
+  const aggStatus = getAggregateStatus(status);
+  const aggAriaLabel = getAggregateAriaLabel(status);
+
   return (
     <div className="backend-status" aria-label="Backend status">
+      {/* Mobile: single aggregate dot */}
+      <span
+        className={`backend-status__aggregate backend-status__dot--${aggStatus}`}
+        aria-label={aggAriaLabel}
+        title={aggAriaLabel}
+      />
+      {/* Desktop: full per-backend list */}
       {BACKENDS.map(backend => (
         <span key={backend} className="backend-status__item" title={STATUS_LABEL[status[backend]] || status[backend]}>
           <span
