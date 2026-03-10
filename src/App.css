@@ -57,7 +57,7 @@
   font-family: var(--font-family);
   padding: var(--space-xs) var(--space-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .app-header__config-btn:hover {
@@ -182,7 +182,7 @@
   font-size: var(--font-size-xs);
   padding: 2px var(--space-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .app-server-config__key-clear:hover {
@@ -238,7 +238,7 @@
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .app-tab:hover {
@@ -260,12 +260,11 @@
 .app-empty {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
   gap: var(--space-lg);
-  padding: var(--space-xxl);
+  padding: var(--space-xxl) 0;
   color: var(--color-text-muted);
-  text-align: center;
+  max-width: 480px;
 }
 
 .app-empty__headline {
@@ -342,7 +341,7 @@
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .app-import-label:hover {

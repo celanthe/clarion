@@ -10,7 +10,7 @@
 }
 
 .agent-card:hover {
-  border-color: var(--color-border-subtle);
+  border-color: var(--color-accent-dim);
 }
 
 /* Header */
@@ -30,11 +30,12 @@
   font-family: var(--font-family);
   font-weight: 600;
   padding: var(--space-xs) 0;
-  outline: none;
   transition: border-color var(--transition-fast);
 }
 
 .agent-card__name:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
   border-bottom-color: var(--color-accent);
 }
 
@@ -88,7 +89,7 @@
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .agent-card__backend-btn:hover {
@@ -272,7 +273,7 @@
   font-family: var(--font-family);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .agent-card__btn:disabled {
@@ -324,5 +325,5 @@
 }
 
 .agent-card__btn--saved:hover {
-  background: rgba(76, 175, 118, 0.1);
+  background: color-mix(in srgb, var(--color-status-up) 10%, transparent);
 }

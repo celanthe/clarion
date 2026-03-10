@@ -27,7 +27,7 @@
 .backend-status__dot--error   { background: var(--color-danger); }
 
 .backend-status__label {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   color: var(--color-text-muted);
 }
 

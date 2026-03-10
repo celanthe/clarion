@@ -62,7 +62,7 @@
   --color-danger-hover: #e74c3c;
 
   /* Text on solid accent/danger backgrounds (buttons) */
-  --color-text-on-accent: #fff;
+  --color-text-on-accent: #f5f3ff;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);

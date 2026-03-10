@@ -143,14 +143,15 @@ export default function App() {
             onClick={() => setShowServerConfig(v => !v)}
             type="button"
             aria-expanded={showServerConfig}
+            aria-controls="server-config-panel"
           >
-            {showServerConfig ? 'Done' : 'Server'}
+            Server settings
           </button>
         </div>
       </header>
 
       {showServerConfig && (
-        <div className="app-server-config">
+        <div className="app-server-config" id="server-config-panel">
           <label className="app-server-config__label" htmlFor="server-url">
             Clarion server URL
           </label>
@@ -301,16 +302,26 @@ export default function App() {
             )}
 
             {importError && (
-              <span className="app-import-error">{importError}</span>
+              <span className="app-import-error" role="alert">
+                {importError}
+                <button
+                  className="app-import-error__dismiss"
+                  type="button"
+                  onClick={() => setImportError(null)}
+                  aria-label="Dismiss error"
+                >
+                  ×
+                </button>
+              </span>
             )}
           </div>
 
           <div className="app-footer__credits">
-            <span>by <a href="https://github.com/celanthe" target="_blank" rel="noopener">celanthe</a> &amp; <a href="https://zabethy.com" target="_blank" rel="noopener">Zabethy</a></span>
+            <span>by <a href="https://github.com/celanthe" target="_blank" rel="noopener noreferrer">celanthe</a> &amp; <a href="https://zabethy.com" target="_blank" rel="noopener noreferrer">Zabethy</a></span>
             <span className="app-footer__sep">·</span>
-            <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/celanthe/clarion" target="_blank" rel="noopener noreferrer">GitHub</a>
             <span className="app-footer__sep">·</span>
-            <a href="https://ko-fi.com/rinoliver" target="_blank" rel="noopener" className="app-footer__kofi">
+            <a href="https://ko-fi.com/rinoliver" target="_blank" rel="noopener noreferrer" className="app-footer__kofi">
               <svg className="app-footer__kofi-heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M12 21.6C5.8 17.7 2 13.7 2 9.5 2 6.4 4.4 4 7.5 4c1.7 0 3.3.8 4.5 2.1C13.2 4.8 14.8 4 16.5 4 19.6 4 22 6.4 22 9.5c0 4.2-3.8 8.2-10 12.1z"/>
               </svg>

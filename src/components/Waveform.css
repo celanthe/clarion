@@ -1,14 +1,14 @@
 .waveform-wrap {
   overflow: hidden;
-  max-height: 0;
+  clip-path: inset(100% 0 0 0);
   opacity: 0;
-  transition: max-height 0.25s ease, opacity 0.3s ease;
+  transition: clip-path 0.25s ease, opacity 0.3s ease;
   border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, 0.2);
+  background: #1a1828;
 }
 
 .waveform-wrap--active {
-  max-height: 72px;
+  clip-path: inset(0 0 0 0);
   opacity: 1;
 }
 

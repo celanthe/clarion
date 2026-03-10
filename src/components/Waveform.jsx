@@ -37,6 +37,10 @@ export default function Waveform({ active }) {
     const freqData = new Uint8Array(BAR_COUNT);
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Accent colors from design system tokens
+    const ACCENT_BASE = { r: 130, g: 114, b: 240 };   // #8272f0
+    const ACCENT_HIGH = { r: 152, g: 136, b: 255 };   // #9888ff (lighter for loud bars)
+
     function draw() {
       const W = canvas.width;
       const H = canvas.height;
@@ -44,8 +48,6 @@ export default function Waveform({ active }) {
       ctx.clearRect(0, 0, W, H);
 
       const now = Date.now();
-      // Rainbow cycles over ~8s unless user prefers reduced motion
-      const hueOffset = prefersReduced ? 0 : (now / 25) % 360;
 
       const analyser = getAnalyser();
       if (analyser) {
@@ -65,11 +67,16 @@ export default function Waveform({ active }) {
         const barH = Math.max(3, Math.round(t * H));
         const x = i * (barW + GAP);
         const y = H - barH;
-        const hue = Math.round(((i / (BAR_COUNT - 1)) * 270 + hueOffset) % 360);
 
-        ctx.shadowColor = `hsl(${hue}, 100%, 78%)`;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = `hsl(${hue}, 100%, 64%)`;
+        // Interpolate between base and high accent by amplitude; quiet bars recede via opacity
+        const r = Math.round(ACCENT_BASE.r + (ACCENT_HIGH.r - ACCENT_BASE.r) * t);
+        const g = Math.round(ACCENT_BASE.g + (ACCENT_HIGH.g - ACCENT_BASE.g) * t);
+        const b = Math.round(ACCENT_BASE.b + (ACCENT_HIGH.b - ACCENT_BASE.b) * t);
+        const alpha = 0.35 + 0.65 * t;
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
         ctx.fillRect(x, y, barW, barH);
       }
 
