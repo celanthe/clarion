@@ -192,9 +192,9 @@
   height: 14px;
   cursor: pointer;
   flex-shrink: 0;
-  /* Extend tap target to 44px minimum without changing visual size */
-  padding: 15px;
-  margin: -15px;
+  /* Extend tap target vertically and to the left only — label covers the right side */
+  padding: 15px 4px 15px 15px;
+  margin: -15px -4px -15px -15px;
 }
 
 /* Custom test text area */

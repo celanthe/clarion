@@ -24,6 +24,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .app-header__title {
