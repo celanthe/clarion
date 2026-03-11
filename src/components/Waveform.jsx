@@ -37,9 +37,33 @@ export default function Waveform({ active }) {
     const freqData = new Uint8Array(BAR_COUNT);
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Accent colors from design system tokens
-    const ACCENT_BASE = { r: 130, g: 114, b: 240 };   // #8272f0
-    const ACCENT_HIGH = { r: 152, g: 136, b: 255 };   // #9888ff (lighter for loud bars)
+    // Frequency-mapped color palette:
+    // Low frequencies → warm rose/amber, high frequencies → cool lavender/blue
+    // Each bar's color is determined by its position (frequency band), not amplitude.
+    // Amplitude modulates height and opacity only.
+    const WARM = { r: 220, g: 100, b: 120 };  // rose — bass/low-mid
+    const MID  = { r: 130, g: 114, b: 240 };  // accent purple — mid
+    const COOL = { r:  80, g: 180, b: 220 };  // teal — high frequencies
+
+    function freqColor(pos) {
+      // pos: 0 (lowest freq) → 1 (highest freq)
+      // Blend warm→mid for the first half, mid→cool for the second
+      if (pos < 0.5) {
+        const p = pos * 2;
+        return {
+          r: Math.round(WARM.r + (MID.r - WARM.r) * p),
+          g: Math.round(WARM.g + (MID.g - WARM.g) * p),
+          b: Math.round(WARM.b + (MID.b - WARM.b) * p),
+        };
+      } else {
+        const p = (pos - 0.5) * 2;
+        return {
+          r: Math.round(MID.r + (COOL.r - MID.r) * p),
+          g: Math.round(MID.g + (COOL.g - MID.g) * p),
+          b: Math.round(MID.b + (COOL.b - MID.b) * p),
+        };
+      }
+    }
 
     function draw() {
       const W = canvas.width;
@@ -68,11 +92,9 @@ export default function Waveform({ active }) {
         const x = i * (barW + GAP);
         const y = H - barH;
 
-        // Interpolate between base and high accent by amplitude; quiet bars recede via opacity
-        const r = Math.round(ACCENT_BASE.r + (ACCENT_HIGH.r - ACCENT_BASE.r) * t);
-        const g = Math.round(ACCENT_BASE.g + (ACCENT_HIGH.g - ACCENT_BASE.g) * t);
-        const b = Math.round(ACCENT_BASE.b + (ACCENT_HIGH.b - ACCENT_BASE.b) * t);
-        const alpha = 0.35 + 0.65 * t;
+        // Color by frequency position; amplitude drives opacity so quiet bars recede
+        const { r, g, b } = freqColor(i / (BAR_COUNT - 1));
+        const alpha = 0.3 + 0.7 * t;
 
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
