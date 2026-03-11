@@ -193,7 +193,7 @@ export default function App() {
             <p className="app-server-config__url-error" role="alert">{urlError}</p>
           )}
           <p className="app-server-config__hint" id="server-url-hint">
-            Point this at your Clarion server (<code>node src/node-server.js</code> or Cloudflare Worker).
+            Point this at your Clarion server (<code>node server/src/node-server.js</code> or Cloudflare Worker).
           </p>
           <label className="app-server-config__label" htmlFor="api-key">
             API key <span className="app-server-config__optional">(optional)</span>
