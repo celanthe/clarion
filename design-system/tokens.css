@@ -51,8 +51,8 @@
 
   /* Status dots */
   --color-status-up:           #4caf76;
-  --color-status-down:         #4a4860;
-  --color-status-unconfigured: #4a4860;
+  --color-status-down:         #c97c2e;  /* warm amber — reachable but failed, needs attention */
+  --color-status-unconfigured: #4a4860;  /* muted gray — never set up */
   --color-status-checking:     #8e88a8;
 
   /* Error / danger */

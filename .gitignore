@@ -10,3 +10,4 @@ server/node_modules/
 # Kokoro model files (large binaries — download separately)
 *.onnx
 *.bin
+tasks/

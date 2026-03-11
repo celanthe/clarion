@@ -126,6 +126,9 @@ export default function App() {
   // Audition saves directly to storage — reload agents list
   const handleAuditionSave = useCallback(() => {
     setAgents(loadAgents());
+  }, []);
+
+  const handleGoToAgents = useCallback(() => {
     setTab('agents');
   }, []);
 
@@ -264,7 +267,7 @@ export default function App() {
 
       <main className="app-main">
         {tab === 'audition' ? (
-          <VoiceAudition health={health} onSave={handleAuditionSave} />
+          <VoiceAudition health={health} onSave={handleAuditionSave} onGoToAgents={handleGoToAgents} />
         ) : (
           <>
             {agents.length === 0 ? (

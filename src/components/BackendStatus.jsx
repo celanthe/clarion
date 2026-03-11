@@ -80,6 +80,15 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
   const aggStatus = getAggregateStatus(status);
   const aggAriaLabel = getAggregateAriaLabel(status);
 
+  // Only show backends that are actively configured or up.
+  // Edge TTS is always shown (zero-config, always available).
+  // All others are shown only when status is 'up', 'down', or 'error' —
+  // meaning the user has pointed Clarion at them. 'unconfigured' and null
+  // are hidden to keep the header clean on a fresh install.
+  const visibleBackends = BACKENDS.filter(b =>
+    b === 'edge' || status[b] === 'up' || status[b] === 'down' || status[b] === 'error'
+  );
+
   return (
     <div className="backend-status" aria-label="Backend status">
       {/* Mobile: single aggregate dot */}
@@ -88,8 +97,8 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
         aria-label={aggAriaLabel}
         title={aggAriaLabel}
       />
-      {/* Desktop: full per-backend list */}
-      {BACKENDS.map(backend => (
+      {/* Desktop: per-backend list — only configured/reachable backends */}
+      {visibleBackends.map(backend => (
         <span key={backend} className="backend-status__item" title={STATUS_LABEL[status[backend]] || status[backend]}>
           <span
             className={`backend-status__dot backend-status__dot--${status[backend]}`}

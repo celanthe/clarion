@@ -175,20 +175,26 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
               Speed
               <span className="agent-card__speed-value">{agent.speed.toFixed(2)}×</span>
             </label>
-            <input
-              id={`agent-card-speed-${agent.id}`}
-              type="range"
-              className="agent-card__speed"
-              min="0.5"
-              max="2.0"
-              step="0.05"
-              value={agent.speed}
-              onChange={handleSpeedChange}
-              aria-valuemin="0.5"
-              aria-valuemax="2.0"
-              aria-valuenow={agent.speed.toFixed(2)}
-              aria-valuetext={`${agent.speed.toFixed(2)}× speed`}
-            />
+            <div className="agent-card__speed-wrap">
+              <input
+                id={`agent-card-speed-${agent.id}`}
+                type="range"
+                className="agent-card__speed"
+                min="0.5"
+                max="2.0"
+                step="0.05"
+                value={agent.speed}
+                onChange={handleSpeedChange}
+                list={`agent-card-speed-ticks-${agent.id}`}
+                aria-valuemin="0.5"
+                aria-valuemax="2.0"
+                aria-valuenow={agent.speed.toFixed(2)}
+                aria-valuetext={`${agent.speed.toFixed(2)}× speed`}
+              />
+              <datalist id={`agent-card-speed-ticks-${agent.id}`}>
+                <option value="1"/>
+              </datalist>
+            </div>
           </div>
         )}
 

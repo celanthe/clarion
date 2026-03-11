@@ -14,7 +14,7 @@ const DEFAULT_TEXT = "The pattern holds. We're moving forward.";
  * Voice audition view — paste an agent's dialogue, hear each voice read it,
  * pick the one that fits, save as an agent profile.
  */
-export default function VoiceAudition({ onSave, health }) {
+export default function VoiceAudition({ onSave, onGoToAgents, health }) {
   const [text, setText] = useState('');
   const [backend, setBackend] = useState('edge');
   const [speed, setSpeed] = useState(1.0);
@@ -75,10 +75,10 @@ export default function VoiceAudition({ onSave, health }) {
     });
 
     saveAgent(agent);
-    setSaved({ voice: saveTarget, label: agentName });
+    onSave?.(agent);
+    setSaved({ voice: saveTarget, label: agentName.trim() });
     setSaveTarget(null);
     setAgentName('');
-    onSave?.(agent);
   }
 
   function handleCancelSave() {
@@ -96,7 +96,6 @@ export default function VoiceAudition({ onSave, health }) {
   return (
     <div className="audition">
       <div className="audition__intro">
-        <h2 className="audition__title">Voice Audition</h2>
         <p className="audition__desc">
           Paste your agent's dialogue below. Each voice will read their words —
           find the one that fits, then save it as a profile.
@@ -121,7 +120,9 @@ export default function VoiceAudition({ onSave, health }) {
         <p className="audition__hint">
           Paste a few lines. Short, characteristic sentences work best —
           the kind your agent actually says.
-          {' '}<span className="audition__char-count">{text.length}/2000</span>
+          {(text.length > 0) && (
+            <>{' '}<span className="audition__char-count">{text.length}/2000</span></>
+          )}
         </p>
       </div>
 
@@ -200,12 +201,24 @@ export default function VoiceAudition({ onSave, health }) {
         </form>
       )}
 
-      {/* Success flash */}
+      {/* Success state */}
       {saved && (
-        <p className="audition__saved-notice" role="status">
-          Saved <strong>{saved.label}</strong> with {saved.voice.label} ({LANG_LABELS[saved.voice.lang] || saved.voice.lang}).
-          {' '}<button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)} aria-label="Dismiss">×</button>
-        </p>
+        <div className="audition__saved-notice" role="status">
+          <span className="audition__saved-check" aria-hidden="true">✓</span>
+          {' '}Saved as <strong>{saved.label}</strong> — {saved.voice.label} ({LANG_LABELS[saved.voice.lang] || saved.voice.lang}).
+          <div className="audition__saved-actions">
+            <button
+              className="audition__saved-goto"
+              type="button"
+              onClick={() => { setSaved(null); onGoToAgents?.(); }}
+            >
+              Go to Agents →
+            </button>
+            <button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)} aria-label="Dismiss">
+              Dismiss
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Voice list */}

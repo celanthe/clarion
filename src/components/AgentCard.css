@@ -116,6 +116,25 @@
   cursor: pointer;
 }
 
+/* 1.0× center notch — positioned at 33.3% of the 0.5–2.0 range */
+.agent-card__speed-wrap {
+  position: relative;
+}
+
+.agent-card__speed-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  /* (1.0 - 0.5) / (2.0 - 0.5) = 0.333... */
+  left: calc(33.33% - 1px);
+  width: 2px;
+  height: 4px;
+  background: var(--color-text-muted);
+  border-radius: 1px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Error */
 .agent-card__error {
   font-size: var(--font-size-sm);
