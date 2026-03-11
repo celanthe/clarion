@@ -34,6 +34,35 @@ import { homedir, tmpdir, platform } from 'os';
 import { join }               from 'path';
 import { spawn }              from 'child_process';
 
+// --- Playback lock ---
+// Prevents multiple stream.js instances from playing simultaneously.
+// When a new instance starts, it kills any existing one and takes over.
+
+const LOCK_FILE = join(tmpdir(), 'clarion-stream.lock');
+
+function acquireLock() {
+  if (existsSync(LOCK_FILE)) {
+    try {
+      const pid = parseInt(readFileSync(LOCK_FILE, 'utf8').trim(), 10);
+      if (pid && pid !== process.pid) {
+        try { process.kill(pid, 'SIGTERM'); } catch {} // already gone = fine
+      }
+    } catch {}
+  }
+  writeFileSync(LOCK_FILE, String(process.pid));
+}
+
+function releaseLock() {
+  try {
+    const pid = parseInt(readFileSync(LOCK_FILE, 'utf8').trim(), 10);
+    if (pid === process.pid) unlinkSync(LOCK_FILE);
+  } catch {}
+}
+
+process.on('exit',    releaseLock);
+process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
+process.on('SIGINT',  () => { releaseLock(); process.exit(0); });
+
 const CONFIG_DIR  = join(homedir(), '.config', 'clarion');
 const AGENTS_FILE = join(CONFIG_DIR, 'agents.json');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
@@ -269,6 +298,7 @@ class SpeakerQueue {
 // --- Main ---
 
 async function main() {
+  acquireLock();
   const flags = parseArgs(process.argv);
 
   if (flags.help) {
