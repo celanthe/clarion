@@ -46,8 +46,6 @@ docker-compose up
 
 ## Voice audition
 
-![Clarion voice audition](docs/img/clarion-waveform.png)
-
 1. Open the **Audition** tab
 2. Paste your agent's characteristic dialogue
 3. Select a backend (Kokoro for the most natural voices)
