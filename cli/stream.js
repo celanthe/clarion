@@ -35,26 +35,49 @@ import { join }               from 'path';
 import { spawn }              from 'child_process';
 
 // --- Playback lock ---
-// Prevents multiple stream.js instances from playing simultaneously.
-// When a new instance starts, it kills any existing one and takes over.
+// Serializes multiple stream.js instances so agents speak in the order
+// their responses completed. Each instance waits for the lock to clear
+// before playing. Stale locks (holder process dead or >60s old) are
+// broken automatically so a crashed instance never blocks the queue.
 
-const LOCK_FILE = join(tmpdir(), 'clarion-stream.lock');
+const LOCK_FILE  = join(tmpdir(), 'clarion-stream.lock');
+const LOCK_TTL   = 60_000;  // max ms to wait before assuming the holder is stuck
+const LOCK_POLL  = 500;     // ms between lock-file checks
 
 function acquireLock() {
-  if (existsSync(LOCK_FILE)) {
+  const deadline = Date.now() + LOCK_TTL;
+  while (true) {
+    if (!existsSync(LOCK_FILE)) {
+      writeFileSync(LOCK_FILE, `${process.pid}:${Date.now()}`);
+      return;
+    }
     try {
-      const pid = parseInt(readFileSync(LOCK_FILE, 'utf8').trim(), 10);
-      if (pid && pid !== process.pid) {
-        try { process.kill(pid, 'SIGTERM'); } catch {} // already gone = fine
+      const raw  = readFileSync(LOCK_FILE, 'utf8').trim();
+      const [pid, ts] = raw.split(':').map(Number);
+      const age  = Date.now() - (ts || 0);
+      const dead = !pid || (() => { try { process.kill(pid, 0); return false; } catch { return true; } })();
+      if (dead || age > LOCK_TTL) {
+        // Stale lock — take it over
+        writeFileSync(LOCK_FILE, `${process.pid}:${Date.now()}`);
+        return;
       }
     } catch {}
+    if (Date.now() >= deadline) {
+      // Timed out waiting — bail silently rather than blocking forever
+      process.exit(0);
+    }
+    // Synchronous sleep via a tight loop is avoided; use a blocking file
+    // check approximation. Node has no sync sleep, so we write a timestamp
+    // and spin — acceptable here since this is a CLI tool, not a server.
+    const wait = Math.min(LOCK_POLL, deadline - Date.now());
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait);
   }
-  writeFileSync(LOCK_FILE, String(process.pid));
 }
 
 function releaseLock() {
   try {
-    const pid = parseInt(readFileSync(LOCK_FILE, 'utf8').trim(), 10);
+    const raw = readFileSync(LOCK_FILE, 'utf8').trim();
+    const pid = parseInt(raw.split(':')[0], 10);
     if (pid === process.pid) unlinkSync(LOCK_FILE);
   } catch {}
 }
