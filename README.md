@@ -14,6 +14,7 @@ Self-hosted TTS proxy and voice manager. Audition voices against your agent's ac
 - **Save agent profiles.** One agent uses Kokoro `bm_george` at 1.0x, another uses Edge `en-GB-SoniaNeural`. Both saved, both exportable as JSON.
 - **Five TTS backends.** Edge TTS (zero config), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight), ElevenLabs (paid), Google Chirp 3 HD (paid).
 - **Terminal integration.** Pipe agent responses through their voice from the CLI. Works with Claude Code via stop hook.
+- **Multi-agent support.** Running several agents at once? Concurrent responses queue automatically and speak in the order they finished — no overlapping audio.
 
 ---
 
@@ -45,7 +46,7 @@ docker-compose up
 
 ## Voice audition
 
-![Clarion voice audition with rainbow waveform](docs/img/clarion-waveform.png)
+![Clarion voice audition](docs/img/clarion-waveform.png)
 
 1. Open the **Audition** tab
 2. Paste your agent's characteristic dialogue
