@@ -29,7 +29,7 @@
  */
 
 import { createInterface }    from 'readline';
-import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
 import { homedir, tmpdir, platform } from 'os';
 import { join }               from 'path';
 import { spawn }              from 'child_process';
@@ -47,28 +47,34 @@ const LOCK_POLL  = 500;     // ms between lock-file checks
 function acquireLock() {
   const deadline = Date.now() + LOCK_TTL;
   while (true) {
-    if (!existsSync(LOCK_FILE)) {
-      writeFileSync(LOCK_FILE, `${process.pid}:${Date.now()}`);
-      return;
+    // Atomic exclusive create — only one process wins the race.
+    // openSync with 'wx' maps to O_CREAT|O_EXCL, which is atomic on POSIX.
+    try {
+      const fd = openSync(LOCK_FILE, 'wx');
+      writeSync(fd, `${process.pid}:${Date.now()}`);
+      closeSync(fd);
+      return; // Lock acquired
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
     }
+
+    // Lock exists — check if the holder is still alive
     try {
       const raw  = readFileSync(LOCK_FILE, 'utf8').trim();
       const [pid, ts] = raw.split(':').map(Number);
       const age  = Date.now() - (ts || 0);
       const dead = !pid || (() => { try { process.kill(pid, 0); return false; } catch { return true; } })();
       if (dead || age > LOCK_TTL) {
-        // Stale lock — take it over
-        writeFileSync(LOCK_FILE, `${process.pid}:${Date.now()}`);
-        return;
+        // Stale lock — remove and retry immediately
+        try { unlinkSync(LOCK_FILE); } catch {}
+        continue;
       }
     } catch {}
+
     if (Date.now() >= deadline) {
       // Timed out waiting — bail silently rather than blocking forever
       process.exit(0);
     }
-    // Synchronous sleep via a tight loop is avoided; use a blocking file
-    // check approximation. Node has no sync sleep, so we write a timestamp
-    // and spin — acceptable here since this is a CLI tool, not a server.
     const wait = Math.min(LOCK_POLL, deadline - Date.now());
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait);
   }
