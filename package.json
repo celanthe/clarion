@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "bin": {
+    "clarion-init": "./cli/init.js",
     "clarion-speak": "./cli/speak.js",
+    "clarion-status": "./cli/status.js",
     "clarion-stream": "./cli/stream.js"
   },
   "scripts": {

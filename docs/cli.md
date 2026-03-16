@@ -20,14 +20,17 @@ From the Clarion directory:
 npm install -g .
 ```
 
-This adds `clarion-speak` and `clarion-stream` to your PATH. Verify:
+This adds `clarion-init`, `clarion-speak`, `clarion-stream`, and `clarion-status` to your PATH.
+
+### 2. Run clarion-init
 
 ```sh
-clarion-speak --help
-clarion-stream --help
+clarion-init
 ```
 
-### 2. Export agents from the UI
+The wizard picks a voice, saves your agent profile, and writes the Claude Code stop hook. That's it — skip steps 3–5 below if you used `clarion-init`.
+
+### 3. Export agents from the UI (alternative)
 
 Open the Clarion UI, go to an agent card, and click **Export**. Or use **Export all** in the footer to get every agent at once. Save the resulting JSON to:
 
@@ -304,6 +307,35 @@ fi
 ```
 
 Update the path and env vars to match your setup.
+
+---
+
+## clarion-status — check what's running
+
+Shows server health, loaded agents, hook state, and whether audio is currently playing.
+
+```sh
+clarion-status
+```
+
+Example output:
+
+```
+Server    http://localhost:8080  ✓ up
+          edge           ✓ up
+          kokoro         ✓ up
+          piper          ✗ unconfigured
+          elevenlabs     ✗ unconfigured
+          google         ✗ unconfigured
+
+Agents    2  (~/.config/clarion/agents.json)
+          julian           kokoro      bm_george              Julian
+          aria             edge        en-GB-SoniaNeural      Aria
+
+Hook      ~/.claude/clarion-hook.js  ✓ active
+
+Playing   idle
+```
 
 ---
 

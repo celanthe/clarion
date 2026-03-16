@@ -62,6 +62,9 @@ Short, characteristic sentences work best. Paste what your agent would actually 
 # Install globally (run once from the Clarion directory)
 npm install -g .
 
+# Set up your first agent (interactive — picks a voice, writes the hook)
+clarion-init
+
 # Speak as a saved agent
 echo "The pattern holds." | clarion-speak --agent my-agent
 

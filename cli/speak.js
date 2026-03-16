@@ -147,7 +147,7 @@ Agent profiles:
   if (flags['list-agents']) {
     const agents = loadAgents();
     if (!agents.length) {
-      console.error('No agents found. Export from the Clarion UI to ~/.config/clarion/agents.json');
+      console.error('No agents found. Run clarion-init to set up your first agent.');
       process.exit(0);
     }
     for (const a of agents) {
@@ -185,7 +185,7 @@ Agent profiles:
     const agent = findAgent(flags.agent);
     if (!agent) {
       console.error(`[clarion] Agent not found: ${flags.agent}`);
-      console.error(`[clarion] Run --list-agents to see saved profiles, or export from the UI.`);
+      console.error(`[clarion] Run clarion-speak --list-agents to see saved profiles, or clarion-init to create a new one.`);
       process.exit(1);
     }
     backend = backend || agent.backend;
