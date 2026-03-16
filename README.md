@@ -59,11 +59,14 @@ Short, characteristic sentences work best. Paste what your agent would actually 
 ## CLI
 
 ```sh
+# Install globally (run once from the Clarion directory)
+npm install -g .
+
 # Speak as a saved agent
-echo "The pattern holds." | node cli/speak.js --agent my-agent
+echo "The pattern holds." | clarion-speak --agent my-agent
 
 # Stream in real time, sentence by sentence
-claude "Walk me through this." | node cli/stream.js --agent my-agent
+claude "Walk me through this." | clarion-stream --agent my-agent
 ```
 
 [Full CLI guide](docs/cli.md): speak.js, stream.js, and the Claude Code stop hook.

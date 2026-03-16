@@ -12,7 +12,22 @@ Pipe your agent's responses through their voice from the terminal.
 
 ## Setup
 
-### 1. Export agents from the UI
+### 1. Install the CLI globally
+
+From the Clarion directory:
+
+```sh
+npm install -g .
+```
+
+This adds `clarion-speak` and `clarion-stream` to your PATH. Verify:
+
+```sh
+clarion-speak --help
+clarion-stream --help
+```
+
+### 2. Export agents from the UI
 
 Open the Clarion UI, go to an agent card, and click **Export**. Or use **Export all** in the footer to get every agent at once. Save the resulting JSON to:
 
@@ -22,7 +37,7 @@ Open the Clarion UI, go to an agent card, and click **Export**. Or use **Export 
 
 The CLI reads this file on every invocation. No restart needed after changes.
 
-### 2. Set the server URL
+### 3. Set the server URL
 
 The CLI defaults to `http://localhost:8787` (wrangler dev). If your server runs elsewhere, set the URL one of two ways:
 
@@ -42,7 +57,7 @@ export CLARION_SERVER=http://localhost:8080
 
 The config file and the `CLARION_SERVER` env var do the same thing. The env var takes precedence if both are set.
 
-### 3. Set an API key (if your server requires one)
+### 4. Set an API key (if your server requires one)
 
 If you started the server with `API_KEY=your-secret`, the CLI must authenticate. Set:
 
@@ -63,45 +78,45 @@ If your server has no `API_KEY` set, skip this step.
 
 ---
 
-## speak.js -- one-shot synthesis
+## clarion-speak -- one-shot synthesis
 
-`speak.js` synthesizes text and writes raw audio/mpeg to stdout. Pipe it to a player or redirect it to a file.
+`clarion-speak` synthesizes text and writes raw audio/mpeg to stdout. Pipe it to a player or redirect it to a file.
 
 ### Basic usage
 
 ```sh
 # Speak as a saved agent (match by ID or name, case-insensitive)
-echo "The pattern holds." | node cli/speak.js --agent my-agent
+echo "The pattern holds." | clarion-speak --agent my-agent
 
 # Text as a positional argument
-node cli/speak.js "Running diagnostics." --agent my-agent
+clarion-speak "Running diagnostics." --agent my-agent
 
 # Direct voice selection without an agent profile
-node cli/speak.js "Hello." --backend kokoro --voice bm_george
+clarion-speak "Hello." --backend kokoro --voice bm_george
 
 # Save output to a file instead of playing it
-node cli/speak.js "Hello." --agent my-agent > hello.mp3
+clarion-speak "Hello." --agent my-agent > hello.mp3
 ```
 
 ### Piping to a player
 
-`speak.js` writes audio to stdout. Pipe it to a player:
+`clarion-speak` writes audio to stdout. Pipe it to a player:
 
 ```sh
 # macOS (afplay reads from a file, not stdin -- use mpv or ffplay for streaming)
-node cli/speak.js "Hello." --agent my-agent | afplay -
+clarion-speak "Hello." --agent my-agent | afplay -
 
 # mpv (Linux/macOS)
-node cli/speak.js "Hello." --agent my-agent | mpv -
+clarion-speak "Hello." --agent my-agent | mpv -
 
 # ffplay (Linux/macOS/Windows)
-node cli/speak.js "Hello." --agent my-agent | ffplay -nodisp -autoexit -
+clarion-speak "Hello." --agent my-agent | ffplay -nodisp -autoexit -
 ```
 
 Note: `afplay` on macOS does not support stdin. If you want to use `afplay`, save to a file first:
 
 ```sh
-node cli/speak.js "Hello." --agent my-agent > /tmp/out.mp3 && afplay /tmp/out.mp3
+clarion-speak "Hello." --agent my-agent > /tmp/out.mp3 && afplay /tmp/out.mp3
 ```
 
 ### All flags
@@ -122,7 +137,7 @@ Flags from an `--agent` profile can be overridden individually. For example, `--
 ### List saved agents
 
 ```sh
-node cli/speak.js --list-agents
+clarion-speak --list-agents
 ```
 
 Output:
@@ -136,9 +151,9 @@ Columns: ID, backend, voice, display name.
 
 ---
 
-## stream.js -- real-time streaming
+## clarion-stream -- real-time streaming
 
-`stream.js` reads stdin line by line and speaks each complete sentence as soon as it arrives. It pre-fetches the next sentence's audio while the current one plays, so gaps between sentences are minimal.
+`clarion-stream` reads stdin line by line and speaks each complete sentence as soon as it arrives. It pre-fetches the next sentence's audio while the current one plays, so gaps between sentences are minimal.
 
 ANSI escape codes and Markdown formatting are stripped automatically before synthesis. Code fences are removed entirely (TTS should not read code).
 
@@ -146,28 +161,28 @@ ANSI escape codes and Markdown formatting are stripped automatically before synt
 
 ```sh
 # Stream Claude Code output in your agent's voice
-claude "Walk me through this architecture." | node cli/stream.js --agent my-agent
+claude "Walk me through this architecture." | clarion-stream --agent my-agent
 
 # Any streaming text source works
-tail -f agent.log | node cli/stream.js --agent my-agent
+tail -f agent.log | clarion-stream --agent my-agent
 
 # Pipe a file
-cat notes.md | node cli/stream.js --agent my-agent
+cat notes.md | clarion-stream --agent my-agent
 ```
 
 ### Choosing a player
 
-`stream.js` writes audio to a temp file and invokes a player directly (not stdout). The default player is `afplay` on macOS and `mpv` on Linux.
+`clarion-stream` writes audio to a temp file and invokes a player directly (not stdout). The default player is `afplay` on macOS and `mpv` on Linux.
 
 ```sh
 # Use mpv
-... | node cli/stream.js --agent my-agent --player mpv
+... | clarion-stream --agent my-agent --player mpv
 
 # Use ffplay
-... | node cli/stream.js --agent my-agent --player ffplay
+... | clarion-stream --agent my-agent --player ffplay
 
 # Use aplay (Linux)
-... | node cli/stream.js --agent my-agent --player aplay
+... | clarion-stream --agent my-agent --player aplay
 ```
 
 ### Skip Markdown stripping
@@ -175,7 +190,7 @@ cat notes.md | node cli/stream.js --agent my-agent
 If your input is already plain text, use `--plain` to skip the cleaner:
 
 ```sh
-... | node cli/stream.js --agent my-agent --plain
+... | clarion-stream --agent my-agent --plain
 ```
 
 ### All flags
@@ -204,31 +219,16 @@ Set this up once and every Claude Code response will be spoken in your agent's v
 
 Claude Code fires a `Stop` event after every reply. The hook reads the session transcript from `~/.claude/projects/`, extracts the last assistant message, strips Markdown and ANSI codes, and streams it sentence by sentence to your Clarion server.
 
-### 1. Find your Node path
-
-```sh
-which node
-# or, if you use nvm:
-echo $(nvm which current)
-```
-
-You will need this path for the shebang line and inside the script.
-
-### 2. Create the hook script at `~/.claude/clarion-hook.js`
+### 1. Create the hook script at `~/.claude/clarion-hook.js`
 
 ```js
-#!/path/to/node
+#!/usr/bin/env node
 import { readFileSync, existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { spawn } from 'child_process';
 
-// Update these three values to match your setup:
-const NODE_BIN    = '/path/to/node';
-const CLARION_DIR = join(homedir(), 'path/to/clarion');  // where you cloned Clarion
-const AGENT       = 'my-agent';                          // your agent ID or name
-
-const STREAM = join(CLARION_DIR, 'cli', 'stream.js');
+const AGENT = 'my-agent';  // your agent ID or name
 
 async function main() {
   let raw = '';
@@ -251,7 +251,7 @@ async function main() {
   }
   if (!text) process.exit(0);
 
-  const proc = spawn(NODE_BIN, [STREAM, '--agent', AGENT],
+  const proc = spawn('clarion-stream', ['--agent', AGENT],
     { stdio: ['pipe', 'ignore', 'inherit'] });
   proc.stdin.write(text);
   proc.stdin.end();
@@ -268,7 +268,7 @@ chmod +x ~/.claude/clarion-hook.js
 echo '{"type":"module"}' > ~/.claude/package.json
 ```
 
-### 3. Register it in `~/.claude/settings.json`
+### 2. Register it in `~/.claude/settings.json`
 
 ```json
 {
@@ -289,7 +289,7 @@ echo '{"type":"module"}' > ~/.claude/package.json
 
 Replace `/Users/you` with your actual home directory path.
 
-### 4. Keep Clarion running
+### 3. Keep Clarion running
 
 The hook is silent if the server is not up -- no errors, no audio. Add this to your `~/.zshrc` or `~/.bashrc` to auto-start the server on every new shell:
 
@@ -297,13 +297,13 @@ The hook is silent if the server is not up -- no errors, no audio. Add this to y
 # Clarion -- auto-start TTS server
 if ! curl -s --max-time 1 http://localhost:8080/health &>/dev/null; then
   KOKORO_SERVER=http://localhost:8880 \
-    /path/to/node ~/path/to/clarion/server/src/node-server.js \
+    node ~/path/to/clarion/server/src/node-server.js \
     &>/tmp/clarion-server.log &
   disown
 fi
 ```
 
-Update the paths and env vars to match your setup.
+Update the path and env vars to match your setup.
 
 ---
 
@@ -331,7 +331,7 @@ Environment variables take precedence over the config file.
 
 **"Agent not found"**
 
-Run `node cli/speak.js --list-agents` to see what IDs are available. IDs are case-sensitive. Check that `~/.config/clarion/agents.json` exists and contains your exported profiles.
+Run `clarion-speak --list-agents` to see what IDs are available. IDs are case-sensitive. Check that `~/.config/clarion/agents.json` exists and contains your exported profiles.
 
 **No audio, no error**
 
@@ -351,6 +351,6 @@ Your server has `API_KEY` set. Set `CLARION_API_KEY` in your environment or conf
 
 The backend is configured but its upstream server is unreachable. For Kokoro, check that `kokoro-server.py` or the Docker container is running. For ElevenLabs/Google, check your API key.
 
-**speak.js hangs with no output**
+**clarion-speak hangs with no output**
 
-If you run `node cli/speak.js` without piping text and without a positional argument, it waits for stdin. Either pipe text to it or pass text as a positional argument.
+If you run `clarion-speak` without piping text and without a positional argument, it waits for stdin. Either pipe text to it or pass text as a positional argument.
