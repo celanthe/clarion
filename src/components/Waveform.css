@@ -4,7 +4,7 @@
   opacity: 0;
   transition: clip-path 0.25s ease, opacity 0.3s ease;
   border-radius: var(--radius-sm);
-  background: #1a1828;
+  background: var(--color-surface);
 }
 
 .waveform-wrap--active {

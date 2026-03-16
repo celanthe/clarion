@@ -11,37 +11,21 @@ Created for Erika Flowers (Investiture author) to give Julian a consistent podca
 
 ## Architecture
 
+See **ARCHITECTURE.md** for the full layer map, stack, naming conventions, import rules, and project structure tree. That file is the technical authority.
+
+Quick reference (abbreviated — ARCHITECTURE.md is authoritative):
+
 ```
 clarion/
-  server/                   # Cloudflare Worker (Hono)
-    src/
-      index.js              # Router: GET /health, GET /voices, POST /speak
-      edge.js               # Edge TTS — Microsoft Translator API (no key needed)
-      kokoro.js             # Kokoro proxy — /v1/audio/speech (OpenAI-compatible)
-      piper.js              # Piper proxy — /v1/audio/speech
-    wrangler.toml
-    package.json
-
-  design-system/tokens.css  # Dark, minimal (Investiture aesthetic)
+  server/                   # Server layer — Cloudflare Worker (Hono)
+  src/                      # UI layer — React 19 SPA
+  services/                 # Services layer — TTS client, storage, crypto
+  core/                     # Domain layer — agent model, voice lists
+  cli/                      # CLI layer — clarion-init/speak/status/stream
+  design-system/tokens.css  # CSS custom properties (72 tokens)
   content/en.json           # UI strings
-  core/domain/agent.js      # Agent model + validation
-  services/
-    storage/agent-storage.js # localStorage: agents + server URL
-    tts.js                  # Client: fetch /speak, play audio
-  src/
-    components/
-      AgentCard.jsx         # Edit one agent (name, backend, voice, speed, test)
-      VoiceSelector.jsx     # Grouped voice dropdown per backend
-      BackendStatus.jsx     # Status dots (polls /health every 30s)
-    App.jsx
-    App.css
-    main.jsx
-    global.css
-  index.html
-  vite.config.js
-  package.json
-  docker-compose.yml        # Kokoro + Clarion server
-  .env.example
+  tasks/                    # Work-in-progress planning files
+  vector/                   # Investiture knowledge artifacts
 ```
 
 ## Running it
