@@ -77,7 +77,7 @@ GET /health
 
 ## Ported from Everbloom
 
-[Everbloom Reader](https://everbloomreader.com) is a podcast reader and TTS tool built for shared/multi-user use — it has RunPod GPU inference, KV caching, rate limiting, and budget tracking. Clarion is the personal, self-hosted version of that same TTS infrastructure: same backend adapters, all the shared-infra complexity stripped out.
+[Everbloom Reader](https://everbloomreader.com) is an EPUB, PDF, TXT, and ebook reader with TTS built for shared/multi-user use — it has RunPod GPU inference, KV caching, rate limiting, and budget tracking. Clarion is the personal, self-hosted version of that same TTS infrastructure: same backend adapters, all the shared-infra complexity stripped out.
 
 Files ported and simplified:
 - `server/src/edge.js` ← everbloom/server/src/edge.js (removed rate limiting, shared infra assumptions)
