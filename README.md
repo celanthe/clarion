@@ -112,8 +112,8 @@ Profiles are stored in `localStorage` and exportable as JSON.
 
 ```json
 {
-  "id": "julian",
-  "name": "Julian",
+  "id": "my-agent",
+  "name": "My Agent",
   "backend": "kokoro",
   "voice": "bm_george",
   "speed": 1.0,

@@ -19,7 +19,7 @@
     "saved": "Saved",
     "delete": "Delete",
     "export": "Export JSON",
-    "namePlaceholder": "Agent name (e.g. Julian)"
+    "namePlaceholder": "Agent name (e.g. Aria)"
   },
   "backend": {
     "edge": "Edge TTS",

@@ -1,13 +1,13 @@
 # Clarion — Agent Voice Manager
 
 Self-hosted TTS proxy and agent voice manager. Built on the Investiture framework pattern.
-Created for Erika Flowers (Investiture author) to give Julian a consistent podcast voice.
+Gives AI agents distinct, auditioned voices — one profile per crewmember, saved and portable.
 
 ## What it does
 
 - **Multi-backend TTS**: Edge TTS (zero-config), Kokoro (self-hosted), Piper (self-hosted), ElevenLabs (paid API), Google Chirp 3 HD (paid API)
-- **Agent profiles**: Named agents (e.g. Julian) with saved backend + voice + speed
-- **Export/import**: Share your Julian config as JSON
+- **Agent profiles**: Named agents with saved backend + voice + speed
+- **Export/import**: Share an agent config as JSON
 
 ## Architecture
 
@@ -77,8 +77,11 @@ GET /health
 
 ## Ported from Everbloom
 
-- `server/src/edge.js` ← everbloom/server/src/edge.js (removed rate limiting, shared infra)
-- `server/src/kokoro.js` ← everbloom/server/src/kokoro.js (removed RunPod, KV, budget)
+[Everbloom Reader](https://everbloomreader.com) is a podcast reader and TTS tool built for shared/multi-user use — it has RunPod GPU inference, KV caching, rate limiting, and budget tracking. Clarion is the personal, self-hosted version of that same TTS infrastructure: same backend adapters, all the shared-infra complexity stripped out.
+
+Files ported and simplified:
+- `server/src/edge.js` ← everbloom/server/src/edge.js (removed rate limiting, shared infra assumptions)
+- `server/src/kokoro.js` ← everbloom/server/src/kokoro.js (removed RunPod, KV cache, budget tracking)
 - `server/src/piper.js` ← everbloom/server/src/piper.js (minimal changes)
 - `design-system/tokens.css` ← new, Investiture dark aesthetic
 
@@ -90,12 +93,12 @@ GET /health
 - ElevenLabs: `21m00Tcm4TlvDq8ikWAM` (Rachel)
 - Google: `en-US-Chirp3-HD-Achernar`
 
-## Julian's recommended config
+## Example agent config (Kokoro, British male)
 
 ```json
 {
-  "id": "julian",
-  "name": "Julian",
+  "id": "my-agent",
+  "name": "My Agent",
   "backend": "kokoro",
   "voice": "bm_george",
   "speed": 1.0
