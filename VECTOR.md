@@ -18,23 +18,45 @@ knowledge:
 
 ## Problem Statement
 
-[OPERATOR: Verify — inferred from README. AI agents are gaining voices, but there's no dedicated tool for auditioning and managing them. Users pick voices blind, configure TTS backends manually per-session, and rebuild setup from scratch across tools. Clarion gives an agent a persistent, auditioned voice — saved as a profile, piped through from the browser or CLI, consistent across every session.]
+AI agents have voices — but those voices are homogeneous, robotic, and impossible to customize. You can't audition a voice against your agent's actual dialogue, compare across TTS models, adjust speed, or save a choice for next time. Every session starts from scratch.
+
+For users running agent fleets — multiple agents with distinct roles and personalities — the problem compounds. There's no way to give each crewmember a distinct sound that matches who they are. And for anyone managing five or six agents simultaneously, reading all that output is exhausting. Audio reduces that cognitive load: you can listen to one agent while reading another, or just let the output wash over you while you work.
+
+Clarion exists to fix all three problems: audition first, save the profile, pipe it through.
 
 ## Target Audience
 
-[OPERATOR: Verify — inferred from README and project context. Developers and creators who run AI agents (Claude Code, custom agents) and want consistent, personalized voices for them. Self-hosters comfortable with Node.js. Users range from zero-config (Edge TTS, browser only) to power users running local Kokoro or Piper servers via Docker.]
+**Primary — AI power users and hobbyists running personal agents.** Specifically:
+- Developers using Claude Code or similar agentic CLIs who want spoken output as they work — ambient audio instead of a wall of text.
+- Users managing agent fleets with distinct roles and personalities who need each crewmember to sound different.
+- Podcast producers and creators who have invented a named AI persona and need a reproducible, consistent voice across sessions.
+- Self-hosters who want local control over their TTS stack and distrust cloud-only lock-in.
+
+Users range from zero-config (Edge TTS, browser only, no setup) to power users running local Kokoro or Piper via Docker. All are comfortable with a CLI and basic self-hosting.
 
 ## Core Value Proposition
 
-[OPERATOR: Verify — inferred from README. Clarion is the missing step between "agent generates a response" and "agent speaks it out loud." It handles audition (hear a voice read your agent's actual dialogue), persistence (save the profile), and piping (CLI hook that fires on agent completion). No vendor lock-in — five backends, the free one works by default.]
+Clarion is the fastest way to give your AI agents distinct, auditionable voices — from a browser audition tab to a live CLI pipe to a Claude Code hook, all self-hosted. The free backend works with zero setup. The best backends run on your own hardware.
 
 ## What This Is Not
 
-[OPERATOR: Define what Clarion explicitly is not. Examples to consider: not a cloud service, not a shared multi-tenant platform, not a real-time voice chat system, not a transcription tool, not a general-purpose TTS SDK or library.]
+- **Not a shared or multi-tenant platform.** Rate limiting exists but is off by default. No per-user accounts, no billing, no usage tracking. Built for personal or small-team self-hosted use.
+- **Not a production SaaS voice product.** No KV cache, no GPU inference, no uptime guarantees. If you need those, build on top of Clarion or use a managed TTS service.
+- **Not a real-time voice chat system.** Clarion synthesizes completed text — it doesn't handle live microphone input, streaming partial tokens mid-sentence, or duplex audio.
+- **Not a transcription or STT tool.** Output only — text in, audio out.
+- **Not a general-purpose TTS library or npm package.** `private: true` in package.json is intentional. Clarion is a self-hosted tool, not a dependency.
 
 ## Design Principles
 
-[OPERATOR: Your README emphasizes "self-hosted," "no config needed," and "give your agent a voice." Consider writing 3–5 principles around: zero-friction defaults (Edge TTS works out of the box), local control (your data, your hardware, your server), agent-first design (voices are profiles attached to named agents, not ad-hoc selections). The architecture reflects these — write the principles that explain why it was built this way.]
+1. **Zero-config is sacred.** Edge TTS works with no server, no API key, no setup. Every feature addition must preserve this. If it breaks the zero-config path, it doesn't ship.
+
+2. **Agents are crewmembers, not settings.** A voice profile is a named crewmember with a role and a sound. Design everything around the agent as a first-class identity, not around backends or parameters.
+
+3. **Hear before you commit.** You should never have to guess what a voice sounds like. Audition against your agent's actual dialogue is a first-class workflow, not a nice-to-have.
+
+4. **Audio is output, not an add-on.** For users managing multiple agents, spoken output is a primary interface — not a novelty. Design for the case where you're listening, not reading.
+
+5. **Local control by default.** Your agents, your hardware, your server. No telemetry, no cloud lock-in, no shared infrastructure assumptions.
 
 ## Constraints
 
@@ -56,7 +78,10 @@ knowledge:
 
 ## Quality Gates
 
-[OPERATOR: Define your quality bar for shipping. What makes a change "done"? Examples: Edge TTS must always work without a server, CLI scripts must not gain npm dependencies, voice audition must be usable on mobile, HMAC signatures must not be logged, agent import/export round-trip must be lossless.]
+- **Edge TTS must play.** If Edge TTS doesn't produce audio without a server, without a key, the change doesn't ship. This is the zero-config guarantee.
+- **No perceptible lag.** Audio should start within a second of triggering. If a change introduces noticeable delay, fix it before shipping.
+- **CLI scripts stay dependency-free.** `cli/*.js` uses Node built-ins and `fetch` only. No new npm dependencies.
+- **Agent profiles round-trip cleanly.** Export then import must produce an identical agent. No data loss, no silent field drops.
 
 ---
 
