@@ -37,15 +37,18 @@ import { spawn }              from 'child_process';
 // --- Playback lock ---
 // Serializes multiple stream.js instances so agents speak in the order
 // their responses completed. Each instance waits for the lock to clear
-// before playing. Stale locks (holder process dead or >60s old) are
-// broken automatically so a crashed instance never blocks the queue.
+// before playing.
+//
+// Stale lock detection: a lock is stale only if the holder process is dead,
+// OR if it has been held for >STALE_AGE (backstop for PID recycling edge cases).
+// We do NOT bail out after a fixed wait — a long response can take several
+// minutes, and all queued instances should wait their turn rather than stomp.
 
 const LOCK_FILE  = join(tmpdir(), 'clarion-stream.lock');
-const LOCK_TTL   = 60_000;  // max ms to wait before assuming the holder is stuck
-const LOCK_POLL  = 500;     // ms between lock-file checks
+const STALE_AGE  = 5 * 60_000;  // 5 min — only break locks from dead/hung processes
+const LOCK_POLL  = 500;          // ms between lock-file checks
 
 function acquireLock() {
-  const deadline = Date.now() + LOCK_TTL;
   while (true) {
     // Atomic exclusive create — only one process wins the race.
     // openSync with 'wx' maps to O_CREAT|O_EXCL, which is atomic on POSIX.
@@ -62,21 +65,16 @@ function acquireLock() {
     try {
       const raw  = readFileSync(LOCK_FILE, 'utf8').trim();
       const [pid, ts] = raw.split(':').map(Number);
-      const age  = Date.now() - (ts || 0);
       const dead = !pid || (() => { try { process.kill(pid, 0); return false; } catch { return true; } })();
-      if (dead || age > LOCK_TTL) {
+      const hung = Date.now() - (ts || 0) > STALE_AGE;
+      if (dead || hung) {
         // Stale lock — remove and retry immediately
         try { unlinkSync(LOCK_FILE); } catch {}
         continue;
       }
     } catch {}
 
-    if (Date.now() >= deadline) {
-      // Timed out waiting — bail silently rather than blocking forever
-      process.exit(0);
-    }
-    const wait = Math.min(LOCK_POLL, deadline - Date.now());
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, LOCK_POLL);
   }
 }
 
