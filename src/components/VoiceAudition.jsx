@@ -147,6 +147,10 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
         })}
       </div>
 
+      {backend === 'kokoro' && (
+        <p className="audition__backend-hint">Kokoro may take a moment on the first request while the model warms up.</p>
+      )}
+
       {/* Speed knob (hidden for piper and elevenlabs — no speed support) */}
       {backend !== 'piper' && backend !== 'elevenlabs' && (
         <div className="audition__speed">
