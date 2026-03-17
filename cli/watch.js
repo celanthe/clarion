@@ -86,13 +86,26 @@ function projectDir(cwd) {
   return join(homedir(), '.claude', 'projects', slug);
 }
 
-function latestJsonl(dir) {
+function latestJsonl(dir, ownAgentId, currentSessionFile) {
   if (!existsSync(dir)) return null;
+
+  // Load sessions claimed by OTHER agents — skip those files
+  const claimed = new Set();
+  const sessions = loadSessions();
+  for (const [sessionId, claimedAgent] of Object.entries(sessions)) {
+    if (claimedAgent !== ownAgentId) claimed.add(sessionId);
+  }
+
   let best = null;
   let bestMtime = 0;
   for (const name of readdirSync(dir)) {
     if (!name.endsWith('.jsonl')) continue;
+    const sessionId = name.slice(0, -6); // strip .jsonl
+
+    // Allow our own current session, skip sessions claimed by others
     const full = join(dir, name);
+    if (claimed.has(sessionId) && full !== currentSessionFile) continue;
+
     try {
       const mtime = statSync(full).mtimeMs;
       if (mtime > bestMtime) { bestMtime = mtime; best = full; }
@@ -232,7 +245,7 @@ async function main() {
 
   // Poll project dir for a newer session file (new Claude invocation = new JSONL)
   function pollProjectDir() {
-    const latest = latestJsonl(projDir);
+    const latest = latestJsonl(projDir, agentId, sessionFile);
     if (!latest) {
       if (!sessionFile && verbose) console.error(`[clarion-watch] Waiting for session JSONL…`);
       return;
