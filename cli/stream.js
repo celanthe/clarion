@@ -29,7 +29,7 @@
  */
 
 import { createInterface }    from 'readline';
-import { readFileSync, existsSync, writeFileSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, appendFileSync, mkdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
 import { homedir, tmpdir, platform } from 'os';
 import { join }               from 'path';
 import { spawn }              from 'child_process';
@@ -90,9 +90,11 @@ process.on('exit',    releaseLock);
 process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
 process.on('SIGINT',  () => { releaseLock(); process.exit(0); });
 
-const CONFIG_DIR  = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE = join(CONFIG_DIR, 'agents.json');
-const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
+const CONFIG_DIR   = join(homedir(), '.config', 'clarion');
+const AGENTS_FILE  = join(CONFIG_DIR, 'agents.json');
+const CONFIG_FILE  = join(CONFIG_DIR, 'config.json');
+const LOG_FILE     = join(CONFIG_DIR, 'crew-log.jsonl');
+const STATE_FILE   = join(CONFIG_DIR, 'agents.state.json');
 
 // --- Config + agents (mirrors cli/speak.js) ---
 
@@ -114,6 +116,14 @@ function loadAgents() {
 
 function findAgent(id) {
   return loadAgents().find(a => a.id === id || a.name.toLowerCase() === id.toLowerCase()) || null;
+}
+
+function isAgentMuted(agentId) {
+  if (!agentId) return false;
+  try {
+    const state = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+    return !!(state[agentId]?.muted);
+  } catch { return false; }
 }
 
 // --- Arg parsing ---
@@ -276,10 +286,11 @@ function playBuffer(buffer, player) {
 // The drain loop plays them in order — while N plays, N+1 is fetching.
 
 class SpeakerQueue {
-  constructor(fetchFn, playFn) {
-    this.fetchFn = fetchFn;
-    this.playFn  = playFn;
-    this.pending = [];    // Array<Promise<Buffer>>
+  constructor(fetchFn, playFn, onPlayed = null) {
+    this.fetchFn  = fetchFn;
+    this.playFn   = playFn;
+    this.onPlayed = onPlayed;
+    this.pending  = [];    // Array<{ fetch: Promise<Buffer>, text: string }>
     this.draining = false;
     this.finished = false;
     this._resolve = null;
@@ -287,7 +298,7 @@ class SpeakerQueue {
 
   enqueue(text) {
     if (!text.trim()) return;
-    this.pending.push(this.fetchFn(text));
+    this.pending.push({ fetch: this.fetchFn(text), text });
     if (!this.draining) this._drain();
   }
 
@@ -309,10 +320,11 @@ class SpeakerQueue {
   async _drain() {
     this.draining = true;
     while (this.pending.length > 0) {
-      const p = this.pending.shift();
+      const { fetch: p, text } = this.pending.shift();
       try {
         const buf = await p;
         await this.playFn(buf);
+        this.onPlayed?.(text);
       } catch (err) {
         console.error(`[clarion] ${err.message}`);
       }
@@ -367,11 +379,29 @@ async function main() {
     console.error(`[clarion] Speaking as ${agent.name} (${backend}/${voice})`);
   }
 
+  const resolvedAgentId = flags.agent ? (findAgent(flags.agent)?.id || flags.agent) : null;
+
   const doFetch = (text) => fetchAudio(text, { server, apiKey: config.apiKey, backend, voice, speed });
   const doPlay  = (buf)  => playBuffer(buf, player);
+  const doLog   = resolvedAgentId ? (text) => {
+    try {
+      if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true });
+      const entry = JSON.stringify({
+        timestamp: new Date().toISOString(),
+        agentId:   resolvedAgentId,
+        text,
+        backend:   backend || 'edge',
+        voice:     voice || null,
+      });
+      appendFileSync(LOG_FILE, entry + '\n');
+    } catch {}
+  } : null;
 
-  const queue   = new SpeakerQueue(doFetch, doPlay);
-  const sentBuf = new SentenceBuffer((s) => queue.enqueue(s));
+  const queue   = new SpeakerQueue(doFetch, doPlay, doLog);
+  const sentBuf = new SentenceBuffer((s) => {
+    if (resolvedAgentId && isAgentMuted(resolvedAgentId)) return;
+    queue.enqueue(s);
+  });
   const plain   = !!flags.plain;
 
   const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });

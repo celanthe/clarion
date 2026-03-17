@@ -13,10 +13,10 @@ Clarion has six distinct layers. Each has a clear job and clear boundaries.
 | Layer | Location | Job | Rule |
 |-------|----------|-----|------|
 | Server | `server/` | Hono-based TTS proxy. Routes `/speak`, `/voices`, `/health`. Runs as Cloudflare Worker or Node server. | No UI logic. No localStorage. Accepts HTTP, returns audio or JSON. |
-| UI | `src/` | React 19 SPA. Tabs: Agents, Audition. Manages agent lifecycle and voice audition. | No direct `fetch` to TTS API — use `services/tts.js`. No storage writes — use `services/storage/`. |
+| UI | `src/` | React 19 SPA. Tabs: Agents, Audition, Log. Manages agent lifecycle, voice audition, and crew log. | No direct `fetch` to TTS API — use `services/tts.js`. No storage writes — use `services/storage/`. |
 | Services | `services/` | Client-side service modules: TTS client, HMAC crypto, agent storage. | No React imports. No DOM manipulation. Pure logic + fetch. |
 | Domain | `core/` | Agent model: `createAgent`, `validateAgent`, `slugify`, `defaultVoice`. Voice list (`core/voices.js`). | No imports from `src/`, `services/`, or `server/`. Pure JS functions. |
-| CLI | `cli/` | Node.js CLI scripts: `clarion-init`, `clarion-speak`, `clarion-status`, `clarion-stream`. | No imports from `src/`, `services/`, `core/`, or `server/`. Uses `fetch` directly. Zero npm deps. |
+| CLI | `cli/` | Node.js CLI scripts: `clarion-init`, `clarion-speak`, `clarion-status`, `clarion-stream`, `clarion-watch`. | No imports from `src/`, `services/`, `core/`, or `server/`. Uses `fetch` directly. Zero npm deps. |
 | Design System | `design-system/` | CSS custom properties. One file: `tokens.css` with 72 custom properties. | All color, spacing, typography, and radius values live here. Never hardcode these in component CSS. |
 
 `content/en.json` — UI strings. Imported by components. Not a layer but a shared resource — copy lives here, not in components.
@@ -53,7 +53,7 @@ cli/             ←  standalone (no imports from any project layer)
 | Styling | CSS custom properties | `design-system/tokens.css` — 72 custom properties, dark lavender theme. No Tailwind, no CSS Modules. |
 | State | React local state (useState/useCallback) | No global state needed — agents loaded from localStorage, no cross-component sync required |
 | Server | Hono + Cloudflare Worker | Thin proxy — routes requests to TTS backends. Worker runs at edge with zero cold-start. Also runs as Node server for local Docker setup via `node-server.js`. |
-| Storage | localStorage + IndexedDB | localStorage: agent profiles, server URL. IndexedDB: HMAC signing key (via SubtleCrypto). No backend persistence. |
+| Storage | localStorage + IndexedDB | localStorage: agent profiles, server URL. IndexedDB: HMAC signing key (via SubtleCrypto), crew message log. No backend persistence. |
 | CLI | Node.js (built-ins only) | Scripts installed globally via `npm install -g .`. Zero npm dependencies by design. |
 | Auth | HMAC-SHA256 (SubtleCrypto) | Browser signs requests using a key stored in IndexedDB. CLI uses `Bearer <key>`. Timing-safe comparison on server. Optional — unauthenticated if no `API_KEY` set. |
 | Font | Space Grotesk (@fontsource) | Self-hosted via @fontsource — no Google Fonts CDN dependency |
@@ -82,17 +82,19 @@ clarion/
 │   ├── App.css                  # App-level styles
 │   ├── global.css               # CSS resets and base styles (imports tokens.css)
 │   └── components/
-│       ├── AgentCard.jsx/css    # Edit one agent (backend, voice, speed, prose mode)
+│       ├── AgentCard.jsx/css    # Edit one agent (backend, voice, speed, prose mode, mute)
 │       ├── BackendStatus.jsx/css # Status dots, polls /health every 30s
+│       ├── CrewLog.jsx/css      # Log tab — per-agent message history with replay
 │       ├── VoiceAudition.jsx/css # Audition tab — paste dialogue, hear voices
 │       ├── VoiceSelector.jsx/css # Grouped voice dropdown per backend
 │       └── Waveform.jsx/css     # Real-time audio waveform visualizer
 │
 ├── services/                    # Services layer — client-side
-│   ├── tts.js                   # Fetch /speak, play audio, serial queue, waveform analyser
+│   ├── tts.js                   # Fetch /speak, play audio, serial queue, speaking state, mute controls
 │   ├── crypto.js                # HMAC key management (IndexedDB) and request signing
 │   └── storage/
-│       └── agent-storage.js    # localStorage: agents, server URL, API key state
+│       ├── agent-storage.js    # localStorage: agents, server URL, API key state
+│       └── crew-log.js         # IndexedDB: per-agent spoken message history
 │
 ├── core/                        # Domain layer — pure JS, no framework deps
 │   ├── domain/
@@ -101,9 +103,12 @@ clarion/
 │
 ├── cli/                         # CLI layer — Node.js, zero npm deps
 │   ├── init.js                  # clarion-init: interactive setup wizard, writes hook
+│   ├── log.js                   # clarion-log: show crew-log.jsonl entries
+│   ├── mute.js                  # clarion-mute: mute/unmute agents via agents.state.json
 │   ├── speak.js                 # clarion-speak: pipe text to agent voice
-│   ├── status.js                # clarion-status: server health and agent state
-│   └── stream.js                # clarion-stream: real-time streaming with lockfile
+│   ├── status.js                # clarion-status: server health, agent state, mute flags
+│   ├── stream.js                # clarion-stream: real-time streaming, mute check, crew log
+│   └── watch.js                 # clarion-watch: persistent daemon, watches session JSONL, speaks live
 │
 ├── server/                      # Server layer — Cloudflare Worker (Hono)
 │   ├── src/

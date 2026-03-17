@@ -45,6 +45,7 @@
   --color-accent:        #8272f0;
   --color-accent-hover:  #9888ff;
   --color-accent-dim:    rgba(130, 114, 240, 0.15);
+  --color-speaking-glow: rgba(130, 114, 240, 0.25);
 
   --color-border:        #332f4e;
   --color-border-subtle: #242238;

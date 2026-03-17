@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import AgentCard from './components/AgentCard.jsx';
 import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
+import CrewLog from './components/CrewLog.jsx';
 import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, hasApiKey, setApiKey } from '../services/storage/agent-storage.js';
 import { migrateApiKey } from '../services/crypto.js';
 import { stop } from '../services/tts.js';
@@ -10,7 +11,8 @@ import './App.css';
 
 const TABS = [
   { id: 'agents',   label: 'Agents' },
-  { id: 'audition', label: 'Audition' }
+  { id: 'audition', label: 'Audition' },
+  { id: 'log',      label: 'Log' },
 ];
 
 export default function App() {
@@ -266,7 +268,9 @@ export default function App() {
       </nav>
 
       <main className="app-main">
-        {tab === 'audition' ? (
+        {tab === 'log' ? (
+          <CrewLog agents={agents} />
+        ) : tab === 'audition' ? (
           <VoiceAudition health={health} onSave={handleAuditionSave} onGoToAgents={handleGoToAgents} />
         ) : (
           <>

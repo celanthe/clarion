@@ -20,7 +20,7 @@ From the Clarion directory:
 npm install -g .
 ```
 
-This adds `clarion-init`, `clarion-speak`, `clarion-stream`, and `clarion-status` to your PATH.
+This adds `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-status`, `clarion-mute`, `clarion-log`, and `clarion-watch` to your PATH.
 
 ### 2. Run clarion-init
 
@@ -214,6 +214,102 @@ Status messages (agent name, errors) go to stderr. Audio goes directly to the pl
 
 ---
 
+## clarion-watch — live session daemon
+
+`clarion-watch` is a persistent background process that watches a Claude Code session JSONL and speaks each assistant message as soon as it is written — including text blocks that appear before tool use. The voice starts while Claude is still working, not after it finishes.
+
+This is the recommended alternative to the stop hook for users who want continuous, low-latency voice output without hook configuration.
+
+### Basic usage
+
+Start the watcher in a separate terminal before (or after) starting a Claude session:
+
+```sh
+# Auto-select agent if only one is configured
+clarion-watch
+
+# Explicit agent
+clarion-watch --agent my-agent
+
+# Watch a different project directory
+clarion-watch --agent my-agent --cwd /path/to/project
+
+# Verbose — logs each detected entry to stderr
+clarion-watch --agent my-agent --verbose
+```
+
+Stop it with `Ctrl+C`.
+
+### How it works
+
+1. Resolves `~/.claude/projects/<slug>/` from `process.cwd()` (or `--cwd`)
+2. Finds the most recent `*.jsonl` file in that directory
+3. On startup, scans all existing entries and records their UUIDs — **does not speak history**
+4. Polls the file every 200ms for new entries; for each new assistant entry, spawns `clarion-stream` with the text
+5. Polls the project directory every 2s — automatically switches to a newer JSONL if a new Claude session starts
+6. Respects mute state: if the agent is muted via `clarion-mute`, entries are skipped silently
+
+### Coexistence with the stop hook
+
+If both `clarion-watch` and the stop hook are active, the same message will be spoken twice — once mid-session (from watch) and once after Claude finishes (from the hook). The watcher logs a warning at startup if it detects this:
+
+```
+[clarion-watch] Warning: the Clarion stop hook is also registered in ~/.claude/settings.json.
+[clarion-watch] Messages will be spoken twice — once mid-session (watch) and once at stop (hook).
+[clarion-watch] Remove the Stop hook entry from settings.json if you want watch-only behavior.
+```
+
+Use one or the other. Watch gives earlier, more frequent voice output. The hook is simpler to set up and works globally across all projects without a running daemon.
+
+### All flags
+
+| Flag | Description |
+|------|-------------|
+| `--agent <id>` | Agent by ID or name. Required if more than one agent is configured. |
+| `--cwd <path>` | Project directory to watch (default: `process.cwd()`) |
+| `--verbose` | Log detection events (UUIDs, mute skips, session switches) to stderr |
+| `--help` | Show usage and exit |
+
+---
+
+## clarion-mute — mute and unmute agents
+
+`clarion-mute` mutes or unmutes an agent. When muted, `clarion-stream` and `clarion-watch` skip audio for that agent silently.
+
+```sh
+# Mute an agent
+clarion-mute my-agent
+
+# Unmute
+clarion-mute my-agent --off
+
+# List all muted agents
+clarion-mute --list
+```
+
+Mute state is stored in `~/.config/clarion/agents.state.json`. It is read on each synthesis call — no restart needed.
+
+---
+
+## clarion-log — view the crew log
+
+`clarion-log` prints recent entries from the crew log, which records every message spoken via `clarion-stream`.
+
+```sh
+# Show the 20 most recent entries (default)
+clarion-log
+
+# Show entries for one agent
+clarion-log --agent my-agent
+
+# Show more entries
+clarion-log --limit 50
+```
+
+The log is stored in `~/.config/clarion/crew-log.jsonl`.
+
+---
+
 ## Claude Code stop hook -- speak every reply automatically
 
 Set this up once and every Claude Code response will be spoken in your agent's voice without any manual piping.
@@ -343,8 +439,8 @@ Playing   idle
 
 | Variable | Where it's read | Description |
 |----------|----------------|-------------|
-| `CLARION_SERVER` | CLI (both scripts) | URL of your Clarion server. Default: `http://localhost:8787` |
-| `CLARION_API_KEY` | CLI (both scripts) | Bearer token, if your server has `API_KEY` set |
+| `CLARION_SERVER` | All CLI scripts | URL of your Clarion server. Default: `http://localhost:8787` |
+| `CLARION_API_KEY` | All CLI scripts | Bearer token, if your server has `API_KEY` set |
 
 Both variables can also be set in `~/.config/clarion/config.json`:
 

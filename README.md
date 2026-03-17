@@ -13,7 +13,8 @@ Self-hosted TTS proxy and voice manager. Audition voices against your agent's ac
 - **Audition voices.** Paste your agent's characteristic dialogue. Hear each voice read it. Pick the one that fits.
 - **Save agent profiles.** One agent uses Kokoro `bm_george` at 1.0x, another uses Edge `en-GB-SoniaNeural`. Both saved, both exportable as JSON.
 - **Five TTS backends.** Edge TTS (zero config), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight), ElevenLabs (paid), Google Chirp 3 HD (paid).
-- **Terminal integration.** Pipe agent responses through their voice from the CLI. Works with Claude Code via stop hook.
+- **Terminal integration.** Pipe agent responses through their voice from the CLI. Works with Claude Code via `clarion-watch` (live daemon) or the stop hook.
+- **Live session voice.** `clarion-watch` speaks each assistant message as soon as it is written — including text before tool use. Voice starts while Claude is still working.
 - **Multi-agent support.** Running several agents at once? Concurrent responses queue automatically and speak in the order they finished — no overlapping audio.
 
 ---
@@ -70,9 +71,16 @@ echo "The pattern holds." | clarion-speak --agent my-agent
 
 # Stream in real time, sentence by sentence
 claude "Walk me through this." | clarion-stream --agent my-agent
+
+# Watch a Claude Code session live — speaks mid-session, before tools finish
+clarion-watch --agent my-agent
+
+# Mute an agent
+clarion-mute my-agent
+clarion-mute my-agent --off
 ```
 
-[Full CLI guide](docs/cli.md): speak.js, stream.js, and the Claude Code stop hook.
+[Full CLI guide](docs/cli.md): `clarion-speak`, `clarion-stream`, `clarion-watch`, `clarion-mute`, `clarion-log`, and the Claude Code stop hook.
 
 ---
 

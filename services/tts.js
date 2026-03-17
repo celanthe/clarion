@@ -9,6 +9,7 @@
 
 import { getServerUrl } from './storage/agent-storage.js';
 import { signRequest } from './crypto.js';
+import { logCrewMessage } from './storage/crew-log.js';
 
 async function authHeaders(method, path) {
   const sig = await signRequest(method, path);
@@ -27,6 +28,28 @@ let _pageUnlocked = false;
 // _generation increments on stop() to cancel any queued items.
 let _queue = Promise.resolve();
 let _generation = 0;
+
+// Speaking state — tracks which agent is currently audible.
+let _currentSpeakingAgentId = null;
+let _mutedAgents = new Set();
+let _speakingListeners = [];
+
+function _notifySpeaking() {
+  for (const fn of _speakingListeners) fn(_currentSpeakingAgentId);
+}
+
+/** Returns the ID of the agent currently speaking, or null. */
+export function getCurrentSpeakingAgentId() { return _currentSpeakingAgentId; }
+
+/** Subscribe to speaking state changes. Returns an unsubscribe function. */
+export function onSpeakingChange(fn) {
+  _speakingListeners.push(fn);
+  return () => { _speakingListeners = _speakingListeners.filter(f => f !== fn); };
+}
+
+export function muteAgent(id)   { _mutedAgents.add(id); }
+export function unmuteAgent(id) { _mutedAgents.delete(id); }
+export function isMuted(id)     { return _mutedAgents.has(id); }
 
 // Web Audio API — for the waveform visualizer
 let _audioCtx = null;
@@ -170,12 +193,31 @@ async function _speak(text, options = {}, onStart) {
 }
 
 export async function speakAsAgent(text, agent) {
-  return speak(text, {
-    backend: agent.backend,
-    voice: agent.voice,
-    speed: agent.speed,
-    proseOnly: agent.proseOnly ?? true
-  });
+  if (_mutedAgents.has(agent.id)) return; // skip muted agents silently
+
+  const gen = ++_generation;
+  _queue = _queue
+    .then(async () => {
+      if (gen !== _generation) return;
+      _currentSpeakingAgentId = agent.id;
+      _notifySpeaking();
+      try {
+        await _speak(text, {
+          backend:   agent.backend,
+          voice:     agent.voice,
+          speed:     agent.speed,
+          proseOnly: agent.proseOnly ?? true,
+        });
+        logCrewMessage(agent.id, text, { backend: agent.backend, voice: agent.voice });
+      } finally {
+        if (_currentSpeakingAgentId === agent.id) {
+          _currentSpeakingAgentId = null;
+          _notifySpeaking();
+        }
+      }
+    })
+    .catch(() => {});
+  return _queue;
 }
 
 export function speak(text, options = {}, onStart) {

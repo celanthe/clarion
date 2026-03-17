@@ -13,6 +13,13 @@
   border-color: var(--color-accent-dim);
 }
 
+/* Speaking state — glow while this agent's voice is playing */
+.agent-card--speaking {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-speaking-glow);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
 /* Header */
 .agent-card__header {
   display: flex;
@@ -265,6 +272,17 @@
 .agent-card__btn--ghost-active {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+/* Mute toggle */
+.agent-card__mute-btn {
+  font-size: 0.85em;
+}
+
+.agent-card__mute-btn--muted {
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  opacity: 0.7;
 }
 
 /* Focus rings — global for all buttons in the card */

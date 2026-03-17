@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 — 2026-03-16
+
+### CLI
+
+- **`clarion-watch`** — new persistent daemon that watches the Claude Code session JSONL and speaks each assistant message as soon as it is written. Voice fires mid-session, including text blocks that appear before tool use, not just at stop. On startup, existing entries are scanned without being spoken so restarting the watcher does not replay history. Automatically switches to a new JSONL when a new Claude session starts. Checks mute state before each synthesis call. Warns at startup if the stop hook is also active (double-speak risk).
+- **`clarion-mute`** — new command to mute or unmute agents via `~/.config/clarion/agents.state.json`. `clarion-stream` and `clarion-watch` both respect this flag on each call — no restart needed.
+- **`clarion-log`** — new command to view the crew log (`~/.config/clarion/crew-log.jsonl`). Supports `--agent` and `--limit` filters.
+- **`clarion-stream`**: now writes every spoken sentence to the crew log with timestamp, agent ID, backend, and voice. Also checks mute state before each sentence (previously checked only at stream start). Adds `onPlayed` callback to `SpeakerQueue` to support the log write after audio plays.
+- **`clarion-status`**: shows mute flag (`🔇 muted`) next to agent rows that are currently muted.
+
+### UI
+
+- **Log tab** — new Crew Log tab shows spoken message history per agent, pulled from IndexedDB. Replays any entry on demand.
+- **Speaking state** — agent cards glow (accent border + subtle box-shadow) while that agent's voice is playing. Driven by `onSpeakingChange` subscription in `services/tts.js`.
+- **Mute button** — each agent card now has an inline mute toggle (🔊 / 🔇). Mute is in-memory for the browser session; CLI mute is persisted to disk via `clarion-mute`.
+- **`services/tts.js`**: adds `muteAgent`, `unmuteAgent`, `isMuted`, `getCurrentSpeakingAgentId`, `onSpeakingChange`. `speakAsAgent` now tracks speaking state, fires listeners, and writes to the crew log (IndexedDB) after each synthesis.
+
+### Design system
+
+- Add `--color-speaking-glow` token (`rgba(130, 114, 240, 0.25)`) for the agent card speaking state.
+
 ## 0.2.0 — 2026-03-10
 
 ### UI

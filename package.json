@@ -1,13 +1,16 @@
 {
   "name": "clarion",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "private": true,
   "bin": {
     "clarion-init": "./cli/init.js",
+    "clarion-log": "./cli/log.js",
+    "clarion-mute": "./cli/mute.js",
     "clarion-speak": "./cli/speak.js",
     "clarion-status": "./cli/status.js",
-    "clarion-stream": "./cli/stream.js"
+    "clarion-stream": "./cli/stream.js",
+    "clarion-watch": "./cli/watch.js"
   },
   "scripts": {
     "dev": "vite",

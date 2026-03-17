@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createAgent, slugify, defaultVoice } from '../../core/domain/agent.js';
 import { saveAgent, deleteAgent, exportAgents } from '../../services/storage/agent-storage.js';
-import { speakAsAgent, stop } from '../../services/tts.js';
+import { speakAsAgent, stop, onSpeakingChange, muteAgent, unmuteAgent, isMuted } from '../../services/tts.js';
 import VoiceSelector from './VoiceSelector.jsx';
 import './AgentCard.css';
 
@@ -23,7 +23,13 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   const [testText, setTestText] = useState('');
   const [showTestInput, setShowTestInput] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [muted, setMuted] = useState(() => isMuted(initialAgent.id));
   const previewTimerRef = useRef(null);
+
+  useEffect(() => {
+    return onSpeakingChange((id) => setIsSpeaking(id === agent.id));
+  }, [agent.id]);
 
   useEffect(() => () => clearTimeout(previewTimerRef.current), []);
 
@@ -105,6 +111,16 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
     exportAgents(agent.id);
   }
 
+  function handleMuteToggle() {
+    if (muted) {
+      unmuteAgent(agent.id);
+      setMuted(false);
+    } else {
+      muteAgent(agent.id);
+      setMuted(true);
+    }
+  }
+
   if (confirmDelete) {
     return (
       <article className="agent-card agent-card--confirming">
@@ -124,7 +140,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   }
 
   return (
-    <article className="agent-card">
+    <article className={`agent-card${isSpeaking ? ' agent-card--speaking' : ''}`}>
       <header className="agent-card__header">
         <input
           className="agent-card__name"
@@ -249,6 +265,16 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
             aria-label="Customize test text"
           >
             {showTestInput ? '↑' : '✎'}
+          </button>
+          <button
+            className={`agent-card__btn agent-card__btn--ghost agent-card__btn--tiny agent-card__mute-btn${muted ? ' agent-card__mute-btn--muted' : ''}`}
+            onClick={handleMuteToggle}
+            type="button"
+            title={muted ? 'Unmute agent' : 'Mute agent'}
+            aria-label={muted ? 'Unmute agent' : 'Mute agent'}
+            aria-pressed={muted}
+          >
+            {muted ? '🔇' : '🔊'}
           </button>
         </div>
 

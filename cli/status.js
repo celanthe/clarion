@@ -13,6 +13,7 @@ import { join } from 'path';
 const CONFIG_DIR    = join(homedir(), '.config', 'clarion');
 const AGENTS_FILE   = join(CONFIG_DIR, 'agents.json');
 const CONFIG_FILE   = join(CONFIG_DIR, 'config.json');
+const STATE_FILE    = join(CONFIG_DIR, 'agents.state.json');
 const HOOK_FILE     = join(homedir(), '.claude', 'clarion-hook.js');
 const SETTINGS_FILE = join(homedir(), '.claude', 'settings.json');
 const LOCK_FILE     = join(tmpdir(), 'clarion-stream.lock');
@@ -31,6 +32,11 @@ function loadConfig() {
 function loadAgents() {
   if (!existsSync(AGENTS_FILE)) return [];
   try { return JSON.parse(readFileSync(AGENTS_FILE, 'utf8')); } catch { return []; }
+}
+
+function loadAgentState() {
+  if (!existsSync(STATE_FILE)) return {};
+  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
 }
 
 function checkLock() {
@@ -85,13 +91,15 @@ async function main() {
 
   // Agents
   const agents = loadAgents();
+  const state  = loadAgentState();
   if (agents.length === 0) {
     console.log(`Agents    none`);
     console.log(`          Run clarion-init to set up your first agent.`);
   } else {
     console.log(`Agents    ${agents.length}  (${AGENTS_FILE})`);
     for (const a of agents) {
-      console.log(`          ${a.id.padEnd(16)} ${a.backend.padEnd(10)} ${a.voice.padEnd(26)} ${a.name}`);
+      const muteFlag = state[a.id]?.muted ? '  🔇 muted' : '';
+      console.log(`          ${a.id.padEnd(16)} ${a.backend.padEnd(10)} ${a.voice.padEnd(26)} ${a.name}${muteFlag}`);
     }
   }
   console.log('');
