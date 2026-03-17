@@ -13,21 +13,19 @@
  *   clarion-watch --verbose             # log detection events to stderr
  *   clarion-watch --help
  *
- * Note: if both clarion-watch and the stop hook are active, the same message
- * will be spoken twice — once mid-session from watch, once at stop from hook.
- * Use one or the other, not both.
+ * When a session is detected, registers a session→agent mapping in
+ * ~/.config/clarion/sessions.json so the stop hook speaks as the correct agent.
  */
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { spawn } from 'child_process';
 
-const CONFIG_DIR  = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE = join(CONFIG_DIR, 'agents.json');
-const STATE_FILE  = join(CONFIG_DIR, 'agents.state.json');
-const HOOK_FILE   = join(homedir(), '.claude', 'clarion-hook.js');
-const SETTINGS_FILE = join(homedir(), '.claude', 'settings.json');
+const CONFIG_DIR    = join(homedir(), '.config', 'clarion');
+const AGENTS_FILE   = join(CONFIG_DIR, 'agents.json');
+const STATE_FILE    = join(CONFIG_DIR, 'agents.state.json');
+const SESSIONS_FILE = join(CONFIG_DIR, 'sessions.json');
 
 // --- Agent loading (mirrors cli/stream.js) ---
 
@@ -48,18 +46,22 @@ function isAgentMuted(agentId) {
   } catch { return false; }
 }
 
-// --- Hook coexistence check ---
+// --- Session-to-agent mapping (shared with stop hook) ---
 
-function isHookRegistered() {
-  if (!existsSync(HOOK_FILE)) return false;
-  if (!existsSync(SETTINGS_FILE)) return false;
-  try {
-    const settings = JSON.parse(readFileSync(SETTINGS_FILE, 'utf8'));
-    const stopHooks = settings?.hooks?.Stop ?? [];
-    return stopHooks.some(group =>
-      (group.hooks ?? []).some(h => h.type === 'command' && h.command?.includes('clarion'))
-    );
-  } catch { return false; }
+function loadSessions() {
+  try { return JSON.parse(readFileSync(SESSIONS_FILE, 'utf8')); } catch { return {}; }
+}
+
+function registerSession(sessionId, agentId) {
+  const sessions = loadSessions();
+  sessions[sessionId] = agentId;
+  writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2) + '\n');
+}
+
+function unregisterSession(sessionId) {
+  const sessions = loadSessions();
+  delete sessions[sessionId];
+  writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2) + '\n');
 }
 
 // --- Arg parsing ---
@@ -155,13 +157,6 @@ async function main() {
     console.error(`[clarion-watch] Agent: ${agents[0].name} (${agentId})`);
   }
 
-  // Warn if the stop hook is also active — same message will be spoken twice
-  if (isHookRegistered()) {
-    console.error(`[clarion-watch] Warning: the Clarion stop hook is also registered in ~/.claude/settings.json.`);
-    console.error(`[clarion-watch] Messages will be spoken twice — once mid-session (watch) and once at stop (hook).`);
-    console.error(`[clarion-watch] Remove the Stop hook entry from settings.json if you want watch-only behavior.`);
-  }
-
   const verbose = !!flags.verbose;
   const cwd = flags.cwd || process.cwd();
   const projDir = projectDir(cwd);
@@ -178,6 +173,10 @@ async function main() {
     sessionFile = file;
     lastSize = -1;
     spokenUuids.clear();
+
+    // Register session→agent mapping so the stop hook knows who's speaking
+    const sessionId = basename(file, '.jsonl');
+    registerSession(sessionId, agentId);
 
     if (!existsSync(file)) return;
     let raw;
@@ -248,9 +247,15 @@ async function main() {
     initSession(latest);
   }
 
-  // Graceful shutdown
-  process.on('SIGINT',  () => { console.error('\n[clarion-watch] stopped'); process.exit(0); });
-  process.on('SIGTERM', () => { process.exit(0); });
+  // Graceful shutdown — unregister session mapping
+  function cleanup() {
+    if (sessionFile) {
+      const sessionId = basename(sessionFile, '.jsonl');
+      try { unregisterSession(sessionId); } catch {}
+    }
+  }
+  process.on('SIGINT',  () => { cleanup(); console.error('\n[clarion-watch] stopped'); process.exit(0); });
+  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
 
   // Initial scan
   pollProjectDir();
