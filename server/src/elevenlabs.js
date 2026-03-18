@@ -8,6 +8,7 @@
 const API_BASE = 'https://api.elevenlabs.io/v1';
 
 export async function synthesize(text, voice, apiKey, speed = 1.0) {
+  speed = Math.min(1.2, Math.max(0.7, speed));
   if (!apiKey) {
     throw new Error('ElevenLabs not configured. Set ELEVENLABS_API_KEY in your environment.');
   }
