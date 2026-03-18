@@ -1,29 +1,46 @@
 #!/usr/bin/env node
 /**
- * Clarion CLI — pipe your agent's text to their voice.
+ * Clarion speak — speak text in any agent's voice on demand.
+ *
+ * Designed for use inside Claude Code sessions: an agent can call
+ * clarion-speak mid-turn to voice a line as a different agent, then the
+ * stop hook will skip any text that was already spoken.
  *
  * Usage:
- *   node cli/speak.js "Hello, world." --backend kokoro --voice bm_george
- *   node cli/speak.js --agent julian "The pattern holds."
- *   echo "Hello." | node cli/speak.js --agent julian
- *   node cli/speak.js --list-agents
+ *   clarion-speak --agent arynna "The pattern holds."
+ *   echo "Hello." | clarion-speak --agent kilara
+ *   clarion-speak --list-agents
+ *   clarion-speak --export
  *
- * Config (env or ~/.config/clarion/config.json):
- *   CLARION_SERVER=http://localhost:8787
+ * Options:
+ *   --agent   <id>    Agent profile by ID or name (required for speaking)
+ *   --backend <name>  edge | kokoro | piper | elevenlabs | google  (default: edge)
+ *   --voice   <id>    Voice ID for the backend
+ *   --speed   <n>     Speed multiplier (default: 1.0)
+ *   --server  <url>   Clarion server URL (default: $CLARION_SERVER or localhost:8080)
+ *   --player  <cmd>   Audio player: afplay (macOS default), mpv, ffplay, aplay
+ *   --raw             Write audio to stdout instead of playing (old behavior)
+ *   --export          Print saved agents as JSON to stdout
+ *   --list-agents     Show saved agent profiles
+ *   --help            This message
  *
- * Agent profiles (~/.config/clarion/agents.json):
- *   Export from the Clarion UI and save to ~/.config/clarion/agents.json, or
- *   print the current agent list: node cli/speak.js --export
+ * Spoken log:
+ *   Each spoken text is hashed (SHA-256) and logged to
+ *   ~/.config/clarion/spoken.log with a timestamp. The stop hook reads
+ *   this log to avoid double-speaking text that was already voiced via
+ *   clarion-speak during the turn.
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { homedir } from 'os';
+import { createHash } from 'crypto';
+import { readFileSync, existsSync, writeFileSync, appendFileSync, mkdirSync, unlinkSync } from 'fs';
+import { homedir, tmpdir, platform } from 'os';
 import { join } from 'path';
-import { writeFileSync, mkdirSync } from 'fs';
+import { spawn } from 'child_process';
 
-const CONFIG_DIR  = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE = join(CONFIG_DIR, 'agents.json');
-const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
+const CONFIG_DIR   = join(homedir(), '.config', 'clarion');
+const AGENTS_FILE  = join(CONFIG_DIR, 'agents.json');
+const CONFIG_FILE  = join(CONFIG_DIR, 'config.json');
+const SPOKEN_LOG   = join(CONFIG_DIR, 'spoken.log');
 
 // Ensure config directory exists on first run
 mkdirSync(CONFIG_DIR, { recursive: true });
@@ -36,7 +53,7 @@ function loadConfig() {
     try { Object.assign(cfg, JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))); } catch {}
   }
   return {
-    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8787',
+    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8080',
     apiKey: process.env.CLARION_API_KEY || cfg.apiKey || null
   };
 }
@@ -54,7 +71,7 @@ function findAgent(id) {
 
 // --- Speak ---
 
-async function speak(text, { server, apiKey, backend, voice, speed }) {
+async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
   const headers = { 'Content-Type': 'application/json' };
   if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
@@ -69,9 +86,52 @@ async function speak(text, { server, apiKey, backend, voice, speed }) {
     throw new Error(err.error || `Server error ${res.status}`);
   }
 
-  // Write raw audio to stdout — pipe to a player or file
-  const buf = await res.arrayBuffer();
-  process.stdout.write(Buffer.from(buf));
+  return Buffer.from(await res.arrayBuffer());
+}
+
+// --- Audio playback ---
+
+function detectPlayer() {
+  if (platform() === 'darwin') return 'afplay';
+  return 'mpv';
+}
+
+function playBuffer(buffer, player) {
+  const tmp = join(tmpdir(), `clarion-speak-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`);
+
+  const playerArgs = {
+    'afplay':  [tmp],
+    'mpv':     ['--no-video', '--really-quiet', tmp],
+    'ffplay':  ['-nodisp', '-autoexit', '-loglevel', 'quiet', tmp],
+    'aplay':   [tmp],
+  };
+
+  return new Promise((resolve, reject) => {
+    try {
+      writeFileSync(tmp, buffer);
+    } catch (err) {
+      return reject(err);
+    }
+    const args = playerArgs[player] || [tmp];
+    const proc = spawn(player, args, { stdio: 'ignore' });
+    proc.on('close', () => { try { unlinkSync(tmp); } catch {} resolve(); });
+    proc.on('error', (err) => { try { unlinkSync(tmp); } catch {} reject(err); });
+  });
+}
+
+// --- Spoken log ---
+
+function hashText(text) {
+  return createHash('sha256').update(text.trim()).digest('hex');
+}
+
+function logSpoken(text) {
+  const entry = JSON.stringify({
+    timestamp: new Date().toISOString(),
+    hash: hashText(text),
+    length: text.trim().length
+  });
+  appendFileSync(SPOKEN_LOG, entry + '\n');
 }
 
 // --- Args ---
@@ -115,31 +175,7 @@ async function main() {
 
   // --help
   if (flags.help) {
-    console.error(`
-clarion speak — pipe your agent's text to their voice
-
-Usage:
-  node cli/speak.js "text" [options]
-  echo "text" | node cli/speak.js [options]
-
-Options:
-  --agent  <id>      Use a saved agent profile (by ID or name)
-  --backend <name>   edge | kokoro | piper | elevenlabs | google  (default: edge)
-  --voice  <id>      Voice ID for the backend
-  --speed  <n>       Playback speed multiplier (default: 1.0)
-  --server <url>     Clarion server URL (default: $CLARION_SERVER or localhost:8787)
-  --export           Print saved agents as JSON to stdout
-  --list-agents      Show saved agent profiles
-  --help             This message
-
-Output:
-  Raw audio/mpeg piped to stdout. Pipe to a player:
-    node cli/speak.js "Hello." | mpv -
-    node cli/speak.js "Hello." | ffplay -nodisp -autoexit -
-
-Agent profiles:
-  Export from Clarion UI → save to ~/.config/clarion/agents.json
-    `);
+    console.error(readFileSync(new URL(import.meta.url), 'utf8').match(/\/\*\*([\s\S]*?)\*\//)[1].replace(/^ \* ?/gm, ''));
     process.exit(0);
   }
 
@@ -164,6 +200,7 @@ Agent profiles:
   }
 
   const server = flags.server || config.server;
+  const player = flags.player || detectPlayer();
 
   // Resolve text from args or stdin
   const stdinText = await readStdin();
@@ -171,8 +208,15 @@ Agent profiles:
 
   if (!text) {
     console.error('[clarion] Error: provide text as argument or via stdin');
-    console.error('[clarion]   node cli/speak.js "Hello."');
-    console.error('[clarion]   echo "Hello." | node cli/speak.js --agent julian');
+    console.error('[clarion]   clarion-speak --agent arynna "Hello."');
+    console.error('[clarion]   echo "Hello." | clarion-speak --agent kilara');
+    process.exit(1);
+  }
+
+  // --agent is required for speaking
+  if (!flags.agent && !flags.backend) {
+    console.error('[clarion] Error: --agent <id> is required');
+    console.error('[clarion]   clarion-speak --agent arynna "Hello."');
     process.exit(1);
   }
 
@@ -195,7 +239,19 @@ Agent profiles:
   }
 
   try {
-    await speak(text, { server, apiKey: config.apiKey, backend, voice, speed });
+    const audio = await fetchAudio(text, { server, apiKey: config.apiKey, backend, voice, speed });
+
+    if (flags.raw) {
+      // Legacy: write raw audio to stdout
+      process.stdout.write(audio);
+    } else {
+      // Play directly
+      await playBuffer(audio, player);
+    }
+
+    // Log the spoken text hash so the stop hook can skip it
+    logSpoken(text);
+    console.error('[clarion] Logged to spoken.log');
   } catch (err) {
     console.error(`[clarion] Error: ${err.message}`);
     process.exit(1);
