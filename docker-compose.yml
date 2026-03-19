@@ -2,7 +2,7 @@ services:
   # Kokoro TTS — CPU inference, no GPU needed
   # Voices: af_heart, af_bella, bm_george, bm_lewis, etc.
   kokoro:
-    image: ghcr.io/remsky/kokoro-fastapi:cpu
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.4
     ports:
       - "8880:8880"
     restart: unless-stopped

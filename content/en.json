@@ -41,5 +41,17 @@
     "placeholder": "http://localhost:8787",
     "hint": "Your Clarion server address"
   },
-  "testText": "Hello. This is your agent speaking. The voice is configured and ready."
+  "testText": "Hello. This is your agent speaking. The voice is configured and ready.",
+  "setup": {
+    "backends": "Backends",
+    "agentHealth": "Agent Health",
+    "connection": "Connection",
+    "testConnection": "Test connection",
+    "testing": "Testing...",
+    "switchToEdge": "Switch to Edge",
+    "backendDown": "Backend down",
+    "online": "Online",
+    "unreachable": "Unreachable",
+    "notConfigured": "Not configured"
+  }
 }

@@ -12,20 +12,18 @@
  *   clarion-mute --help      # show this message
  */
 
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
+import { readFileSync, writeFileSync } from 'fs';
 
-const CONFIG_DIR  = join(homedir(), '.config', 'clarion');
-const STATE_FILE  = join(CONFIG_DIR, 'agents.state.json');
+import {
+  CONFIG_DIR, STATE_FILE, loadAgentState, ensureConfigDir
+} from './lib.js';
 
 function loadState() {
-  if (!existsSync(STATE_FILE)) return {};
-  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
+  return loadAgentState();
 }
 
 function saveState(state) {
-  if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true });
+  ensureConfigDir();
   writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n');
 }
 

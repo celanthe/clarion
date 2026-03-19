@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
- * clarion init — interactive first-run setup wizard.
+ * clarion init — interactive setup wizard with multi-backend support.
  *
- * Creates an agent profile using Edge TTS (no server config needed),
- * saves it to ~/.config/clarion/agents.json, and optionally writes the
- * Claude Code stop hook to ~/.claude/clarion-hook.js.
+ * Creates an agent profile, saves it to ~/.config/clarion/agents.json,
+ * and optionally writes the Claude Code stop hook.
+ *
+ * When the server is reachable, shows available backends and fetches
+ * voice lists from the server. Falls back to embedded Edge TTS voices
+ * if the server is unreachable.
  *
  * Usage:
  *   clarion-init
@@ -14,10 +17,12 @@ import { createInterface } from 'readline';
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { spawn } from 'child_process';
 
-const CONFIG_DIR   = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE  = join(CONFIG_DIR, 'agents.json');
-const HOOK_FILE    = join(homedir(), '.claude', 'clarion-hook.js');
+import {
+  CONFIG_DIR, AGENTS_FILE, HOOK_FILE,
+  loadConfig, loadAgents, ensureConfigDir
+} from './lib.js';
 
 // Edge TTS voices — embedded so setup works without a running server.
 // Grouped to match server/src/edge.js.
@@ -67,6 +72,14 @@ const VOICE_GROUPS = [
   ]},
 ];
 
+const BACKEND_LABELS = {
+  edge:       'Edge TTS',
+  kokoro:     'Kokoro',
+  piper:      'Piper',
+  elevenlabs: 'ElevenLabs',
+  google:     'Google Chirp',
+};
+
 function allVoices() {
   return VOICE_GROUPS.flatMap(g => g.voices);
 }
@@ -75,13 +88,8 @@ function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'agent';
 }
 
-function loadAgents() {
-  if (!existsSync(AGENTS_FILE)) return [];
-  try { return JSON.parse(readFileSync(AGENTS_FILE, 'utf8')); } catch { return []; }
-}
-
 function saveAgents(agents) {
-  mkdirSync(CONFIG_DIR, { recursive: true });
+  ensureConfigDir();
   writeFileSync(AGENTS_FILE, JSON.stringify(agents, null, 2) + '\n');
 }
 
@@ -90,11 +98,7 @@ function ask(rl, question) {
 }
 
 function hookScript(agentId) {
-  // Backslashes and template expressions that must survive the template literal:
-  //   \/   → \\/ in source  → \/ in output (regex escape)
-  //   \n   → \\n in source  → \n in output (string literal)
-  //   `    → \` in source   → ` in output
-  //   ${…} → \${…} in source → ${…} in output (template expression)
+  if (!/^[a-z0-9-]+$/.test(agentId)) throw new Error(`Invalid agent ID for hook script: ${agentId}`);
   return `#!/usr/bin/env node
 import { readFileSync, existsSync } from 'fs';
 import { homedir } from 'os';
@@ -135,8 +139,38 @@ main().catch(() => process.exit(0));
 `;
 }
 
+async function checkServer(config) {
+  try {
+    const headers = {};
+    if (config.apiKey) headers['Authorization'] = `Bearer ${config.apiKey}`;
+    const res = await fetch(`${config.server}/health`, {
+      headers,
+      signal: AbortSignal.timeout(3000)
+    });
+    if (res.ok) return await res.json();
+  } catch {}
+  return null;
+}
+
+async function fetchVoicesFromServer(config, backend) {
+  try {
+    const headers = {};
+    if (config.apiKey) headers['Authorization'] = `Bearer ${config.apiKey}`;
+    const res = await fetch(`${config.server}/voices?backend=${backend}`, {
+      headers,
+      signal: AbortSignal.timeout(5000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.voices || [];
+    }
+  } catch {}
+  return null;
+}
+
 async function main() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const config = loadConfig();
 
   console.log('\nClarion setup\n');
 
@@ -161,28 +195,119 @@ async function main() {
     console.log(`  Replacing existing agent "${id}".`);
   }
 
-  // Voice selection
-  console.log('\nEdge TTS voices (no server config needed)\n');
-  const voices = allVoices();
-  let n = 1;
-  for (const group of VOICE_GROUPS) {
-    console.log(`  ${group.label}`);
-    for (const v of group.voices) {
-      console.log(`  ${String(n).padStart(3)}  ${v.label.padEnd(14)} ${v.gender}   ${v.id}`);
-      n++;
+  // Server check — show which backends are available
+  console.log(`\nChecking server at ${config.server}...`);
+  const health = await checkServer(config);
+
+  let backend = 'edge';
+  let voices = null;
+  let voice = null;
+
+  if (health) {
+    console.log('');
+    console.log('Available backends:');
+    const backends = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
+    const available = [];
+    for (let i = 0; i < backends.length; i++) {
+      const b = backends[i];
+      const status = health[b] || 'unconfigured';
+      const icon = status === 'up' ? '✓ ready' : '✗ ' + status;
+      console.log(`  ${i + 1}. ${BACKEND_LABELS[b].padEnd(14)} ${icon}`);
+      available.push({ id: b, status });
     }
     console.log('');
+
+    // Backend selection
+    while (true) {
+      const pick = await ask(rl, `Pick a backend [1–${backends.length}, default 1]: `);
+      const idx = pick === '' ? 0 : parseInt(pick, 10) - 1;
+      if (!isNaN(idx) && idx >= 0 && idx < backends.length) {
+        backend = backends[idx];
+        const status = available[idx].status;
+        if (status !== 'up' && backend !== 'edge') {
+          console.log(`  Warning: ${BACKEND_LABELS[backend]} is ${status}.`);
+          const proceed = await ask(rl, '  Continue anyway? [y/N]: ');
+          if (proceed.toLowerCase() !== 'y') continue;
+        }
+        break;
+      }
+      console.log(`  Enter a number from 1 to ${backends.length}.`);
+    }
+
+    // Fetch voice list from server
+    console.log(`\nFetching ${BACKEND_LABELS[backend]} voices...`);
+    const serverVoices = await fetchVoicesFromServer(config, backend);
+    if (serverVoices && serverVoices.length > 0) {
+      voices = serverVoices;
+    }
+  } else {
+    console.log('  Server unreachable — using Edge TTS (always available).\n');
   }
 
-  let voice;
-  while (true) {
-    const pick = await ask(rl, `Pick a voice [1–${voices.length}, default 1]: `);
-    const idx = pick === '' ? 0 : parseInt(pick, 10) - 1;
-    if (!isNaN(idx) && idx >= 0 && idx < voices.length) {
-      voice = voices[idx];
-      break;
+  // Voice selection
+  if (voices) {
+    // Use server-provided voice list
+    console.log(`\n${BACKEND_LABELS[backend]} voices\n`);
+    for (let i = 0; i < voices.length; i++) {
+      const v = voices[i];
+      const label = v.label || v.id;
+      const gender = v.gender ? `  ${v.gender}` : '';
+      console.log(`  ${String(i + 1).padStart(3)}  ${label.padEnd(20)}${gender}   ${v.id}`);
     }
-    console.log(`  Enter a number from 1 to ${voices.length}.`);
+    console.log('');
+
+    while (true) {
+      const pick = await ask(rl, `Pick a voice [1–${voices.length}, default 1]: `);
+      const idx = pick === '' ? 0 : parseInt(pick, 10) - 1;
+      if (!isNaN(idx) && idx >= 0 && idx < voices.length) {
+        voice = voices[idx];
+        break;
+      }
+      console.log(`  Enter a number from 1 to ${voices.length}.`);
+    }
+  } else {
+    // Fallback to embedded Edge voice list
+    if (backend !== 'edge') {
+      console.log(`  Could not fetch ${BACKEND_LABELS[backend]} voices. Falling back to Edge TTS.\n`);
+      backend = 'edge';
+    }
+    console.log('\nEdge TTS voices (no server config needed)\n');
+    const edgeVoices = allVoices();
+    let n = 1;
+    for (const group of VOICE_GROUPS) {
+      console.log(`  ${group.label}`);
+      for (const v of group.voices) {
+        console.log(`  ${String(n).padStart(3)}  ${v.label.padEnd(14)} ${v.gender}   ${v.id}`);
+        n++;
+      }
+      console.log('');
+    }
+
+    while (true) {
+      const pick = await ask(rl, `Pick a voice [1–${edgeVoices.length}, default 1]: `);
+      const idx = pick === '' ? 0 : parseInt(pick, 10) - 1;
+      if (!isNaN(idx) && idx >= 0 && idx < edgeVoices.length) {
+        voice = edgeVoices[idx];
+        break;
+      }
+      console.log(`  Enter a number from 1 to ${edgeVoices.length}.`);
+    }
+  }
+
+  // Optional audition
+  const auditionAnswer = await ask(rl, '\nHear this voice? [y/N]: ');
+  if (auditionAnswer.toLowerCase() === 'y') {
+    console.log('  Playing sample...');
+    try {
+      const proc = spawn('clarion-speak', [
+        '--backend', backend,
+        '--voice', voice.id,
+        'Hello. This is your agent speaking. The voice is configured and ready.'
+      ], { stdio: ['ignore', 'ignore', 'inherit'] });
+      await new Promise((resolve) => proc.on('close', resolve));
+    } catch {
+      console.log('  Could not play sample. Make sure clarion-speak is available.');
+    }
   }
 
   // Speed
@@ -198,12 +323,12 @@ async function main() {
   }
 
   // Save agent
-  const agent = { id, name, backend: 'edge', voice: voice.id, speed, proseOnly: true };
+  const agent = { id, name, backend, voice: voice.id, speed, proseOnly: true };
   const updated = existing.filter(a => a.id !== id);
   saveAgents([...updated, agent]);
 
   console.log(`\n✓ Agent saved to ${AGENTS_FILE}`);
-  console.log(`  ${name}  ·  ${voice.id}  ·  ${speed}x`);
+  console.log(`  ${name}  ·  ${BACKEND_LABELS[backend]}  ·  ${voice.id}  ·  ${speed}x`);
 
   // Hook
   console.log('');

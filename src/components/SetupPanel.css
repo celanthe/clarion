@@ -1,0 +1,173 @@
+.setup-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.setup-panel__section-title {
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+/* Backend cards */
+.setup-panel__backends {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+.setup-panel__backend-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.setup-panel__backend-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.setup-panel__backend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.setup-panel__backend-dot--up           { background: var(--color-status-up); }
+.setup-panel__backend-dot--down         { background: var(--color-status-down); }
+.setup-panel__backend-dot--unconfigured { background: var(--color-status-unconfigured); }
+.setup-panel__backend-dot--error        { background: var(--color-danger); }
+.setup-panel__backend-dot--checking     { background: var(--color-status-checking); animation: pulse 1.5s ease infinite; }
+
+.setup-panel__backend-name {
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.setup-panel__backend-status {
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.setup-panel__backend-detail {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.setup-panel__backend-hint {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  padding: var(--space-sm);
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-sm);
+}
+
+/* Agent health */
+.setup-panel__agents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.setup-panel__agent-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.setup-panel__agent-name {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.setup-panel__agent-backend {
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.setup-panel__agent-warning {
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--color-status-down);
+}
+
+.setup-panel__switch-btn {
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  background: none;
+  border: 1px solid var(--color-accent-dim);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.setup-panel__switch-btn:hover {
+  background: var(--color-accent-dim);
+}
+
+/* Connection test */
+.setup-panel__test-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.setup-panel__test-btn {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-on-accent);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.setup-panel__test-btn:hover {
+  background: var(--color-accent-hover);
+}
+
+.setup-panel__test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.setup-panel__test-result {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.setup-panel__test-result--ok {
+  color: var(--color-status-up);
+}
+
+.setup-panel__test-result--fail {
+  color: var(--color-error);
+}

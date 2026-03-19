@@ -21,7 +21,7 @@ clarion/
   src/                      # UI layer — React 19 SPA
   services/                 # Services layer — TTS client, storage, crypto
   core/                     # Domain layer — agent model, voice lists
-  cli/                      # CLI layer — clarion-init/speak/status/stream
+  cli/                      # CLI layer — clarion-doctor/init/speak/status/stream
   design-system/tokens.css  # CSS custom properties (72 tokens)
   content/en.json           # UI strings
   tasks/                    # Work-in-progress planning files
@@ -56,13 +56,16 @@ docker-compose up
 ```
 POST /speak
 { "text": "Hello.", "voice": "en-GB-RyanNeural", "backend": "edge", "speed": 1.0 }
-→ audio/mpeg
+→ audio/mpeg (X-Clarion-Fallback header if backend was unavailable and Edge was used)
 
 GET /voices?backend=edge|kokoro|piper|elevenlabs|google
 → { backend, voices: [{ id, label, lang, gender }] }
 
 GET /health
 → { edge: "up", kokoro: "up|down|unconfigured", piper: "up|down|unconfigured", elevenlabs: "up|down|unconfigured", google: "up|down|unconfigured" }
+
+GET /diagnostics
+→ { server: { version }, backends: { [name]: { status, configured, detail } } }
 ```
 
 ## Key decisions
@@ -90,7 +93,7 @@ Files ported and simplified:
 - Edge: `en-US-JennyNeural`
 - Kokoro: `af_heart`
 - Piper: `amy`
-- ElevenLabs: `21m00Tcm4TlvDq8ikWAM` (Rachel)
+- ElevenLabs: `CwhRBWXzGAHq8TQ4Fs17` (Roger)
 - Google: `en-US-Chirp3-HD-Achernar`
 
 ## Example agent config (Kokoro, British male)

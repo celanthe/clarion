@@ -20,7 +20,7 @@ From the Clarion directory:
 npm install -g .
 ```
 
-This adds `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-status`, `clarion-mute`, `clarion-log`, and `clarion-watch` to your PATH.
+This adds `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-status`, `clarion-mute`, `clarion-log`, and `clarion-watch` to your PATH.
 
 ### 2. Run clarion-init
 
@@ -28,7 +28,9 @@ This adds `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-status`, `
 clarion-init
 ```
 
-The wizard picks a voice, saves your agent profile, and writes the Claude Code stop hook. That's it — skip steps 3–5 below if you used `clarion-init`.
+The wizard detects available backends, lets you pick one, fetches voices from the server, and optionally auditions them. It saves your agent profile and writes the Claude Code stop hook. That's it — skip steps 3–5 below if you used `clarion-init`.
+
+If the server is unreachable, `clarion-init` falls back to Edge TTS voices embedded in the CLI.
 
 ### 3. Export agents from the UI (alternative)
 
@@ -303,10 +305,56 @@ clarion-log
 clarion-log --agent my-agent
 
 # Show more entries
-clarion-log --limit 50
+clarion-log --count 50
 ```
 
 The log is stored in `~/.config/clarion/crew-log.jsonl`.
+
+---
+
+## clarion-doctor — diagnose setup issues
+
+`clarion-doctor` runs 10 checks on your Clarion installation and reports pass/fail with specific remediation hints. It is read-only — it never writes anything.
+
+### Basic usage
+
+```sh
+clarion-doctor
+```
+
+### Example output
+
+```
+✓ Config directory (~/.config/clarion/)
+✓ Config file valid
+✓ Server reachable (http://localhost:8080)
+  Backend: edge          ✓ up
+  Backend: kokoro         ✓ up
+  Backend: piper          — unconfigured
+  Backend: elevenlabs     ✓ up
+  Backend: google         — unconfigured
+✓ 3 agents configured
+✓ All agent backends are healthy
+✓ Audio player: afplay
+✓ No stale lock file
+✓ Sessions file OK
+✓ Docker: kokoro container running
+```
+
+Each failing check includes a remediation hint:
+
+```
+✗ Kokoro — down
+    Is Docker running? Check with: docker ps
+    Then: docker compose up -d
+
+✗ Agent "my-agent" uses kokoro which is currently down
+    Switch backend or start Kokoro. See above.
+```
+
+### Exit codes
+
+`clarion-doctor` exits with code `0` if all checks pass, or `1` if any check fails. This makes it usable in scripts and CI.
 
 ---
 

@@ -1,9 +1,17 @@
 {
   "name": "clarion",
-  "version": "0.3.0",
+  "version": "0.4.0",
+  "description": "Give your AI agent a voice — self-hosted TTS proxy and voice manager",
   "type": "module",
   "private": true,
+  "license": "MIT",
+  "homepage": "https://github.com/celanthe/clarion",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celanthe/clarion.git"
+  },
   "bin": {
+    "clarion-doctor": "./cli/doctor.js",
     "clarion-init": "./cli/init.js",
     "clarion-log": "./cli/log.js",
     "clarion-mute": "./cli/mute.js",

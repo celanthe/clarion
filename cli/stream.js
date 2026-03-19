@@ -30,9 +30,14 @@
 
 import { createInterface }    from 'readline';
 import { readFileSync, existsSync, writeFileSync, appendFileSync, mkdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
-import { homedir, tmpdir, platform } from 'os';
+import { tmpdir } from 'os';
 import { join }               from 'path';
 import { spawn }              from 'child_process';
+
+import {
+  CONFIG_DIR, AGENTS_FILE, CONFIG_FILE, LOG_FILE, STATE_FILE, LOCK_FILE,
+  loadConfig, loadAgents, findAgent, isAgentMuted, parseArgs, detectPlayer
+} from './lib.js';
 
 // --- Playback lock ---
 // Serializes multiple stream.js instances so agents speak in the order
@@ -43,10 +48,6 @@ import { spawn }              from 'child_process';
 // OR if it has been held for >STALE_AGE (backstop for PID recycling edge cases).
 // We do NOT bail out after a fixed wait — a long response can take several
 // minutes, and all queued instances should wait their turn rather than stomp.
-
-const LOCK_FILE  = join(tmpdir(), 'clarion-stream.lock');
-const STALE_AGE  = 5 * 60_000;  // 5 min — only break locks from dead/hung processes
-const LOCK_POLL  = 500;          // ms between lock-file checks
 
 function acquireLock() {
   while (true) {
@@ -90,56 +91,8 @@ process.on('exit',    releaseLock);
 process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
 process.on('SIGINT',  () => { releaseLock(); process.exit(0); });
 
-const CONFIG_DIR   = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE  = join(CONFIG_DIR, 'agents.json');
-const CONFIG_FILE  = join(CONFIG_DIR, 'config.json');
-const LOG_FILE     = join(CONFIG_DIR, 'crew-log.jsonl');
-const STATE_FILE   = join(CONFIG_DIR, 'agents.state.json');
-
-// --- Config + agents (mirrors cli/speak.js) ---
-
-function loadConfig() {
-  const cfg = {};
-  if (existsSync(CONFIG_FILE)) {
-    try { Object.assign(cfg, JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))); } catch {}
-  }
-  return {
-    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8787',
-    apiKey: process.env.CLARION_API_KEY || cfg.apiKey || null
-  };
-}
-
-function loadAgents() {
-  if (!existsSync(AGENTS_FILE)) return [];
-  try { return JSON.parse(readFileSync(AGENTS_FILE, 'utf8')); } catch { return []; }
-}
-
-function findAgent(id) {
-  return loadAgents().find(a => a.id === id || a.name.toLowerCase() === id.toLowerCase()) || null;
-}
-
-function isAgentMuted(agentId) {
-  if (!agentId) return false;
-  try {
-    const state = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
-    return !!(state[agentId]?.muted);
-  } catch { return false; }
-}
-
-// --- Arg parsing ---
-
-function parseArgs(argv) {
-  const flags = {};
-  const raw = argv.slice(2);
-  for (let i = 0; i < raw.length; i++) {
-    if (raw[i].startsWith('--')) {
-      const key = raw[i].slice(2);
-      const next = raw[i + 1];
-      flags[key] = (next && !next.startsWith('--')) ? raw[++i] : true;
-    }
-  }
-  return flags;
-}
+const STALE_AGE  = 5 * 60_000;  // 5 min — only break locks from dead/hung processes
+const LOCK_POLL  = 500;          // ms between lock-file checks
 
 // --- ANSI + Markdown cleaner ---
 
@@ -249,13 +202,16 @@ async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || `Server ${res.status}`);
   }
+
+  const fallback = res.headers.get('X-Clarion-Fallback');
+  if (fallback) {
+    console.error(`[clarion] Warning: ${backend || 'backend'} unavailable, fell back to ${fallback}`);
+  }
+
   return Buffer.from(await res.arrayBuffer());
 }
 
-function detectPlayer() {
-  if (platform() === 'darwin') return 'afplay';
-  return 'mpv';  // Linux/Windows default
-}
+// detectPlayer imported from ./lib.js
 
 function playBuffer(buffer, player) {
   const ext = '.mp3';
