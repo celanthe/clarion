@@ -20,6 +20,7 @@ import { spawn } from 'child_process';
 const CONFIG_DIR     = join(homedir(), '.config', 'clarion');
 const SESSIONS_FILE  = join(CONFIG_DIR, 'sessions.json');
 const AGENTS_FILE    = join(CONFIG_DIR, 'agents.json');
+const WATCHER_LOCK   = join(CONFIG_DIR, 'watcher.lock');
 
 function resolveAgent(sessionId) {
   // First: check session→agent mapping (written by clarion-watch)
@@ -49,6 +50,12 @@ async function main() {
 
   // Guard against infinite loops
   if (stop_hook_active) process.exit(0);
+
+  // If clarion-watch is active for this session, it handles voice — stand down
+  try {
+    const lockContent = readFileSync(WATCHER_LOCK, 'utf8').trim();
+    if (lockContent === session_id) process.exit(0);
+  } catch {}
 
   // Resolve which agent owns this session
   const agent = resolveAgent(session_id);
@@ -99,7 +106,7 @@ async function main() {
     stdio: ['pipe', 'ignore', 'inherit'],
     env: {
       ...process.env,
-      CLARION_SERVER: process.env.CLARION_SERVER || 'http://localhost:8080'
+      CLARION_SERVER: process.env.CLARION_SERVER || 'http://localhost:8787'
     }
   });
 

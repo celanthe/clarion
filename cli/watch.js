@@ -27,6 +27,9 @@ import {
   loadAgents, findAgent, isAgentMuted, parseArgs
 } from './lib.js';
 
+// Marker file that tells the stop hook "I'm handling voice for this session"
+const WATCHER_LOCK = join(homedir(), '.config', 'clarion', 'watcher.lock');
+
 // --- Session-to-agent mapping (shared with stop hook) ---
 
 function loadSessions() {
@@ -48,7 +51,7 @@ function unregisterSession(sessionId) {
 // --- JSONL helpers ---
 
 function projectDir(cwd) {
-  const slug = cwd.replace(/\//g, '-');
+  const slug = cwd.replace(/[\\/]/g, '-');
   return join(homedir(), '.claude', 'projects', slug);
 }
 
@@ -247,6 +250,7 @@ async function main() {
     // Register session→agent mapping so the stop hook knows who's speaking
     const sessionId = basename(file, '.jsonl');
     registerSession(sessionId, agentId);
+    writeLock(sessionId);
 
     if (!existsSync(file)) return;
     let raw;
@@ -348,8 +352,18 @@ async function main() {
     initSession(latest);
   }
 
-  // Graceful shutdown — unregister session mapping
+  // Write watcher lock so the stop hook knows to stand down
+  function writeLock(sessionId) {
+    try { writeFileSync(WATCHER_LOCK, sessionId + '\n'); } catch {}
+  }
+
+  function clearLock() {
+    try { if (existsSync(WATCHER_LOCK)) writeFileSync(WATCHER_LOCK, ''); } catch {}
+  }
+
+  // Graceful shutdown — unregister session mapping and remove lock
   function cleanup() {
+    clearLock();
     if (sessionFile) {
       const sessionId = basename(sessionFile, '.jsonl');
       try { unregisterSession(sessionId); } catch {}
