@@ -11,7 +11,3 @@ server/node_modules/
 *.onnx
 *.bin
 tasks/
-
-# Piper local binaries and models
-piper/
-piper-models/
