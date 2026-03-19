@@ -11,6 +11,11 @@ Self-hosted TTS proxy and voice manager. Audition voices against your agent's ac
 
 > Voice starts while your agent is still working. `clarion-watch` speaks each assistant message the moment it's written — even before tool calls finish.
 
+<!-- TODO: Replace with demo video link once recorded
+[![Clarion demo — live voice for AI agents](docs/img/clarion-demo-thumb.png)](https://youtube.com/watch?v=TODO)
+*Watch with audio — the whole point is you hear the voice.*
+-->
+
 ![Clarion waveform visualization showing audio output from the voice audition interface](docs/img/clarion-waveform.png)
 
 ---
@@ -214,7 +219,7 @@ docker-compose up
 ## Troubleshooting
 
 **No audio output?**
-Edge TTS returns `audio/mpeg`. Make sure your player supports it. From CLI, Clarion auto-detects `afplay` (macOS), `mpv`, or `ffplay`. Pass `--player <command>` to override.
+Edge TTS returns `audio/mpeg`. Make sure your player supports it. From CLI, Clarion auto-detects `afplay` (macOS), `mpv`, `ffplay`, `paplay`, or `cvlc` (Linux). On Windows, `mpv`, `ffplay`, or `vlc` are detected. Pass `--player <command>` to override.
 
 **Kokoro connection refused?**
 Check `KOKORO_SERVER` is set and the server is running on the right port. Docker: `docker-compose up` handles this automatically. Verify with `clarion-status`.

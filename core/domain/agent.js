@@ -72,7 +72,7 @@ export function defaultVoice(backend) {
   switch (backend) {
     case 'kokoro':     return 'af_heart';
     case 'piper':      return 'amy';
-    case 'elevenlabs': return '21m00Tcm4TlvDq8ikWAM'; // Rachel
+    case 'elevenlabs': return 'CwhRBWXzGAHq8TQ4Fs17'; // Roger (free tier default)
     case 'google':     return 'en-US-Chirp3-HD-Achernar';
     case 'edge':
     default:           return 'en-US-JennyNeural';

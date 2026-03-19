@@ -88,6 +88,7 @@
 .setup-panel__agent-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   background: var(--color-surface);

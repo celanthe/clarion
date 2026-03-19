@@ -1,6 +1,6 @@
 node_modules/
 dist/
-.env
+**/.env
 server/.dev.vars
 server/.wrangler/
 server/node_modules/

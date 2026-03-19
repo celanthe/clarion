@@ -196,7 +196,8 @@ async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
   const res = await fetch(`${server}/speak`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 })
+    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 }),
+    signal: AbortSignal.timeout(30000)
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -221,12 +222,13 @@ function playBuffer(buffer, player) {
     'afplay':  [tmp],
     'mpv':     ['--no-video', '--really-quiet', tmp],
     'ffplay':  ['-nodisp', '-autoexit', '-loglevel', 'quiet', tmp],
-    'aplay':   [tmp],
+    'paplay':  [tmp],
+    'cvlc':    ['--play-and-exit', '-q', tmp],
   };
 
   return new Promise((resolve, reject) => {
     try {
-      writeFileSync(tmp, buffer);
+      writeFileSync(tmp, buffer, { mode: 0o600 });
     } catch (err) {
       return reject(err);
     }

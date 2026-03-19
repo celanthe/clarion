@@ -7,8 +7,8 @@
  * stop hook will skip any text that was already spoken.
  *
  * Usage:
- *   clarion-speak --agent arynna "The pattern holds."
- *   echo "Hello." | clarion-speak --agent kilara
+ *   clarion-speak --agent my-agent "The pattern holds."
+ *   echo "Hello." | clarion-speak --agent my-agent
  *   clarion-speak --list-agents
  *   clarion-speak --export
  *
@@ -54,7 +54,8 @@ async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
   const res = await fetch(`${server}/speak`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 })
+    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 }),
+    signal: AbortSignal.timeout(30000)
   });
 
   if (!res.ok) {
@@ -74,12 +75,13 @@ function playBuffer(buffer, player) {
     'afplay':  [tmp],
     'mpv':     ['--no-video', '--really-quiet', tmp],
     'ffplay':  ['-nodisp', '-autoexit', '-loglevel', 'quiet', tmp],
-    'aplay':   [tmp],
+    'paplay':  [tmp],
+    'cvlc':    ['--play-and-exit', '-q', tmp],
   };
 
   return new Promise((resolve, reject) => {
     try {
-      writeFileSync(tmp, buffer);
+      writeFileSync(tmp, buffer, { mode: 0o600 });
     } catch (err) {
       return reject(err);
     }
@@ -179,15 +181,15 @@ async function main() {
 
   if (!text) {
     console.error('[clarion] Error: provide text as argument or via stdin');
-    console.error('[clarion]   clarion-speak --agent arynna "Hello."');
-    console.error('[clarion]   echo "Hello." | clarion-speak --agent kilara');
+    console.error('[clarion]   clarion-speak --agent my-agent "Hello."');
+    console.error('[clarion]   echo "Hello." | clarion-speak --agent my-agent');
     process.exit(1);
   }
 
   // --agent is required for speaking
   if (!flags.agent && !flags.backend) {
     console.error('[clarion] Error: --agent <id> is required');
-    console.error('[clarion]   clarion-speak --agent arynna "Hello."');
+    console.error('[clarion]   clarion-speak --agent my-agent "Hello."');
     process.exit(1);
   }
 

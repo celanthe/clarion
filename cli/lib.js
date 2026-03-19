@@ -81,9 +81,17 @@ export function parseArgs(argv) {
 
 export function detectPlayer() {
   if (platform() === 'darwin') return 'afplay';
-  // On Linux, check what's actually installed
-  for (const player of ['mpv', 'ffplay', 'aplay']) {
-    try { execSync(`which ${player}`, { stdio: 'pipe' }); return player; } catch {}
+  const which = platform() === 'win32' ? 'where' : 'which';
+  if (platform() === 'win32') {
+    // Windows: try powershell media player, then common CLI players
+    for (const player of ['mpv', 'ffplay', 'vlc']) {
+      try { execSync(`${which} ${player}`, { stdio: 'pipe' }); return player; } catch {}
+    }
+    return 'powershell'; // fallback — will use [System.Media.SoundPlayer]
+  }
+  // Linux: check what's actually installed (paplay/mpv/ffplay handle MP3; aplay does not)
+  for (const player of ['mpv', 'ffplay', 'paplay', 'cvlc']) {
+    try { execSync(`${which} ${player}`, { stdio: 'pipe' }); return player; } catch {}
   }
   return 'mpv'; // fallback even if not found — will error at playback time
 }

@@ -155,11 +155,12 @@ async function _speak(text, options = {}, onStart) {
     _audioCtx.resume().catch(() => {});
   }
 
-  // Fetch the real audio
+  // Fetch the real audio (15s timeout prevents infinite hang on flaky connections)
   const response = await fetch(`${serverUrl}/speak`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...await authHeaders('POST', '/speak') },
-    body: JSON.stringify({ text, backend, voice, speed })
+    body: JSON.stringify({ text, backend, voice, speed }),
+    signal: AbortSignal.timeout(15000)
   });
 
   if (!response.ok) {
@@ -256,7 +257,8 @@ export function stop() {
 export async function fetchVoices(backend) {
   const serverUrl = getServerUrl();
   const res = await fetch(`${serverUrl}/voices?backend=${backend}`, {
-    headers: await authHeaders('GET', '/voices')
+    headers: await authHeaders('GET', '/voices'),
+    signal: AbortSignal.timeout(8000)
   });
   if (!res.ok) throw new Error(`Failed to fetch voices: ${res.status}`);
   const data = await res.json();

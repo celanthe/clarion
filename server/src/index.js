@@ -247,6 +247,12 @@ app.get('/voices', async (c) => {
  * Returns audio/mpeg (edge/kokoro) or audio/wav (piper) directly.
  */
 app.post('/speak', async (c) => {
+  // Reject oversized bodies before parsing (prevents memory exhaustion)
+  const contentLength = parseInt(c.req.header('content-length') || '0', 10);
+  if (contentLength > 50000) {
+    return c.json({ error: 'Request too large' }, 413);
+  }
+
   let body;
   try {
     body = await c.req.json();
@@ -352,7 +358,7 @@ app.post('/speak', async (c) => {
       }
     }
 
-    return c.json({ error: err.message }, status);
+    return c.json({ error: `${backend} synthesis failed` }, status);
   }
 });
 

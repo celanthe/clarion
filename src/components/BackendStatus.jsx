@@ -73,8 +73,25 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
     }
 
     check();
-    const interval = setInterval(check, 30000);
-    return () => { cancelled = true; clearInterval(interval); };
+    let interval = setInterval(check, 30000);
+
+    // Pause polling when the tab is backgrounded (saves battery on mobile)
+    function onVisibilityChange() {
+      if (document.hidden) {
+        clearInterval(interval);
+        interval = null;
+      } else {
+        check();
+        interval = setInterval(check, 30000);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [serverUrl]);
 
   const aggStatus = getAggregateStatus(status);

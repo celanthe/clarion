@@ -34,7 +34,7 @@ export default function ClarionEmbed({ serverUrl }) {
   const fetchAgents = useCallback(async () => {
     // Try to load agents from localStorage (same format as main app)
     try {
-      const stored = localStorage.getItem('clarion-agents');
+      const stored = localStorage.getItem('clarion_agents');
       if (stored) setAgents(JSON.parse(stored));
     } catch {}
   }, []);

@@ -3,14 +3,36 @@
   "version": "0.4.0",
   "description": "Give your AI agent a voice — self-hosted TTS proxy and voice manager",
   "type": "module",
-  "private": true,
   "license": "MIT",
   "homepage": "https://github.com/celanthe/clarion",
   "repository": {
     "type": "git",
     "url": "https://github.com/celanthe/clarion.git"
   },
+  "keywords": [
+    "tts",
+    "text-to-speech",
+    "ai-agent",
+    "voice",
+    "edge-tts",
+    "kokoro",
+    "piper",
+    "elevenlabs",
+    "self-hosted"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "cli/",
+    "core/",
+    "services/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "bin": {
+    "clarion": "./cli/speak.js",
     "clarion-doctor": "./cli/doctor.js",
     "clarion-init": "./cli/init.js",
     "clarion-log": "./cli/log.js",
@@ -29,13 +51,11 @@
     "server:deploy": "cd server && wrangler deploy",
     "test": "node test/hmac-auth.js"
   },
-  "dependencies": {
-    "@fontsource/space-grotesk": "^5.2.10",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
   "devDependencies": {
+    "@fontsource/space-grotesk": "^5.2.10",
     "@vitejs/plugin-react": "^4.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "vite": "^6.0.0"
   }
 }
