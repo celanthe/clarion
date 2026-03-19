@@ -13,7 +13,7 @@ export async function synthesize(text, voice, apiKey, speed = 1.0) {
     throw new Error('ElevenLabs not configured. Set ELEVENLABS_API_KEY in your environment.');
   }
 
-  const voiceId = voice || '21m00Tcm4TlvDq8ikWAM'; // Rachel default
+  const voiceId = voice || 'CwhRBWXzGAHq8TQ4Fs17'; // Roger default (Rachel paywalled on free tier)
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -69,7 +69,8 @@ export async function checkHealth(apiKey) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`${API_BASE}/user`, {
+    // Use /voices instead of /user — scoped API keys may lack user_read permission
+    const res = await fetch(`${API_BASE}/voices?page_size=1`, {
       headers: { 'xi-api-key': apiKey },
       signal: controller.signal
     });

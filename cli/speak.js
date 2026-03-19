@@ -32,42 +32,18 @@
  */
 
 import { createHash } from 'crypto';
-import { readFileSync, existsSync, writeFileSync, appendFileSync, mkdirSync, unlinkSync } from 'fs';
-import { homedir, tmpdir, platform } from 'os';
+import { readFileSync, existsSync, writeFileSync, appendFileSync, unlinkSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { spawn } from 'child_process';
 
-const CONFIG_DIR   = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE  = join(CONFIG_DIR, 'agents.json');
-const CONFIG_FILE  = join(CONFIG_DIR, 'config.json');
-const SPOKEN_LOG   = join(CONFIG_DIR, 'spoken.log');
+import {
+  SPOKEN_LOG,
+  loadConfig, loadAgents, findAgent, detectPlayer, ensureConfigDir
+} from './lib.js';
 
 // Ensure config directory exists on first run
-mkdirSync(CONFIG_DIR, { recursive: true });
-
-// --- Config ---
-
-function loadConfig() {
-  const cfg = {};
-  if (existsSync(CONFIG_FILE)) {
-    try { Object.assign(cfg, JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))); } catch {}
-  }
-  return {
-    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8080',
-    apiKey: process.env.CLARION_API_KEY || cfg.apiKey || null
-  };
-}
-
-// --- Agents ---
-
-function loadAgents() {
-  if (!existsSync(AGENTS_FILE)) return [];
-  try { return JSON.parse(readFileSync(AGENTS_FILE, 'utf8')); } catch { return []; }
-}
-
-function findAgent(id) {
-  return loadAgents().find(a => a.id === id || a.name.toLowerCase() === id.toLowerCase()) || null;
-}
+ensureConfigDir();
 
 // --- Speak ---
 
@@ -90,11 +66,6 @@ async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
 }
 
 // --- Audio playback ---
-
-function detectPlayer() {
-  if (platform() === 'darwin') return 'afplay';
-  return 'mpv';
-}
 
 function playBuffer(buffer, player) {
   const tmp = join(tmpdir(), `clarion-speak-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`);
@@ -258,4 +229,7 @@ async function main() {
   }
 }
 
-main();
+main().catch(err => {
+  console.error(`[clarion] ${err.message}`);
+  process.exit(1);
+});

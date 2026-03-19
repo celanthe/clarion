@@ -11,24 +11,8 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
 
-const CONFIG_DIR = join(homedir(), '.config', 'clarion');
-const LOG_FILE   = join(CONFIG_DIR, 'crew-log.jsonl');
-
-function parseArgs(argv) {
-  const flags = {};
-  const raw = argv.slice(2);
-  for (let i = 0; i < raw.length; i++) {
-    if (raw[i].startsWith('--')) {
-      const key  = raw[i].slice(2);
-      const next = raw[i + 1];
-      flags[key] = (next && !next.startsWith('--')) ? raw[++i] : true;
-    }
-  }
-  return flags;
-}
+import { LOG_FILE, parseArgs } from './lib.js';
 
 const flags = parseArgs(process.argv);
 

@@ -157,6 +157,57 @@ app.get('/health', async (c) => {
   });
 });
 
+// --- Diagnostics ---
+
+app.get('/diagnostics', async (c) => {
+  const kokoroServer = c.env?.KOKORO_SERVER;
+  const piperServer  = c.env?.PIPER_SERVER;
+  const elevenKey    = c.env?.ELEVENLABS_API_KEY;
+  const googleKey    = c.env?.GOOGLE_TTS_API_KEY;
+
+  const [kokoro, piper, elevenlabs, google] = await Promise.all([
+    kokoroHealth(kokoroServer),
+    piperHealth(piperServer),
+    elevenlabsHealth(elevenKey),
+    googleHealth(googleKey)
+  ]);
+
+  return c.json({
+    server: { version: '0.4.0' },
+    backends: {
+      edge: { status: 'up', configured: true, detail: 'Microsoft Translator API — always available' },
+      kokoro: {
+        status: kokoro,
+        configured: !!kokoroServer,
+        detail: kokoro === 'up' ? 'Connected' :
+                kokoro === 'unconfigured' ? 'Set KOKORO_SERVER env var' :
+                'Connection refused'
+      },
+      piper: {
+        status: piper,
+        configured: !!piperServer,
+        detail: piper === 'up' ? 'Connected' :
+                piper === 'unconfigured' ? 'Set PIPER_SERVER env var' :
+                'Connection refused'
+      },
+      elevenlabs: {
+        status: elevenlabs,
+        configured: !!elevenKey,
+        detail: elevenlabs === 'up' ? 'API key valid' :
+                elevenlabs === 'unconfigured' ? 'Set ELEVENLABS_API_KEY env var' :
+                'API key invalid or expired'
+      },
+      google: {
+        status: google,
+        configured: !!googleKey,
+        detail: google === 'up' ? 'API key valid' :
+                google === 'unconfigured' ? 'Set GOOGLE_TTS_API_KEY env var' :
+                'API key invalid or expired'
+      }
+    }
+  });
+});
+
 // --- Voices ---
 
 app.get('/voices', async (c) => {
@@ -281,6 +332,25 @@ app.post('/speak', async (c) => {
     const status = err.message.includes('not configured') ? 503 :
                    err.message.includes('unreachable') ? 503 :
                    err.message.includes('Unknown') ? 400 : 500;
+
+    // Auto-fallback to Edge TTS when a backend is unavailable (503)
+    if (status === 503 && backend !== 'edge') {
+      console.log(`[speak] ${backend} failed, falling back to edge`);
+      try {
+        const fallbackResponse = await edgeSynthesize(text, 'en-US-JennyNeural', safeSpeed, c.env);
+        const allowedOrigin = c.env?.ALLOWED_ORIGIN;
+        // Copy headers from the edge response and add fallback indicator
+        for (const [k, v] of fallbackResponse.headers) {
+          c.header(k, v);
+        }
+        c.header('X-Clarion-Fallback', 'edge');
+        c.header('Access-Control-Allow-Origin',
+          allowedOrigin && allowedOrigin !== '*' ? allowedOrigin : '*');
+        return c.body(fallbackResponse.body, 200);
+      } catch (fallbackErr) {
+        console.error(`[speak] Edge fallback also failed: ${fallbackErr.message}`);
+      }
+    }
 
     return c.json({ error: err.message }, status);
   }

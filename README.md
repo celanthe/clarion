@@ -2,24 +2,33 @@
 
 **Give your AI agent a voice.**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/celanthe/clarion)](https://github.com/celanthe/clarion/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/celanthe/clarion)](https://github.com/celanthe/clarion/commits/main)
+[![Version](https://img.shields.io/badge/version-0.4.0-green)](https://github.com/celanthe/clarion)
+
 Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, pick one, and pipe responses through it from the browser or CLI.
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/rinoliver)
+> Voice starts while your agent is still working. `clarion-watch` speaks each assistant message the moment it's written — even before tool calls finish.
+
+![Clarion waveform visualization showing audio output from the voice audition interface](docs/img/clarion-waveform.png)
 
 ---
 
 ## What it does
 
+- **Live session voice.** `clarion-watch` speaks each assistant message as soon as it is written — including text before tool use. Voice starts while Claude is still working.
 - **Audition voices.** Paste your agent's characteristic dialogue. Hear each voice read it. Pick the one that fits.
 - **Save agent profiles.** One agent uses Kokoro `bm_george` at 1.0x, another uses Edge `en-GB-SoniaNeural`. Both saved, both exportable as JSON.
 - **Five TTS backends.** Edge TTS (zero config), Kokoro (self-hosted, natural), Piper (self-hosted, lightweight), ElevenLabs (paid), Google Chirp 3 HD (paid).
 - **Terminal integration.** Pipe agent responses through their voice from the CLI. Works with Claude Code via `clarion-watch` (live daemon) or the stop hook.
-- **Live session voice.** `clarion-watch` speaks each assistant message as soon as it is written — including text before tool use. Voice starts while Claude is still working.
 - **Multi-agent support.** Running several agents at once? Concurrent responses queue automatically and speak in the order they finished — no overlapping audio.
 
 ---
 
 ## Quickstart
+
+Requires Node.js 18+ and npm. Start with UI only — it works out of the box. Add the server later if you want higher-quality voices.
 
 ### UI only (Edge TTS, no setup needed)
 
@@ -31,6 +40,8 @@ npm run dev
 
 ### With server (required for Kokoro, Piper, ElevenLabs, Google)
 
+Run in a second terminal alongside the UI:
+
 ```sh
 cd server && npm install && npm run dev
 # http://localhost:8787
@@ -39,9 +50,22 @@ cd server && npm install && npm run dev
 Or with Docker (Kokoro included):
 
 ```sh
-docker-compose up
+docker compose up
 # Kokoro at :8880, Clarion server at :8080
 ```
+
+---
+
+## Why Clarion?
+
+Most TTS tools give you an API. Clarion gives you a workflow.
+
+- **Audition, don't guess** — hear each voice read your agent's actual dialogue before you commit
+- **Self-hosted** — your audio, your servers, your data
+- **proseOnly** — strips code blocks, markdown, and structure so agents speak naturally, not robotically
+- **Live voice** — `clarion-watch` speaks during the session, not after
+- **Five backends** — swap from free (Edge) to premium (ElevenLabs) without changing a line of agent code
+- **Multi-agent crews** — each agent gets its own voice, concurrent responses queue automatically
 
 ---
 
@@ -75,12 +99,18 @@ claude "Walk me through this." | clarion-stream --agent my-agent
 # Watch a Claude Code session live — speaks mid-session, before tools finish
 clarion-watch --agent my-agent
 
+# Diagnose setup issues — 10 checks with remediation hints
+clarion-doctor
+
+# Check server health, loaded agents, and playback status
+clarion-status
+
 # Mute an agent
 clarion-mute my-agent
 clarion-mute my-agent --off
 ```
 
-[Full CLI guide](docs/cli.md): `clarion-speak`, `clarion-stream`, `clarion-watch`, `clarion-mute`, `clarion-log`, and the Claude Code stop hook.
+[Full CLI guide](docs/cli.md): `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-watch`, `clarion-status`, `clarion-mute`, `clarion-log`, and the Claude Code stop hook.
 
 ---
 
@@ -89,13 +119,16 @@ clarion-mute my-agent --off
 ```
 POST /speak
 Body: { "text": "Hello.", "backend": "edge", "voice": "en-GB-RyanNeural", "speed": 1.0 }
-Returns: audio/mpeg
+Returns: audio/mpeg (X-Clarion-Fallback header if backend fell back to Edge)
 
 GET /voices?backend=edge|kokoro|piper|elevenlabs|google
 Returns: { voices: [{ id, label, lang, gender }] }
 
 GET /health
 Returns: { edge: "up", kokoro: "up|down|unconfigured", ... }
+
+GET /diagnostics
+Returns: { server: { version }, backends: { [name]: { status, configured, detail } } }
 ```
 
 ---
@@ -104,13 +137,39 @@ Returns: { edge: "up", kokoro: "up|down|unconfigured", ... }
 
 | Backend | Config needed | Quality | Voices |
 |---------|--------------|---------|--------|
-| Edge TTS | None | Good | 27 Neural (US, UK, AU, IE, CA, ZA, NZ, IN) |
+| Edge TTS | None* | Good | 27 Neural (US, UK, AU, IE, CA, ZA, NZ, IN) |
 | Kokoro | `KOKORO_SERVER=http://...` | Excellent | 11 (US + UK English) |
 | Piper | `PIPER_SERVER=http://...` | OK | 6 (US + UK English) |
 | ElevenLabs | `ELEVENLABS_API_KEY=...` | Excellent | 11 (US, UK, AU) |
 | Google Chirp 3 HD | `GOOGLE_TTS_API_KEY=...` | Excellent | 16 (US + UK) |
 
+\*Edge TTS uses Microsoft's public Translator API. No API key is required, but this is an unofficial integration and availability is not guaranteed.
+
 [Backend setup guide](docs/backends.md): local Kokoro and Piper install, Docker, API key setup.
+
+---
+
+## What gets spoken
+
+By default (`proseOnly: true`), Clarion strips non-conversational markdown before sending text to the TTS backend — so your agent only speaks what it would actually say, not the structure around it.
+
+| Content | Spoken? |
+|---|---|
+| Prose paragraphs | Yes |
+| Heading text (`## Like this`) | Yes — markers stripped |
+| Bold / italic / strikethrough | Yes — markers stripped |
+| Links (`[text](url)`) | Yes — link text spoken |
+| Images (`![alt](url)`) | Yes — alt text spoken |
+| Blockquotes (`> text`) | Yes — markers stripped |
+| Bullet lists (`- item`) | Yes — markers stripped |
+| Numbered lists (`1. item`) | Yes — markers stripped |
+| Fenced code blocks (` ``` `) | No — removed |
+| Inline code (`` `like this` ``) | No — removed |
+| Indented code blocks | No — removed |
+| HTML tags | No — removed |
+| Horizontal rules (`---`) | No — removed |
+
+Toggle **Prose only** off on any agent card if you want everything spoken verbatim — useful for agents that narrate code reviews or read structured output.
 
 ---
 
@@ -130,23 +189,6 @@ Profiles are stored in `localStorage` and exportable as JSON.
 ```
 
 Export from the UI (Export all button) or share a single agent profile as a `.json` file. Import via the Import button.
-
-### What gets spoken
-
-By default (`proseOnly: true`), Clarion strips non-conversational markdown before sending text to the TTS backend — so your agent only speaks what it would actually say, not the structure around it.
-
-| Content | Spoken? |
-|---|---|
-| Prose paragraphs | Yes |
-| Heading text (`## Like this`) | Yes — markers stripped |
-| Bold / italic text | Yes — markers stripped |
-| Fenced code blocks (` ``` `) | No — removed |
-| Inline code (`` `like this` ``) | No — removed |
-| Indented code blocks | No — removed |
-| Bullet lists (`- item`) | Yes — markers stripped |
-| Numbered lists (`1. item`) | Yes — markers stripped |
-
-Toggle **Prose only** off on any agent card if you want everything spoken verbatim — useful for agents that narrate code reviews or read structured output.
 
 ---
 
@@ -169,6 +211,22 @@ docker-compose up
 
 ---
 
+## Troubleshooting
+
+**No audio output?**
+Edge TTS returns `audio/mpeg`. Make sure your player supports it. From CLI, Clarion auto-detects `afplay` (macOS), `mpv`, or `ffplay`. Pass `--player <command>` to override.
+
+**Kokoro connection refused?**
+Check `KOKORO_SERVER` is set and the server is running on the right port. Docker: `docker-compose up` handles this automatically. Verify with `clarion-status`.
+
+**`clarion-watch` not speaking?**
+Run `clarion-log` to check recent entries. Make sure the agent profile exists: `clarion-speak --list-agents`. Check mute state: `clarion-mute --list`.
+
+**Audio overlapping between agents?**
+`clarion-stream` uses a process lock file to serialize playback. If a stale lock remains after a crash, delete `$TMPDIR/clarion-stream.lock`.
+
+---
+
 ## Security
 
 Clarion is designed for personal, self-hosted use. For deployments beyond localhost:
@@ -179,6 +237,28 @@ Clarion is designed for personal, self-hosted use. For deployments beyond localh
 
 ---
 
+## Privacy
+
+Clarion sends the text you provide to whichever TTS backend is selected. **Edge TTS, ElevenLabs, and Google Chirp 3 HD** route text through external APIs (Microsoft, ElevenLabs, and Google respectively). **Kokoro and Piper** are fully self-hosted — text never leaves your infrastructure. Choose your backend accordingly. No text is stored by the Clarion server.
+
+---
+
+## Ecosystem
+
+Clarion is part of the [zerovector.design](https://zerovector.design) ecosystem — tools for building directly from intent to artifact. See also [Terminus](https://github.com/celanthe/terminus), the zero-overhead orchestration layer for multi-agent workflows.
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code style, and how to add a backend.
+
+Clarion is an audio tool, but contributions are not limited to people who use audio. UI improvements, backend adapters, documentation, and testing are all valuable.
+
+---
+
 ## Credits
 
 Built by [celanthe](https://github.com/celanthe) · Design by [Zabethy](https://zabethy.com) · Inspired by [Investiture](https://zerovector.design/investiture) by [Erika Flowers](https://github.com/erikaflowers) and [Everbloom Reader](https://everbloomreader.com)
+
+[![Support Clarion on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/rinoliver)

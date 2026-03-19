@@ -98,12 +98,27 @@ function extractProse(text) {
     .replace(/`[^`\n]+`/g, '')
     // Indented code blocks (4-space or tab-prefixed lines)
     .replace(/^( {4}|\t).+$/gm, '')
+    // HTML tags
+    .replace(/<[^>]+>/g, '')
+    // Images — keep alt text
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    // Links — keep link text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    // Horizontal rules
+    .replace(/^[-*_]{3,}\s*$/gm, '')
+    // Blockquotes — keep text, drop markers
+    .replace(/^>\s?/gm, '')
     // Bullet list items (-, *, +) — keep text, drop markers
     .replace(/^[ \t]*[-*+][ \t]+/gm, '')
     // Numbered list items — keep text, drop markers
     .replace(/^[ \t]*\d+\.[ \t]+/gm, '')
     // Heading markers — keep the text, drop the #s
     .replace(/^#{1,6}\s+/gm, '')
+    // Triple bold/italic (must come before double)
+    .replace(/\*{3}([^*]+)\*{3}/g, '$1')
+    .replace(/_{3}([^_]+)_{3}/g, '$1')
+    // Strikethrough — keep text
+    .replace(/~~([^~]+)~~/g, '$1')
     // Bold and italic markers
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/\*([^*\n]+)\*/g, '$1')
@@ -150,6 +165,11 @@ async function _speak(text, options = {}, onStart) {
   if (!response.ok) {
     const err = await response.json().catch(() => ({ error: response.statusText }));
     throw new Error(err.error || `Server error ${response.status}`);
+  }
+
+  const fallback = response.headers.get('X-Clarion-Fallback');
+  if (fallback) {
+    console.warn(`[clarion] ${backend} unavailable, fell back to ${fallback}`);
   }
 
   const blob = new Blob([await response.arrayBuffer()], { type: 'audio/mpeg' });

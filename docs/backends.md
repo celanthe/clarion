@@ -70,7 +70,7 @@ docker-compose up
 ```
 
 This starts:
-- Kokoro at `http://localhost:8880` (image: `ghcr.io/remsky/kokoro-fastapi:cpu`)
+- Kokoro at `http://localhost:8880` (image: `ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.4`)
 - Clarion server at `http://localhost:8080`
 
 The `KOKORO_SERVER` variable is wired automatically between the two containers. No further configuration needed.
@@ -237,7 +237,9 @@ ELEVENLABS_API_KEY=your-api-key
 
 ### Available voices
 
-Clarion includes a curated set of pre-made ElevenLabs voices. The default (when no voice is specified) is Rachel (`21m00Tcm4TlvDq8ikWAM`).
+Clarion includes a curated set of pre-made ElevenLabs voices. The default (when no voice is specified) is Roger (`CwhRBWXzGAHq8TQ4Fs17`).
+
+**Note:** Some voices (e.g., Rachel) may be paywalled on the free tier. The voices listed below are available on both free and paid plans.
 
 | ID | Name | Accent | Gender |
 |----|------|--------|--------|

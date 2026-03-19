@@ -7,37 +7,11 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { homedir, tmpdir } from 'os';
-import { join } from 'path';
 
-const CONFIG_DIR    = join(homedir(), '.config', 'clarion');
-const AGENTS_FILE   = join(CONFIG_DIR, 'agents.json');
-const CONFIG_FILE   = join(CONFIG_DIR, 'config.json');
-const STATE_FILE    = join(CONFIG_DIR, 'agents.state.json');
-const HOOK_FILE     = join(homedir(), '.claude', 'clarion-hook.js');
-const SETTINGS_FILE = join(homedir(), '.claude', 'settings.json');
-const LOCK_FILE     = join(tmpdir(), 'clarion-stream.lock');
-
-function loadConfig() {
-  const cfg = {};
-  if (existsSync(CONFIG_FILE)) {
-    try { Object.assign(cfg, JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))); } catch {}
-  }
-  return {
-    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8787',
-    apiKey: process.env.CLARION_API_KEY || cfg.apiKey || null,
-  };
-}
-
-function loadAgents() {
-  if (!existsSync(AGENTS_FILE)) return [];
-  try { return JSON.parse(readFileSync(AGENTS_FILE, 'utf8')); } catch { return []; }
-}
-
-function loadAgentState() {
-  if (!existsSync(STATE_FILE)) return {};
-  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
-}
+import {
+  CONFIG_DIR, AGENTS_FILE, HOOK_FILE, SETTINGS_FILE, LOCK_FILE,
+  loadConfig, loadAgents, loadAgentState
+} from './lib.js';
 
 function checkLock() {
   if (!existsSync(LOCK_FILE)) return null;

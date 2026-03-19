@@ -1,6 +1,6 @@
 # Clarion — Architecture
 
-> Last Updated: 2026-03-16
+> Last Updated: 2026-03-18
 >
 > This file is the technical specification. Read VECTOR.md for philosophy and constraints. Follow what is written here — if reality diverges, update this file rather than working around it.
 
@@ -12,11 +12,11 @@ Clarion has six distinct layers. Each has a clear job and clear boundaries.
 
 | Layer | Location | Job | Rule |
 |-------|----------|-----|------|
-| Server | `server/` | Hono-based TTS proxy. Routes `/speak`, `/voices`, `/health`. Runs as Cloudflare Worker or Node server. | No UI logic. No localStorage. Accepts HTTP, returns audio or JSON. |
+| Server | `server/` | Hono-based TTS proxy. Routes `/speak`, `/voices`, `/health`, `/diagnostics`. Runs as Cloudflare Worker or Node server. Auto-fallback to Edge TTS when a backend is unavailable. | No UI logic. No localStorage. Accepts HTTP, returns audio or JSON. |
 | UI | `src/` | React 19 SPA. Tabs: Agents, Audition, Log. Manages agent lifecycle, voice audition, and crew log. | No direct `fetch` to TTS API — use `services/tts.js`. No storage writes — use `services/storage/`. |
 | Services | `services/` | Client-side service modules: TTS client, HMAC crypto, agent storage. | No React imports. No DOM manipulation. Pure logic + fetch. |
 | Domain | `core/` | Agent model: `createAgent`, `validateAgent`, `slugify`, `defaultVoice`. Voice list (`core/voices.js`). | No imports from `src/`, `services/`, or `server/`. Pure JS functions. |
-| CLI | `cli/` | Node.js CLI scripts: `clarion-init`, `clarion-speak`, `clarion-status`, `clarion-stream`, `clarion-watch`. | No imports from `src/`, `services/`, `core/`, or `server/`. Uses `fetch` directly. Zero npm deps. |
+| CLI | `cli/` | Node.js CLI scripts: `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-status`, `clarion-stream`, `clarion-watch`. Shared utilities in `cli/lib.js`. | No imports from `src/`, `services/`, `core/`, or `server/`. Uses `fetch` directly. Zero npm deps. CLI scripts import shared code from `cli/lib.js`. |
 | Design System | `design-system/` | CSS custom properties. One file: `tokens.css` with 72 custom properties. | All color, spacing, typography, and radius values live here. Never hardcode these in component CSS. |
 
 `content/en.json` — UI strings. Imported by components. Not a layer but a shared resource — copy lives here, not in components.
@@ -38,6 +38,7 @@ design-system/   ←  no imports
 
 cli/             ←  standalone (no imports from any project layer)
                      uses Node built-ins + fetch only
+                     CLI scripts import shared utilities from cli/lib.js
 ```
 
 [OPERATOR: Verify — confirmed from App.jsx, services/tts.js, services/storage/agent-storage.js, core/domain/agent.js, cli/init.js. Key invariant: CLI and server are both isolated from the UI layer. cli/ must never import from src/ or services/ — it uses fetch to talk to the running server directly. services/ may import from core/ (domain model) but not from src/.]
@@ -78,13 +79,15 @@ clarion/
 │
 ├── src/                         # UI layer — React 19
 │   ├── main.jsx                 # React root mount
-│   ├── App.jsx                  # Root: tab routing, agent state, server config
+│   ├── App.jsx                  # Root: tab routing (Agents/Audition/Log/Setup), agent state, server config
 │   ├── App.css                  # App-level styles
 │   ├── global.css               # CSS resets and base styles (imports tokens.css)
 │   └── components/
 │       ├── AgentCard.jsx/css    # Edit one agent (backend, voice, speed, prose mode, mute)
 │       ├── BackendStatus.jsx/css # Status dots, polls /health every 30s
+│       ├── ClarionEmbed.jsx     # Standalone embeddable diagnostic panel (serverUrl prop, no App state)
 │       ├── CrewLog.jsx/css      # Log tab — per-agent message history with replay
+│       ├── SetupPanel.jsx/css   # Setup tab — backend cards, agent health, connection test
 │       ├── VoiceAudition.jsx/css # Audition tab — paste dialogue, hear voices
 │       ├── VoiceSelector.jsx/css # Grouped voice dropdown per backend
 │       └── Waveform.jsx/css     # Real-time audio waveform visualizer
@@ -102,7 +105,9 @@ clarion/
 │   └── voices.js                # Backend voice lists
 │
 ├── cli/                         # CLI layer — Node.js, zero npm deps
-│   ├── init.js                  # clarion-init: interactive setup wizard, writes hook
+│   ├── lib.js                   # Shared utilities: config, agents, arg parsing, path constants
+│   ├── doctor.js                # clarion-doctor: 10-check diagnostic with remediation hints
+│   ├── init.js                  # clarion-init: multi-backend setup wizard, writes hook
 │   ├── log.js                   # clarion-log: show crew-log.jsonl entries
 │   ├── mute.js                  # clarion-mute: mute/unmute agents via agents.state.json
 │   ├── speak.js                 # clarion-speak: pipe text to agent voice
@@ -112,7 +117,7 @@ clarion/
 │
 ├── server/                      # Server layer — Cloudflare Worker (Hono)
 │   ├── src/
-│   │   ├── index.js             # Router: /health, /voices, /speak + HMAC auth
+│   │   ├── index.js             # Router: /health, /voices, /speak, /diagnostics + HMAC auth + Edge auto-fallback
 │   │   ├── edge.js              # Edge TTS adapter (Microsoft Translator, no key)
 │   │   ├── kokoro.js            # Kokoro adapter (OpenAI-compatible /v1/audio/speech)
 │   │   ├── piper.js             # Piper adapter

@@ -3,6 +3,7 @@ import AgentCard from './components/AgentCard.jsx';
 import BackendStatus from './components/BackendStatus.jsx';
 import VoiceAudition from './components/VoiceAudition.jsx';
 import CrewLog from './components/CrewLog.jsx';
+import SetupPanel from './components/SetupPanel.jsx';
 import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, hasApiKey, setApiKey } from '../services/storage/agent-storage.js';
 import { migrateApiKey } from '../services/crypto.js';
 import { stop } from '../services/tts.js';
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'agents',   label: 'Agents' },
   { id: 'audition', label: 'Audition' },
   { id: 'log',      label: 'Log' },
+  { id: 'setup',    label: 'Setup' },
 ];
 
 export default function App() {
@@ -268,7 +270,9 @@ export default function App() {
       </nav>
 
       <main className="app-main">
-        {tab === 'log' ? (
+        {tab === 'setup' ? (
+          <SetupPanel health={health} agents={agents} onAgentUpdate={handleSave} />
+        ) : tab === 'log' ? (
           <CrewLog agents={agents} />
         ) : tab === 'audition' ? (
           <VoiceAudition health={health} onSave={handleAuditionSave} onGoToAgents={handleGoToAgents} />
