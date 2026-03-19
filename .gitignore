@@ -11,3 +11,13 @@ server/node_modules/
 *.onnx
 *.bin
 tasks/
+
+# Piper local binaries and models
+piper/
+piper-models/
+
+# Growth/marketing drafts — local only
+content/drafts/
+demo/
+.github/
+examples/
