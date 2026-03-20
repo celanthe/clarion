@@ -13,7 +13,29 @@
 
 import { serve } from '@hono/node-server';
 import { createServer } from 'net';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import app from './index.js';
+
+// Auto-load .dev.vars or .env from the server directory (same keys Wrangler reads)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const serverDir = join(__dirname, '..');
+for (const envFile of ['.dev.vars', '.env']) {
+  try {
+    const lines = readFileSync(join(serverDir, envFile), 'utf8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq < 1) continue;
+      const key = trimmed.slice(0, eq);
+      const val = trimmed.slice(eq + 1);
+      if (!process.env[key]) process.env[key] = val;  // env vars take precedence
+    }
+    break;  // use first file found
+  } catch {}
+}
 
 const port = parseInt(process.env.PORT || '8080', 10);
 
