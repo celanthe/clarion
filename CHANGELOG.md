@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.4.0 — 2026-03-19
+
+### CLI
+
+- **`clarion-router`** — new multi-agent voice router. A single process that watches all active Claude Code project directories for JSONL transcripts and routes each assistant message through the correct agent voice automatically. Handles subagent detection, audio queuing (agents never overlap), and persona-to-voice mapping. Supports `--default`, `--verbose`, and `--dry-run` flags.
+- **`clarion-migrate`** — new one-time migration tool. Merges voice fields from `~/.config/terminus-dev/agent-preferences.json` into `~/.config/clarion/agents.json`. Safe to run multiple times — skips agents that already exist. Supports `--dry-run`.
+- **`clarion-watch`**: new `--multi` flag delegates to `clarion-router` for multi-agent mode. Per-project lock files replace the single global `watcher.lock`, so multiple watchers across different projects no longer conflict. Incremental byte-offset reads replace full-file re-reads on each poll — significantly reduces I/O for long sessions. Atomic JSON writes (temp file + rename) for session registration to prevent corruption on concurrent writes.
+- **Shared `fetchAudio`** — deduplicated from `speak.js` and `stream.js` into `lib.js`. Both scripts now import a single implementation with consistent timeout, error handling, and fallback header logging.
+- **Shared `projectDir`** — path slug helper extracted to `lib.js`, used by both `hook.js` and `watch.js`.
+- **`hook.js`**: now scans per-project lock files instead of a single global lock. Better error logging on bad input. Path encoding handles both forward and back slashes.
+
+### Server
+
+- **Port conflict detection** — `node-server.js` checks if the port is already in use before binding and exits with a clear error message instead of crashing.
+- **Graceful shutdown** — handles `SIGTERM`, `SIGINT`, and `disconnect` signals with a clean shutdown and 3-second timeout.
+- **Structured readiness signal** — prints `{"status":"ready","port":8080}` to stdout when listening, enabling parent processes (Electron, scripts) to detect startup programmatically.
+- **Default port changed** — server and all CLI tools now default to port `8080` (was `8787`). `CLARION_SERVER` env var and config file override as before.
+
+### Domain
+
+- **`proseOnly` validation** — `agent.js` now validates that `proseOnly` is a boolean if present.
+
 ## 0.3.0 — 2026-03-16
 
 ### CLI

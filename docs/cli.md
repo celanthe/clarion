@@ -20,7 +20,7 @@ From the Clarion directory:
 npm install -g .
 ```
 
-This adds `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-status`, `clarion-mute`, `clarion-log`, and `clarion-watch` to your PATH.
+This adds `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-status`, `clarion-mute`, `clarion-log`, `clarion-watch`, `clarion-router`, and `clarion-migrate` to your PATH.
 
 ### 2. Run clarion-init
 
@@ -44,7 +44,7 @@ The CLI reads this file on every invocation. No restart needed after changes.
 
 ### 3. Set the server URL
 
-The CLI defaults to `http://localhost:8787` (wrangler dev). If your server runs elsewhere, set the URL one of two ways:
+The CLI defaults to `http://localhost:8080`. If your server runs elsewhere, set the URL one of two ways:
 
 **Environment variable (easiest):**
 
@@ -274,6 +274,84 @@ Use one or the other. Watch gives earlier, more frequent voice output. The hook 
 
 ---
 
+## clarion-router — multi-agent voice router
+
+`clarion-router` is a single process that watches all active Claude Code project directories and routes each assistant message through the correct agent voice. Unlike running one `clarion-watch` per agent, `clarion-router` handles all sessions across all projects from a single process.
+
+### Basic usage
+
+```sh
+# Watch all active projects, auto-detect agents
+clarion-router
+
+# Set a fallback/default agent voice
+clarion-router --default julian
+
+# Verbose — log agent detection and routing decisions
+clarion-router --verbose
+
+# Dry run — detect agents and log what would be spoken, but don't play audio
+clarion-router --dry-run
+```
+
+You can also launch it via `clarion-watch --multi`, which delegates to `clarion-router`.
+
+### Agent detection strategy (priority order)
+
+1. **Agent tool call** — `description` or `prompt` field in an Agent tool use contains a known agent name
+2. **"You are \<Name\>"** pattern in the first assistant message of a session
+3. **Session→agent mapping** from `sessions.json` (written by `clarion-watch`)
+4. **Fallback** to `--default` agent (or first agent in `agents.json`)
+
+### Audio queuing
+
+All speech is serialized through a single FIFO queue. Agents never overlap. Each queued item carries the agent ID so the correct voice is used.
+
+### Error suppression
+
+If a backend fails 3 times in a row, `clarion-router` suppresses further error output for that backend to avoid log spam. It logs once on the first failure and once when suppression kicks in.
+
+### All flags
+
+| Flag | Description |
+|------|-------------|
+| `--default <id>` | Fallback agent voice (default: first in `agents.json`) |
+| `--verbose` | Log detection events, routing decisions, and queue activity to stderr |
+| `--dry-run` | Detect agents and log what would be spoken, but don't play audio |
+| `--help` | Show usage and exit |
+
+---
+
+## clarion-migrate — config migration from Terminus
+
+`clarion-migrate` is a one-time migration tool that merges voice fields from Terminus agent preferences into Clarion's `agents.json`. Safe to run multiple times — it skips agents that already exist.
+
+### Basic usage
+
+```sh
+# Preview what would change
+clarion-migrate --dry-run
+
+# Run the migration
+clarion-migrate
+```
+
+### What it does
+
+1. Reads `~/.config/terminus-dev/agent-preferences.json`
+2. For each entry with voice fields (`voiceBackend`, `voiceName`, `voiceSpeed`), creates a Clarion agent profile
+3. Writes the merged profiles to `~/.config/clarion/agents.json`
+4. Strips the migrated voice fields from the Terminus prefs file (so they aren't duplicated)
+
+### All flags
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Show what would change without writing |
+| `--help` | Show usage and exit |
+
+---
+
 ## clarion-mute — mute and unmute agents
 
 `clarion-mute` mutes or unmutes an agent. When muted, `clarion-stream` and `clarion-watch` skip audio for that agent silently.
@@ -487,7 +565,7 @@ Playing   idle
 
 | Variable | Where it's read | Description |
 |----------|----------------|-------------|
-| `CLARION_SERVER` | All CLI scripts | URL of your Clarion server. Default: `http://localhost:8787` |
+| `CLARION_SERVER` | All CLI scripts | URL of your Clarion server. Default: `http://localhost:8080` |
 | `CLARION_API_KEY` | All CLI scripts | Bearer token, if your server has `API_KEY` set |
 
 Both variables can also be set in `~/.config/clarion/config.json`:

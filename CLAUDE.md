@@ -42,7 +42,7 @@ npm run dev
 cd server
 npm install
 npm run dev
-# → http://localhost:8787
+# → http://localhost:8080
 ```
 
 ### With Kokoro (docker-compose)

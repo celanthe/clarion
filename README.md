@@ -49,7 +49,7 @@ Run in a second terminal alongside the UI:
 
 ```sh
 cd server && npm install && npm run dev
-# http://localhost:8787
+# http://localhost:8080
 ```
 
 Or with Docker (Kokoro included):
@@ -104,6 +104,12 @@ claude "Walk me through this." | clarion-stream --agent my-agent
 # Watch a Claude Code session live — speaks mid-session, before tools finish
 clarion-watch --agent my-agent
 
+# Multi-agent mode — one router watches all projects, routes each to the right voice
+clarion-watch --multi
+
+# Migrate voice configs from Terminus to Clarion
+clarion-migrate --dry-run
+
 # Diagnose setup issues — 10 checks with remediation hints
 clarion-doctor
 
@@ -115,7 +121,7 @@ clarion-mute my-agent
 clarion-mute my-agent --off
 ```
 
-[Full CLI guide](docs/cli.md): `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-watch`, `clarion-status`, `clarion-mute`, `clarion-log`, and the Claude Code stop hook.
+[Full CLI guide](docs/cli.md): `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-stream`, `clarion-watch`, `clarion-router`, `clarion-migrate`, `clarion-status`, `clarion-mute`, `clarion-log`, and the Claude Code stop hook.
 
 ---
 
