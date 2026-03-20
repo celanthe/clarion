@@ -20,7 +20,6 @@ import { spawn } from 'child_process';
 const CONFIG_DIR     = join(homedir(), '.config', 'clarion');
 const SESSIONS_FILE  = join(CONFIG_DIR, 'sessions.json');
 const AGENTS_FILE    = join(CONFIG_DIR, 'agents.json');
-const WATCHER_LOCK   = join(CONFIG_DIR, 'watcher.lock');
 
 function resolveAgent(sessionId) {
   // First: check session→agent mapping (written by clarion-watch)
@@ -44,7 +43,7 @@ async function main() {
   for await (const chunk of process.stdin) raw += chunk;
 
   let hookData;
-  try { hookData = JSON.parse(raw); } catch { process.exit(0); }
+  try { hookData = JSON.parse(raw); } catch (e) { console.error('[clarion-hook] bad input:', e.message); process.exit(0); }
 
   const { session_id, cwd, stop_hook_active } = hookData;
 
@@ -52,9 +51,13 @@ async function main() {
   if (stop_hook_active) process.exit(0);
 
   // If clarion-watch is active for this session, it handles voice — stand down
+  // Check per-project lock files (watcher-<slug>.lock)
   try {
-    const lockContent = readFileSync(WATCHER_LOCK, 'utf8').trim();
-    if (lockContent === session_id) process.exit(0);
+    const lockFiles = readdirSync(CONFIG_DIR).filter(f => f.startsWith('watcher-') && f.endsWith('.lock'));
+    for (const lf of lockFiles) {
+      const lockContent = readFileSync(join(CONFIG_DIR, lf), 'utf8').trim();
+      if (lockContent === session_id) process.exit(0);
+    }
   } catch {}
 
   // Resolve which agent owns this session
@@ -63,7 +66,7 @@ async function main() {
 
   // Locate the transcript JSONL
   const projectsDir = join(homedir(), '.claude', 'projects');
-  const encoded = cwd.replace(/\//g, '-');
+  const encoded = cwd.replace(/[\\/]/g, '-');
   let transcriptPath = join(projectsDir, encoded, `${session_id}.jsonl`);
 
   if (!existsSync(transcriptPath)) {
@@ -106,7 +109,7 @@ async function main() {
     stdio: ['pipe', 'ignore', 'inherit'],
     env: {
       ...process.env,
-      CLARION_SERVER: process.env.CLARION_SERVER || 'http://localhost:8787'
+      CLARION_SERVER: process.env.CLARION_SERVER || 'http://localhost:8080'
     }
   });
 

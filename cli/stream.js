@@ -17,7 +17,7 @@
  *   --backend <name>  edge | kokoro | piper | elevenlabs | google  (default: edge)
  *   --voice   <id>    Voice ID for the backend
  *   --speed   <n>     Speed multiplier (default: 1.0)
- *   --server  <url>   Clarion server URL (default: $CLARION_SERVER or localhost:8787)
+ *   --server  <url>   Clarion server URL (default: $CLARION_SERVER or localhost:8080)
  *   --player  <cmd>   Audio player: afplay (macOS default), mpv, ffplay, aplay
  *   --plain           Skip ANSI/Markdown stripping — pass text through as-is
  *   --list-agents     Print saved agents and exit
@@ -36,7 +36,7 @@ import { spawn }              from 'child_process';
 
 import {
   CONFIG_DIR, AGENTS_FILE, CONFIG_FILE, LOG_FILE, STATE_FILE, LOCK_FILE,
-  loadConfig, loadAgents, findAgent, isAgentMuted, parseArgs, detectPlayer
+  loadConfig, loadAgents, findAgent, isAgentMuted, parseArgs, detectPlayer, fetchAudio
 } from './lib.js';
 
 // --- Playback lock ---
@@ -187,32 +187,7 @@ class SentenceBuffer {
   }
 }
 
-// --- Audio fetch + play ---
-
-async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
-  const res = await fetch(`${server}/speak`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 }),
-    signal: AbortSignal.timeout(30000)
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `Server ${res.status}`);
-  }
-
-  const fallback = res.headers.get('X-Clarion-Fallback');
-  if (fallback) {
-    console.error(`[clarion] Warning: ${backend || 'backend'} unavailable, fell back to ${fallback}`);
-  }
-
-  return Buffer.from(await res.arrayBuffer());
-}
-
-// detectPlayer imported from ./lib.js
+// --- Audio play ---
 
 function playBuffer(buffer, player) {
   const ext = '.mp3';

@@ -50,6 +50,9 @@ export function validateAgent(obj) {
   if (typeof obj.speed !== 'number' || obj.speed < 0.25 || obj.speed > 4.0) {
     errors.push('Speed must be a number between 0.25 and 4.0');
   }
+  if (obj.proseOnly !== undefined && typeof obj.proseOnly !== 'boolean') {
+    errors.push('proseOnly must be a boolean');
+  }
 
   return { valid: errors.length === 0, errors };
 }

@@ -39,32 +39,11 @@ import { spawn } from 'child_process';
 
 import {
   SPOKEN_LOG,
-  loadConfig, loadAgents, findAgent, detectPlayer, ensureConfigDir
+  loadConfig, loadAgents, findAgent, detectPlayer, ensureConfigDir, fetchAudio
 } from './lib.js';
 
 // Ensure config directory exists on first run
 ensureConfigDir();
-
-// --- Speak ---
-
-async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
-  const res = await fetch(`${server}/speak`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 }),
-    signal: AbortSignal.timeout(30000)
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `Server error ${res.status}`);
-  }
-
-  return Buffer.from(await res.arrayBuffer());
-}
 
 // --- Audio playback ---
 

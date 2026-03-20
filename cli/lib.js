@@ -33,7 +33,7 @@ export function loadConfig() {
     try { Object.assign(cfg, JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))); } catch {}
   }
   return {
-    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8787',
+    server: process.env.CLARION_SERVER || cfg.server || 'http://localhost:8080',
     apiKey: process.env.CLARION_API_KEY || cfg.apiKey || null,
   };
 }
@@ -100,4 +100,41 @@ export function detectPlayer() {
 
 export function ensureConfigDir() {
   mkdirSync(CONFIG_DIR, { recursive: true });
+}
+
+// --- Project directory ---
+
+/**
+ * Convert a working directory path to the Claude Code projects slug.
+ * Handles both forward slashes (POSIX) and backslashes (Windows).
+ */
+export function projectDir(cwd) {
+  const slug = cwd.replace(/[\\/]/g, '-');
+  return join(homedir(), '.claude', 'projects', slug);
+}
+
+// --- Audio fetch (shared by speak.js and stream.js) ---
+
+export async function fetchAudio(text, { server, apiKey, backend, voice, speed }) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+  const res = await fetch(`${server}/speak`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ text, backend: backend || 'edge', voice, speed: speed || 1.0 }),
+    signal: AbortSignal.timeout(30000)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `Server error ${res.status}`);
+  }
+
+  const fallback = res.headers.get('X-Clarion-Fallback');
+  if (fallback) {
+    console.error(`[clarion] Warning: ${backend || 'backend'} unavailable, fell back to ${fallback}`);
+  }
+
+  return Buffer.from(await res.arrayBuffer());
 }

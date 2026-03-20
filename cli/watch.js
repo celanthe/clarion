@@ -11,24 +11,27 @@
  *   clarion-watch --agent <id>          # explicit agent by ID or name
  *   clarion-watch --cwd /path/to/proj   # explicit project dir (default: process.cwd())
  *   clarion-watch --verbose             # log detection events to stderr
+ *   clarion-watch --multi               # multi-agent mode (delegates to clarion-router)
  *   clarion-watch --help
  *
  * When a session is detected, registers a session→agent mapping in
  * ~/.config/clarion/sessions.json so the stop hook speaks as the correct agent.
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { homedir } from 'os';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, renameSync, openSync, readSync, closeSync } from 'fs';
+import { homedir, tmpdir } from 'os';
 import { join, basename } from 'path';
 import { spawn } from 'child_process';
 
 import {
   SESSIONS_FILE,
-  loadAgents, findAgent, isAgentMuted, parseArgs
+  loadAgents, findAgent, isAgentMuted, parseArgs, projectDir as projectDirFromCwd
 } from './lib.js';
 
-// Marker file that tells the stop hook "I'm handling voice for this session"
-const WATCHER_LOCK = join(homedir(), '.config', 'clarion', 'watcher.lock');
+// Per-project lock file — tells the stop hook "I'm handling voice for this project"
+function watcherLockPath(projSlug) {
+  return join(homedir(), '.config', 'clarion', `watcher-${projSlug}.lock`);
+}
 
 // --- Session-to-agent mapping (shared with stop hook) ---
 
@@ -36,24 +39,27 @@ function loadSessions() {
   try { return JSON.parse(readFileSync(SESSIONS_FILE, 'utf8')); } catch { return {}; }
 }
 
+function atomicWriteJson(filePath, data) {
+  const tmp = join(tmpdir(), `clarion-${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`);
+  writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n');
+  renameSync(tmp, filePath);
+}
+
 function registerSession(sessionId, agentId) {
   const sessions = loadSessions();
   sessions[sessionId] = agentId;
-  writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2) + '\n');
+  atomicWriteJson(SESSIONS_FILE, sessions);
 }
 
 function unregisterSession(sessionId) {
   const sessions = loadSessions();
   delete sessions[sessionId];
-  writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2) + '\n');
+  atomicWriteJson(SESSIONS_FILE, sessions);
 }
 
 // --- JSONL helpers ---
 
-function projectDir(cwd) {
-  const slug = cwd.replace(/[\\/]/g, '-');
-  return join(homedir(), '.claude', 'projects', slug);
-}
+// projectDir imported from lib.js as projectDirFromCwd
 
 function latestJsonl(dir, ownAgentId, currentSessionFile) {
   if (!existsSync(dir)) return null;
@@ -202,6 +208,22 @@ async function main() {
     process.exit(0);
   }
 
+  // --multi: delegate to clarion-router
+  if (flags.multi) {
+    const args = [];
+    if (flags.verbose) args.push('--verbose');
+    if (flags.agent)   args.push('--default', flags.agent);
+    console.error('[clarion-watch] Multi-agent mode — delegating to clarion-router');
+    const router = spawn('clarion-router', args, { stdio: 'inherit' });
+    router.on('close', (code) => process.exit(code || 0));
+    router.on('error', (err) => {
+      console.error(`[clarion-watch] Failed to launch clarion-router: ${err.message}`);
+      console.error('[clarion-watch] Run: npm link (in the clarion directory) to install clarion-router');
+      process.exit(1);
+    });
+    return;
+  }
+
   // Resolve agent
   let agentId;
   if (flags.agent) {
@@ -230,7 +252,7 @@ async function main() {
 
   const verbose = !!flags.verbose;
   const cwd = flags.cwd || process.cwd();
-  const projDir = projectDir(cwd);
+  const projDir = projectDirFromCwd(cwd);
 
   console.error(`[clarion-watch] Watching: ${projDir}`);
 
@@ -238,6 +260,7 @@ async function main() {
   const spokenUuids = new Set();
   let sessionFile = null;
   let lastSize = -1;
+  let lastReadOffset = 0;  // byte offset for incremental reads
   let toolAgentMap = new Map();  // tool_use_id → agentId for multi-voice routing
   const allAgents = loadAgents();
 
@@ -245,7 +268,9 @@ async function main() {
   function initSession(file) {
     sessionFile = file;
     lastSize = -1;
+    lastReadOffset = 0;
     spokenUuids.clear();
+    toolAgentMap = new Map();
 
     // Register session→agent mapping so the stop hook knows who's speaking
     const sessionId = basename(file, '.jsonl');
@@ -256,7 +281,9 @@ async function main() {
     let raw;
     try { raw = readFileSync(file, 'utf8'); } catch { return; }
 
-    for (const line of raw.split('\n')) {
+    // Pre-scan: mark all existing entries as spoken, build initial tool map
+    const lines = raw.split('\n');
+    for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
       try {
@@ -264,13 +291,18 @@ async function main() {
         if (entry.uuid) spokenUuids.add(entry.uuid);
       } catch {}
     }
+    toolAgentMap = buildToolAgentMap(lines, allAgents);
 
-    try { lastSize = statSync(file).size; } catch {}
+    try {
+      const stat = statSync(file);
+      lastSize = stat.size;
+      lastReadOffset = stat.size;
+    } catch {}
 
     if (verbose) console.error(`[clarion-watch] Session: ${file} (${spokenUuids.size} existing entries)`);
   }
 
-  // Poll the session file for new entries
+  // Poll the session file for new entries (incremental read from lastReadOffset)
   function pollSession() {
     if (!sessionFile || !existsSync(sessionFile)) return;
 
@@ -279,13 +311,46 @@ async function main() {
     if (size === lastSize) return;
     lastSize = size;
 
+    // Read only the new bytes appended since last read
     let raw;
-    try { raw = readFileSync(sessionFile, 'utf8'); } catch { return; }
+    try {
+      const bytesToRead = size - lastReadOffset;
+      if (bytesToRead <= 0) return;
+      const fd = openSync(sessionFile, 'r');
+      const buf = Buffer.alloc(bytesToRead);
+      readSync(fd, buf, 0, bytesToRead, lastReadOffset);
+      closeSync(fd);
+      raw = buf.toString('utf8');
+      lastReadOffset = size;
+    } catch {
+      // Fallback: read entire file if incremental read fails
+      try { raw = readFileSync(sessionFile, 'utf8'); } catch { return; }
+      lastReadOffset = size;
+    }
 
     const lines = raw.split('\n');
 
-    // Rebuild tool→agent map for multi-voice routing
-    toolAgentMap = buildToolAgentMap(lines, allAgents);
+    // Incrementally update tool→agent map from new lines only
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      let entry;
+      try { entry = JSON.parse(trimmed); } catch { continue; }
+      if (entry.type !== 'assistant') continue;
+      const blocks = entry.message?.content || [];
+      for (const b of blocks) {
+        if (b.type !== 'tool_use' || b.name !== 'Agent') continue;
+        const desc = (b.input?.description || '').toLowerCase();
+        const prompt = (b.input?.prompt || '').toLowerCase();
+        for (const agent of allAgents) {
+          const name = agent.name.toLowerCase();
+          if (desc.includes(name) || prompt.startsWith(`you are ${name}`)) {
+            toolAgentMap.set(b.id, agent.id);
+            break;
+          }
+        }
+      }
+    }
 
     for (const line of lines) {
       const trimmed = line.trim();
@@ -352,13 +417,16 @@ async function main() {
     initSession(latest);
   }
 
-  // Write watcher lock so the stop hook knows to stand down
+  // Per-project watcher lock so multiple watchers don't conflict
+  const projSlug = basename(projDir);
+  const lockFile = watcherLockPath(projSlug);
+
   function writeLock(sessionId) {
-    try { writeFileSync(WATCHER_LOCK, sessionId + '\n'); } catch {}
+    try { writeFileSync(lockFile, sessionId + '\n'); } catch {}
   }
 
   function clearLock() {
-    try { if (existsSync(WATCHER_LOCK)) writeFileSync(WATCHER_LOCK, ''); } catch {}
+    try { if (existsSync(lockFile)) writeFileSync(lockFile, ''); } catch {}
   }
 
   // Graceful shutdown — unregister session mapping and remove lock

@@ -40,7 +40,9 @@
     "clarion-speak": "./cli/speak.js",
     "clarion-status": "./cli/status.js",
     "clarion-stream": "./cli/stream.js",
-    "clarion-watch": "./cli/watch.js"
+    "clarion-watch": "./cli/watch.js",
+    "clarion-router": "./cli/router.js",
+    "clarion-migrate": "./cli/migrate.js"
   },
   "scripts": {
     "dev": "vite",
