@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.4.0 — 2026-03-19
+## 0.5.0 — 2026-03-19
+
+### Breaking Changes
+
+- **Default port changed** from `8787` to `8080`. Update `CLARION_SERVER` env var, `~/.config/clarion/config.json`, or scripts that reference the old port.
+- **Watcher lock files moved** from a single global `~/.config/clarion/watcher.lock` to per-project files (`watcher-<slug>.lock`). The old lock file is no longer used.
 
 ### CLI
 
@@ -17,6 +22,7 @@
 - **Graceful shutdown** — handles `SIGTERM`, `SIGINT`, and `disconnect` signals with a clean shutdown and 3-second timeout.
 - **Structured readiness signal** — prints `{"status":"ready","port":8080}` to stdout when listening, enabling parent processes (Electron, scripts) to detect startup programmatically.
 - **Default port changed** — server and all CLI tools now default to port `8080` (was `8787`). `CLARION_SERVER` env var and config file override as before.
+- **Auto-load `.dev.vars`** — the Node server now reads `.dev.vars` (or `.env` fallback) on startup so paid backend API keys work without passing env vars manually.
 
 ### Domain
 

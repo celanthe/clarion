@@ -14,7 +14,7 @@ npm run dev          # UI at http://localhost:5173 (Edge TTS works out of the bo
 To run the server (needed for Kokoro, Piper, ElevenLabs, Google):
 
 ```sh
-cd server && npm install && npm run dev   # http://localhost:8787
+cd server && npm install && npm run dev   # http://localhost:8080
 ```
 
 ## Adding a TTS backend

@@ -1,6 +1,6 @@
 # Clarion — Architecture
 
-> Last Updated: 2026-03-18
+> Last Updated: 2026-03-19
 >
 > This file is the technical specification. Read VECTOR.md for philosophy and constraints. Follow what is written here — if reality diverges, update this file rather than working around it.
 
@@ -16,7 +16,7 @@ Clarion has six distinct layers. Each has a clear job and clear boundaries.
 | UI | `src/` | React 19 SPA. Tabs: Agents, Audition, Log. Manages agent lifecycle, voice audition, and crew log. | No direct `fetch` to TTS API — use `services/tts.js`. No storage writes — use `services/storage/`. |
 | Services | `services/` | Client-side service modules: TTS client, HMAC crypto, agent storage. | No React imports. No DOM manipulation. Pure logic + fetch. |
 | Domain | `core/` | Agent model: `createAgent`, `validateAgent`, `slugify`, `defaultVoice`. Voice list (`core/voices.js`). | No imports from `src/`, `services/`, or `server/`. Pure JS functions. |
-| CLI | `cli/` | Node.js CLI scripts: `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-status`, `clarion-stream`, `clarion-watch`. Shared utilities in `cli/lib.js`. | No imports from `src/`, `services/`, `core/`, or `server/`. Uses `fetch` directly. Zero npm deps. CLI scripts import shared code from `cli/lib.js`. |
+| CLI | `cli/` | Node.js CLI scripts: `clarion-doctor`, `clarion-init`, `clarion-speak`, `clarion-status`, `clarion-stream`, `clarion-watch`, `clarion-router`, `clarion-migrate`. Stop hook: `hook.js`. Shared utilities in `cli/lib.js`. | No imports from `src/`, `services/`, `core/`, or `server/`. Uses `fetch` directly. Zero npm deps. CLI scripts import shared code from `cli/lib.js`. |
 | Design System | `design-system/` | CSS custom properties. One file: `tokens.css` with 72 custom properties. | All color, spacing, typography, and radius values live here. Never hardcode these in component CSS. |
 
 `content/en.json` — UI strings. Imported by components. Not a layer but a shared resource — copy lives here, not in components.
@@ -113,7 +113,10 @@ clarion/
 │   ├── speak.js                 # clarion-speak: pipe text to agent voice
 │   ├── status.js                # clarion-status: server health, agent state, mute flags
 │   ├── stream.js                # clarion-stream: real-time streaming, mute check, crew log
-│   └── watch.js                 # clarion-watch: persistent daemon, watches session JSONL, speaks live
+│   ├── watch.js                 # clarion-watch: persistent daemon, watches session JSONL, speaks live
+│   ├── router.js                # clarion-router: multi-agent voice router, watches all sessions
+│   ├── migrate.js               # clarion-migrate: one-time config migration from agent-preferences.json
+│   └── hook.js                  # Claude Code stop hook — speaks last assistant message via clarion-stream
 │
 ├── server/                      # Server layer — Cloudflare Worker (Hono)
 │   ├── src/
@@ -123,7 +126,7 @@ clarion/
 │   │   ├── piper.js             # Piper adapter
 │   │   ├── elevenlabs.js        # ElevenLabs adapter
 │   │   ├── google.js            # Google Chirp 3 HD adapter
-│   │   └── node-server.js       # Node.js wrapper for docker-compose deployments
+│   │   └── node-server.js       # Node.js server — auto-loads .dev.vars, readiness signal, graceful shutdown. Spawned by Terminus as managed child process.
 │   ├── package.json             # Server deps: hono, @cloudflare/workers-types
 │   └── wrangler.toml            # Cloudflare Worker config
 │
@@ -269,4 +272,4 @@ Key decisions already documented in CLAUDE.md (not yet in formal ADRs):
 - Kokoro uses `/v1/audio/speech` (OpenAI-compatible), not `/dev/captioned_speech`
 - Agent profiles in localStorage — no backend needed, exportable as JSON
 - Edge TTS via Microsoft Translator API — always available, no key needed
-- `private: true` in package.json — self-hosted, not a published npm package
+- Terminus integration: `node-server.js` emits a structured JSON readiness signal (`{"status":"ready","port":8080}`) on stdout so Electron can detect startup programmatically. Terminus spawns and manages the Node server as a child process following the same pattern as `wavesrv`.
