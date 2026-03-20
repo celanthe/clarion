@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/celanthe/clarion)](https://github.com/celanthe/clarion/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/celanthe/clarion)](https://github.com/celanthe/clarion/commits/main)
-[![Version](https://img.shields.io/badge/version-0.4.0-green)](https://github.com/celanthe/clarion)
+[![Version](https://img.shields.io/badge/version-0.5.0-green)](https://github.com/celanthe/clarion)
 
 Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, pick one, and pipe responses through it from the browser or CLI.
 
