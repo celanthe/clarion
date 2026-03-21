@@ -20,13 +20,14 @@ import {
   loadConfig, loadAgents
 } from './lib.js';
 
-const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
+const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google', 'chatterbox'];
 
 const BACKEND_HINTS = {
   kokoro:      'Is Docker running? Check with: docker ps\n    Then: docker-compose up -d',
   piper:       'Is the Piper server running? Check PIPER_SERVER in your server .env',
   elevenlabs:  'API key may be expired or invalid. Renew at elevenlabs.io/account',
   google:      'API key may be invalid. Check GOOGLE_TTS_API_KEY in your server .env',
+  chatterbox:  'Is the Chatterbox server running? Check CHATTERBOX_SERVER in your server .env\n    Needs GPU — run on RunPod or a machine with NVIDIA GPU.',
 };
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }

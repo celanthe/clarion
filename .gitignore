@@ -16,6 +16,9 @@ tasks/
 piper/
 piper-models/
 
+# Research instruments — keep unpublished until studies are complete
+vector/research/
+
 # Growth/marketing drafts — local only
 content/drafts/
 demo/

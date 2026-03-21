@@ -5,7 +5,7 @@ Gives AI agents distinct, auditioned voices — one profile per crewmember, save
 
 ## What it does
 
-- **Multi-backend TTS**: Edge TTS (zero-config), Kokoro (self-hosted), Piper (self-hosted), ElevenLabs (paid API), Google Chirp 3 HD (paid API)
+- **Multi-backend TTS**: Edge TTS (zero-config), Kokoro (self-hosted), Chatterbox (self-hosted, GPU), Piper (self-hosted), ElevenLabs (paid API), Google Chirp 3 HD (paid API)
 - **Agent profiles**: Named agents with saved backend + voice + speed
 - **Export/import**: Share an agent config as JSON
 
@@ -58,11 +58,11 @@ POST /speak
 { "text": "Hello.", "voice": "en-GB-RyanNeural", "backend": "edge", "speed": 1.0 }
 → audio/mpeg (X-Clarion-Fallback header if backend was unavailable and Edge was used)
 
-GET /voices?backend=edge|kokoro|piper|elevenlabs|google
+GET /voices?backend=edge|kokoro|piper|elevenlabs|google|chatterbox
 → { backend, voices: [{ id, label, lang, gender }] }
 
 GET /health
-→ { edge: "up", kokoro: "up|down|unconfigured", piper: "up|down|unconfigured", elevenlabs: "up|down|unconfigured", google: "up|down|unconfigured" }
+→ { edge: "up", kokoro: "up|down|unconfigured", piper: "up|down|unconfigured", elevenlabs: "up|down|unconfigured", google: "up|down|unconfigured", chatterbox: "up|down|unconfigured" }
 
 GET /diagnostics
 → { server: { version }, backends: { [name]: { status, configured, detail } } }
@@ -72,9 +72,10 @@ GET /diagnostics
 
 - **No rate limiting** — it's your server, not shared infra
 - **No KV cache** — keep it simple; add caching later if needed
-- **No RunPod GPU logic** — Clarion uses CPU Kokoro (docker-compose)
+- **Chatterbox for GPU inference** — ElevenLabs-quality, self-hosted via RunPod or local NVIDIA GPU. See docs/chatterbox.md
+- **Kokoro for CPU inference** — lighter quality but runs anywhere via docker-compose
 - **Edge TTS always works** — Microsoft Translator API, no key needed
-- **Kokoro uses `/v1/audio/speech`** — OpenAI-compatible, returns audio/mpeg directly
+- **Kokoro and Chatterbox use `/v1/audio/speech`** — OpenAI-compatible, returns audio/mpeg directly
   (not `/dev/captioned_speech` which returns NDJSON — we don't need word timestamps)
 - **Agent profiles in localStorage** — simple, no backend needed, exportable as JSON
 
@@ -92,6 +93,7 @@ Files ported and simplified:
 
 - Edge: `en-US-JennyNeural`
 - Kokoro: `af_heart`
+- Chatterbox: `default` (or any registered voice name)
 - Piper: `amy`
 - ElevenLabs: `CwhRBWXzGAHq8TQ4Fs17` (Roger)
 - Google: `en-US-Chirp3-HD-Achernar`

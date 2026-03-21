@@ -61,9 +61,10 @@ import { synthesize as kokoroSynthesize, checkHealth as kokoroHealth, getVoices 
 import { synthesize as piperSynthesize, checkHealth as piperHealth, getVoices as piperVoices } from './piper.js';
 import { synthesize as elevenlabsSynthesize, checkHealth as elevenlabsHealth, getVoices as elevenlabsVoices } from './elevenlabs.js';
 import { synthesize as googleSynthesize, checkHealth as googleHealth, getVoices as googleVoices } from './google.js';
+import { synthesize as chatterboxSynthesize, checkHealth as chatterboxHealth, getVoices as chatterboxVoices } from './chatterbox.js';
 
 // Valid backend IDs
-const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper', 'elevenlabs', 'google']);
+const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper', 'elevenlabs', 'google', 'chatterbox']);
 
 // Rate limiting — opt-in via RATE_LIMIT env var (max requests per minute per IP).
 // Set RATE_LIMIT=20 to allow 20 /speak requests per minute per IP.
@@ -140,11 +141,14 @@ app.get('/health', async (c) => {
     console.warn('[clarion] WARNING: Paid backend configured (ElevenLabs/Google) with RATE_LIMIT=0. Set RATE_LIMIT to cap requests per minute per IP.');
   }
 
-  const [kokoro, piper, elevenlabs, google] = await Promise.all([
+  const chatterboxServer = c.env?.CHATTERBOX_SERVER;
+
+  const [kokoro, piper, elevenlabs, google, chatterbox] = await Promise.all([
     kokoroHealth(kokoroServer),
     piperHealth(piperServer),
     elevenlabsHealth(elevenKey),
-    googleHealth(googleKey)
+    googleHealth(googleKey),
+    chatterboxHealth(chatterboxServer)
   ]);
 
   return c.json({
@@ -153,6 +157,7 @@ app.get('/health', async (c) => {
     piper,
     elevenlabs,
     google,
+    chatterbox,
     timestamp: new Date().toISOString()
   });
 });
@@ -164,12 +169,14 @@ app.get('/diagnostics', async (c) => {
   const piperServer  = c.env?.PIPER_SERVER;
   const elevenKey    = c.env?.ELEVENLABS_API_KEY;
   const googleKey    = c.env?.GOOGLE_TTS_API_KEY;
+  const chatterboxServer = c.env?.CHATTERBOX_SERVER;
 
-  const [kokoro, piper, elevenlabs, google] = await Promise.all([
+  const [kokoro, piper, elevenlabs, google, chatterbox] = await Promise.all([
     kokoroHealth(kokoroServer),
     piperHealth(piperServer),
     elevenlabsHealth(elevenKey),
-    googleHealth(googleKey)
+    googleHealth(googleKey),
+    chatterboxHealth(chatterboxServer)
   ]);
 
   return c.json({
@@ -203,6 +210,13 @@ app.get('/diagnostics', async (c) => {
         detail: google === 'up' ? 'API key valid' :
                 google === 'unconfigured' ? 'Set GOOGLE_TTS_API_KEY env var' :
                 'API key invalid or expired'
+      },
+      chatterbox: {
+        status: chatterbox,
+        configured: !!chatterboxServer,
+        detail: chatterbox === 'up' ? 'Connected' :
+                chatterbox === 'unconfigured' ? 'Set CHATTERBOX_SERVER env var' :
+                'Connection refused'
       }
     }
   });
@@ -220,13 +234,15 @@ app.get('/voices', async (c) => {
     google: googleVoices
   };
 
-  if (!voiceMap[backend] && backend !== 'elevenlabs') {
-    return c.json({ error: `Unknown backend: ${backend}. Use edge, kokoro, piper, elevenlabs, or google.` }, 400);
+  if (!voiceMap[backend] && backend !== 'elevenlabs' && backend !== 'chatterbox') {
+    return c.json({ error: `Unknown backend: ${backend}. Use edge, kokoro, piper, elevenlabs, google, or chatterbox.` }, 400);
   }
 
   let voices;
   if (backend === 'elevenlabs') {
     voices = await elevenlabsVoices(c.env?.ELEVENLABS_API_KEY);
+  } else if (backend === 'chatterbox') {
+    voices = await chatterboxVoices(c.env?.CHATTERBOX_SERVER);
   } else {
     voices = voiceMap[backend]();
   }
@@ -321,6 +337,10 @@ app.post('/speak', async (c) => {
 
       case 'google':
         audioResponse = await googleSynthesize(text, safeVoice, safeSpeed, c.env?.GOOGLE_TTS_API_KEY);
+        break;
+
+      case 'chatterbox':
+        audioResponse = await chatterboxSynthesize(text, safeVoice, safeSpeed, c.env?.CHATTERBOX_SERVER);
         break;
     }
 
