@@ -15,7 +15,7 @@
   /* Typography */
   --font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-size-xs:  0.75rem;
+  --font-size-xs:  0.8125rem;
   --font-size-sm:  0.875rem;
   --font-size-md:  1rem;
   --font-size-lg:  1.125rem;
@@ -40,7 +40,7 @@
 
   --color-text-primary:  #eae6f6;
   --color-text-secondary:#c0bad8;   /* lavender, not neutral gray */
-  --color-text-muted:    #a09abc;   /* muted lavender — passes WCAG AA */
+  --color-text-muted:    #b0aac8;   /* muted lavender — passes WCAG AA at ~5.3:1 */
 
   --color-accent:        #8272f0;
   --color-accent-hover:  #9888ff;

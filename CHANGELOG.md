@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.6.0 — 2026-03-30
+
+### Accessibility
+- Fix tab ARIA pattern (roving tabindex, tabpanel role, proper id/aria-controls associations)
+- Bump --color-text-muted to #b0aac8 (passes WCAG AA at 5.3:1)
+- Fix accent color used as text (swap to --color-accent-hover where used as readable text)
+- Add role="alert" to AgentCard error messages for screen reader announcement
+- Add focus management to delete confirmation (focus moves to Cancel button)
+- Add role="alertdialog" and aria-label to delete confirmation view
+- Add role="status" and sr-only labels to BackendStatus aggregate dot
+- Add skip-to-content link for keyboard navigation
+- Add Escape key handler and focus management to server config panel
+- All tab buttons, footer actions, and icon buttons meet 44px touch targets
+- Remove text-transform: uppercase from all labels (dyslexia-friendly)
+- Bump --font-size-xs from 12px to 13px for readability
+- Fix broken token references in VoiceAudition (--text-xs, --color-text-dim)
+- Remove italic from placeholders and unsaved indicator
+- Remove negative letter-spacing from app title
+- Bump base line-height to 1.6, add letter-spacing and word-spacing to body
+- Add focus-visible styles to import-error dismiss button
+- Fix voice gender display to handle non-M/F values
+
+### Visual Polish
+- Add fadeIn animation on tab content switch
+- Add hover lift on agent cards (with reduced-motion fallback)
+- Add active press state on voice audition rows
+- Restyle unsaved indicator with accent dot instead of text block
+- Custom slider thumb and track styling matching lavender theme
+- Add SVG speaker icon to agents empty state
+- Improve CrewLog empty state structure (title + hint)
+- Add "Done" close button to server config panel
+- Add custom ::selection color matching lavender theme
+- Add smooth scroll behavior
+- Style import-error dismiss button
+
+### UX
+- Default to Audition tab when user has zero agents (better first-run)
+- Add agent name placeholder: "Who's speaking?"
+- Fix grid overflow on viewports under 340px (minmax 340px to 300px)
+- Add mobile grid override for SetupPanel backends
+- Scope Space-key-to-stop to active playback only (no longer hijacks page scroll)
+
+### Security
+- Add CORS wildcard warning at startup when API_KEY set without ALLOWED_ORIGIN
+- Add URL protocol validation on Kokoro, Piper, and Chatterbox server URLs
+- Add encodeURIComponent on ElevenLabs voice ID in URL path
+- Document rate limiter limitation (Node-only, not effective on CF Workers)
+
 ## 0.5.0 — 2026-03-19
 
 ### Breaking Changes

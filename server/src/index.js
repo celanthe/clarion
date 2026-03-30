@@ -69,6 +69,9 @@ const VALID_BACKENDS = new Set(['edge', 'kokoro', 'piper', 'elevenlabs', 'google
 // Rate limiting — opt-in via RATE_LIMIT env var (max requests per minute per IP).
 // Set RATE_LIMIT=20 to allow 20 /speak requests per minute per IP.
 // Default is 0 (no limit) — it's your server.
+// NOTE: This in-memory rate limiter only works in Node/long-lived process mode.
+// On Cloudflare Workers, each request gets a fresh isolate — use CF's built-in
+// rate limiting or Durable Objects for Worker deployments.
 const _rateBuckets = new Map();
 
 function checkRateLimit(ip, maxPerMinute) {

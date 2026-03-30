@@ -82,6 +82,17 @@
   margin: 0;
 }
 
+.crew-log__empty-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.crew-log__empty-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
 /* Entry list */
 .crew-log__list {
   list-style: none;
@@ -124,7 +135,12 @@
 }
 
 .crew-log__replay-btn {
-  padding: 2px var(--space-sm);
+  padding: var(--space-sm);
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);

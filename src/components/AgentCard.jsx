@@ -26,12 +26,17 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [muted, setMuted] = useState(() => isMuted(initialAgent.id));
   const previewTimerRef = useRef(null);
+  const cancelRef = useRef(null);
 
   useEffect(() => {
     return onSpeakingChange((id) => setIsSpeaking(id === agent.id));
   }, [agent.id]);
 
   useEffect(() => () => clearTimeout(previewTimerRef.current), []);
+
+  useEffect(() => {
+    if (confirmDelete && cancelRef.current) cancelRef.current.focus();
+  }, [confirmDelete]);
 
   function update(fields) {
     setAgent(prev => ({ ...prev, ...fields }));
@@ -123,12 +128,12 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
 
   if (confirmDelete) {
     return (
-      <article className="agent-card agent-card--confirming">
+      <article className="agent-card agent-card--confirming" role="alertdialog" aria-label={`Confirm deletion of ${agent.name}`}>
         <p className="agent-card__confirm-text">
           Delete <strong>{agent.name}</strong>? This cannot be undone.
         </p>
         <div className="agent-card__confirm-actions">
-          <button className="agent-card__btn agent-card__btn--ghost" onClick={handleDeleteCancel} type="button">
+          <button className="agent-card__btn agent-card__btn--ghost" onClick={handleDeleteCancel} type="button" ref={cancelRef}>
             Cancel
           </button>
           <button className="agent-card__btn agent-card__btn--delete-confirm" onClick={handleDeleteConfirm} type="button">
@@ -147,7 +152,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
           type="text"
           value={agent.name}
           onChange={handleNameChange}
-          placeholder="Agent name"
+          placeholder="Who's speaking?"
           aria-label="Agent name"
         />
         <span className="agent-card__id" title="Agent ID (used by CLI)">{agent.id}</span>
@@ -246,7 +251,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         )}
       </div>
 
-      {error && <p className="agent-card__error">{error}</p>}
+      {error && <p className="agent-card__error" role="alert">{error}</p>}
 
       <footer className="agent-card__footer">
         <div className="agent-card__test-group">

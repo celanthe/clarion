@@ -11,10 +11,19 @@
  * @param {string} serverUrl - PIPER_SERVER env var value
  * @returns {Response} audio/wav
  */
+function validateServerUrl(url) {
+  const parsed = new URL(url);
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error(`Invalid server URL protocol: ${parsed.protocol}`);
+  }
+  return url;
+}
+
 export async function synthesize(text, voice, serverUrl) {
   if (!serverUrl) {
     throw new Error('Piper server not configured. Set PIPER_SERVER in your environment.');
   }
+  validateServerUrl(serverUrl);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 35000);

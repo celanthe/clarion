@@ -6,7 +6,7 @@ import CrewLog from './components/CrewLog.jsx';
 import SetupPanel from './components/SetupPanel.jsx';
 import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, hasApiKey, setApiKey } from '../services/storage/agent-storage.js';
 import { migrateApiKey } from '../services/crypto.js';
-import { stop } from '../services/tts.js';
+import { stop, getCurrentSpeakingAgentId } from '../services/tts.js';
 import { createAgent } from '../core/domain/agent.js';
 import './App.css';
 
@@ -18,8 +18,11 @@ const TABS = [
 ];
 
 export default function App() {
-  const [tab, setTab] = useState('agents');
   const [agents, setAgents] = useState(() => loadAgents());
+  const [tab, setTab] = useState(() => {
+    const initial = loadAgents();
+    return initial.length === 0 ? 'audition' : 'agents';
+  });
   const [serverUrl, setServerUrlState] = useState(() => getServerUrl());
   const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const [newApiKey, setNewApiKey] = useState('');
@@ -28,6 +31,7 @@ export default function App() {
   const [health, setHealth] = useState(null);
   const [urlError, setUrlError] = useState(null);
   const fileInputRef = useRef(null);
+  const serverConfigRef = useRef(null);
 
   function handleNewAgent() {
     const agent = createAgent({ name: 'New Agent' });
@@ -55,12 +59,13 @@ export default function App() {
     migrateApiKey().then(() => hasApiKey().then(setApiKeyConfigured));
   }, []);
 
-  // Space key stops playback globally (ignored when focus is in a text input)
+  // Space key stops playback globally (only when audio is playing, ignored in text inputs)
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.code !== 'Space') return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || e.target.isContentEditable) return;
+      if (!getCurrentSpeakingAgentId()) return;
       e.preventDefault();
       stop();
     }
@@ -86,6 +91,17 @@ export default function App() {
     document.addEventListener('keydown', handleTabArrowKey);
     return () => document.removeEventListener('keydown', handleTabArrowKey);
   }, [tab]);
+
+  // Escape key closes server config panel
+  useEffect(() => {
+    if (!showServerConfig) return;
+    function handleEscape(e) {
+      if (e.key === 'Escape') setShowServerConfig(false);
+    }
+    document.addEventListener('keydown', handleEscape);
+    if (serverConfigRef.current) serverConfigRef.current.focus();
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showServerConfig]);
 
   function handleServerUrlChange(e) {
     const url = e.target.value;
@@ -138,6 +154,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <header className="app-header">
         <div className="app-header__left">
           <h1 className="app-header__title">Clarion</h1>
@@ -180,7 +197,7 @@ export default function App() {
       </header>
 
       {showServerConfig && (
-        <div className="app-server-config" id="server-config-panel">
+        <div className="app-server-config" id="server-config-panel" ref={serverConfigRef} tabIndex="-1">
           <label className="app-server-config__label" htmlFor="server-url">
             Clarion server URL
           </label>
@@ -238,6 +255,13 @@ export default function App() {
           <p className="app-server-config__hint">
             Stored securely in your browser — the key never leaves your device. Requests are signed with HMAC-SHA256.
           </p>
+          <button
+            className="app-server-config__done"
+            onClick={() => setShowServerConfig(false)}
+            type="button"
+          >
+            Done
+          </button>
         </div>
       )}
 
@@ -263,13 +287,16 @@ export default function App() {
             type="button"
             role="tab"
             aria-selected={tab === t.id}
+            tabIndex={tab === t.id ? 0 : -1}
+            id={`tab-${t.id}`}
+            aria-controls="main-content"
           >
             {t.label}
           </button>
         ))}
       </nav>
 
-      <main className="app-main">
+      <main className="app-main" role="tabpanel" id="main-content" aria-labelledby={`tab-${tab}`}>
         {tab === 'setup' ? (
           <SetupPanel health={health} agents={agents} onAgentUpdate={handleSave} />
         ) : tab === 'log' ? (
@@ -280,6 +307,11 @@ export default function App() {
           <>
             {agents.length === 0 ? (
               <div className="app-empty">
+                <svg className="app-empty__icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
                 <p className="app-empty__headline">Give your agent a voice.</p>
                 <p className="app-empty__hint">
                   Go to <button className="app-empty__tab-link" onClick={() => setTab('audition')} type="button">Audition</button> — paste a few lines of your agent's dialogue, hear each voice read them, and save the one that fits.

@@ -55,6 +55,11 @@ const env = {
 const originalFetch = app.fetch.bind(app);
 const patchedFetch = (request, e) => originalFetch(request, { ...env, ...(e || {}) });
 
+// TODO: Use crypto.timingSafeEqual from Node's native 'crypto' module as an override
+// for the custom timingSafeEqual in index.js. Node's native implementation is constant-time
+// at the C++ level and more robust. This would require index.js to accept an injectable
+// comparison function or exporting/re-wiring the auth middleware.
+
 // --- Port conflict detection ---
 function checkPort(p) {
   return new Promise((resolve) => {
@@ -95,6 +100,11 @@ async function start() {
     console.error(`[clarion] Another Clarion server or service may be running on this port.`);
     console.error(`[clarion] Set PORT=<number> to use a different port.`);
     process.exit(1);
+  }
+
+  // Startup warnings
+  if (env.API_KEY && !env.ALLOWED_ORIGIN) {
+    console.warn('[clarion] Warning: API_KEY is set but ALLOWED_ORIGIN is not. CORS defaults to wildcard (*). Set ALLOWED_ORIGIN to restrict access.');
   }
 
   server = serve({
