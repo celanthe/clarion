@@ -20,7 +20,7 @@ export async function synthesize(text, voice, apiKey, speed = 1.0) {
 
   let res;
   try {
-    res = await fetch(`${API_BASE}/text-to-speech/${voiceId}`, {
+    res = await fetch(`${API_BASE}/text-to-speech/${encodeURIComponent(voiceId)}`, {
       method: 'POST',
       headers: {
         'xi-api-key': apiKey,

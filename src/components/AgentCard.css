@@ -6,11 +6,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow 200ms ease, transform 200ms ease;
 }
 
 .agent-card:hover {
   border-color: var(--color-accent-dim);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-card { transition: none; }
+  .agent-card:hover { transform: none; }
 }
 
 /* Speaking state — glow while this agent's voice is playing */
@@ -72,8 +79,8 @@
 .agent-card__label {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -121,6 +128,42 @@
   width: 100%;
   accent-color: var(--color-accent);
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.agent-card__speed::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-accent-dim);
+}
+
+.agent-card__speed::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-accent-dim);
+}
+
+.agent-card__speed::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.agent-card__speed::-moz-range-track {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
 }
 
 /* 1.0× center notch — positioned at 33.3% of the 0.5–2.0 range */
@@ -153,12 +196,26 @@
   border-left: 2px solid var(--color-error);
 }
 
-/* Unsaved indicator */
+/* Unsaved indicator — subtle dot + text inline */
 .agent-card__unsaved {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  font-style: italic;
   margin: calc(-1 * var(--space-xs)) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 1.2em;
+}
+
+.agent-card__unsaved:not(:empty)::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 /* Delete confirmation state */
@@ -167,6 +224,16 @@
   justify-content: center;
   min-height: 100px;
   gap: var(--space-md);
+  animation: fadeIn 150ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-card--confirming { animation: none; }
 }
 
 .agent-card__confirm-text {
@@ -245,7 +312,6 @@
 
 .agent-card__test-input::placeholder {
   color: var(--color-text-muted);
-  font-style: italic;
 }
 
 .agent-card__char-hint {
@@ -266,7 +332,11 @@
 .agent-card__btn--tiny {
   padding: var(--space-xs);
   font-size: var(--font-size-xs);
-  min-width: 28px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .agent-card__btn--ghost-active {

@@ -18,10 +18,19 @@
  * @param {string} serverUrl - CHATTERBOX_SERVER env var value
  * @returns {Response} audio/mpeg
  */
+function validateServerUrl(url) {
+  const parsed = new URL(url);
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error(`Invalid server URL protocol: ${parsed.protocol}`);
+  }
+  return url;
+}
+
 export async function synthesize(text, voice, speed = 1.0, serverUrl) {
   if (!serverUrl) {
     throw new Error('Chatterbox server not configured. Set CHATTERBOX_SERVER in your environment.');
   }
+  validateServerUrl(serverUrl);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 120000); // GPU inference, generous timeout

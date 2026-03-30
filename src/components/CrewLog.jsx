@@ -76,7 +76,10 @@ export default function CrewLog({ agents }) {
       {loading ? (
         <p className="crew-log__empty">Loading…</p>
       ) : entries.length === 0 ? (
-        <p className="crew-log__empty">No messages yet. Speak as an agent to see the log here.</p>
+        <div className="crew-log__empty">
+          <p className="crew-log__empty-title">No voice activity yet</p>
+          <p className="crew-log__empty-hint">Test an agent's voice from the Agents tab to see the log here.</p>
+        </div>
       ) : (
         <ul className="crew-log__list">
           {entries.map(entry => (

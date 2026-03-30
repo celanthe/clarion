@@ -9,9 +9,16 @@
 html {
   font-family: var(--font-family);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  word-spacing: 0.06em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
 
 body {
@@ -51,4 +58,9 @@ button, input, select, textarea {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+::selection {
+  background: rgba(130, 114, 240, 0.3);
+  color: var(--color-text-primary);
 }

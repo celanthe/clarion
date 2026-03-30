@@ -13,10 +13,19 @@
  * @param {string} serverUrl - KOKORO_SERVER env var value
  * @returns {Response} audio/mpeg
  */
+function validateServerUrl(url) {
+  const parsed = new URL(url);
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error(`Invalid server URL protocol: ${parsed.protocol}`);
+  }
+  return url;
+}
+
 export async function synthesize(text, voice, speed = 1.0, serverUrl) {
   if (!serverUrl) {
     throw new Error('Kokoro server not configured. Set KOKORO_SERVER in your environment.');
   }
+  validateServerUrl(serverUrl);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 90000); // CPU inference can take a while

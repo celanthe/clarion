@@ -107,13 +107,14 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
   );
 
   return (
-    <div className="backend-status" aria-label="Backend status">
+    <div className="backend-status" role="status">
       {/* Mobile: single aggregate dot */}
       <span
         className={`backend-status__aggregate backend-status__dot--${aggStatus}`}
-        aria-label={aggAriaLabel}
         title={aggAriaLabel}
-      />
+      >
+        <span className="sr-only">{aggAriaLabel}</span>
+      </span>
       {/* Desktop: per-backend list — only configured/reachable backends */}
       {visibleBackends.map(backend => (
         <span key={backend} className="backend-status__item" title={STATUS_LABEL[status[backend]] || status[backend]}>

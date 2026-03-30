@@ -254,7 +254,7 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
                   </button>
                   <div className="audition__voice-info">
                     <span className="audition__voice-name">{voice.label}</span>
-                    <span className="audition__voice-gender">{voice.gender === 'F' ? 'Female' : 'Male'}</span>
+                    <span className="audition__voice-gender">{voice.gender === 'F' ? 'Female' : voice.gender === 'M' ? 'Male' : voice.gender || ''}</span>
                   </div>
                   <button
                     className="audition__use-btn"

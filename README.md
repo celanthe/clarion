@@ -5,16 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/celanthe/clarion)](https://github.com/celanthe/clarion/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/celanthe/clarion)](https://github.com/celanthe/clarion/commits/main)
-[![Version](https://img.shields.io/badge/version-0.5.0-green)](https://github.com/celanthe/clarion)
+[![Version](https://img.shields.io/badge/version-0.6.0-green)](https://github.com/celanthe/clarion)
 
 Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, pick one, and pipe responses through it from the browser or CLI.
 
 > Voice starts while your agent is still working. `clarion-watch` speaks each assistant message the moment it's written — even before tool calls finish.
-
-<!-- TODO: Replace with demo video link once recorded
-[![Clarion demo — live voice for AI agents](docs/img/clarion-demo-thumb.png)](https://youtube.com/watch?v=TODO)
-*Watch with audio — the whole point is you hear the voice.*
--->
 
 ![Clarion waveform visualization showing audio output from the voice audition interface](docs/img/clarion-waveform.png)
 
