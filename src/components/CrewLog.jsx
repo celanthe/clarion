@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCrewLog, clearCrewLog } from '../../services/storage/crew-log.js';
 import { onSpeakingChange, speakAsAgent } from '../../services/tts.js';
+import content from '../../content/en.json';
 import './CrewLog.css';
 
 export default function CrewLog({ agents }) {
@@ -51,7 +52,7 @@ export default function CrewLog({ agents }) {
             onClick={() => setFilter(null)}
             type="button"
           >
-            All
+            {content.crewLog.filterAll}
           </button>
           {agentsInLog.map(id => (
             <button
@@ -69,16 +70,16 @@ export default function CrewLog({ agents }) {
           onClick={() => handleClear(filter)}
           type="button"
         >
-          Clear {filter ? agentName(filter) : 'all'}
+          {content.crewLog.clearPrefix} {filter ? agentName(filter) : content.crewLog.clearAll}
         </button>
       </div>
 
       {loading ? (
-        <p className="crew-log__empty">Loading…</p>
+        <p className="crew-log__empty">{content.crewLog.loading}</p>
       ) : entries.length === 0 ? (
         <div className="crew-log__empty">
-          <p className="crew-log__empty-title">No voice activity yet</p>
-          <p className="crew-log__empty-hint">Test an agent's voice from the Agents tab to see the log here.</p>
+          <p className="crew-log__empty-title">{content.crewLog.emptyTitle}</p>
+          <p className="crew-log__empty-hint">{content.crewLog.emptyHint}</p>
         </div>
       ) : (
         <ul className="crew-log__list">
@@ -93,9 +94,9 @@ export default function CrewLog({ agents }) {
                   className="crew-log__replay-btn"
                   onClick={() => handleReplay(entry)}
                   type="button"
-                  title="Replay this message"
+                  title={content.crewLog.replayTitle}
                 >
-                  ▶ Replay
+                  ▶ {content.crewLog.replay}
                 </button>
               </div>
               <p className="crew-log__entry-text">{entry.text}</p>

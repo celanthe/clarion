@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.7.0 — 2026-03-30
+
+### Fixes
+- Add CHATTERBOX_SERVER to Node server env injection (was always unconfigured)
+- Fix diagnostics version (was hardcoded 0.4.0, now 0.6.0 to 0.7.0)
+- Add chatterbox to agent validation, default voice, and UI backend arrays
+- Fix server config dialog: add role="dialog", aria-modal, focus trap
+
+### Security
+- Implement native crypto.timingSafeEqual for Node mode
+
+### Accessibility
+- Add ErrorBoundary component
+- Remove italic from CrewLog empty state
+- Add theme-color meta tag
+- Add overscroll-behavior-y: contain
+
+### Design System
+- Add line-height tokens (tight/base/relaxed)
+- Add font-weight tokens (normal/medium/semibold/bold)
+
+### Code Quality
+- Migrate all hardcoded strings to content/en.json (~100 strings)
+- Delete unused ClarionEmbed component
+
 ## 0.6.0 — 2026-03-30
 
 ### Accessibility

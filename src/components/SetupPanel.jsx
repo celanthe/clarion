@@ -2,31 +2,33 @@ import { useState, useEffect, useCallback } from 'react';
 import { getServerUrl } from '../../services/storage/agent-storage.js';
 import { signRequest } from '../../services/crypto.js';
 import { loadAgents, saveAgent } from '../../services/storage/agent-storage.js';
+import content from '../../content/en.json';
 import './SetupPanel.css';
 
-const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
+const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google', 'chatterbox'];
 
 const BACKEND_LABELS = {
-  edge: 'Edge TTS',
-  kokoro: 'Kokoro',
-  piper: 'Piper',
-  elevenlabs: 'ElevenLabs',
-  google: 'Google Chirp'
+  edge: content.backend.edge,
+  kokoro: content.backend.kokoro,
+  piper: content.backend.piper,
+  elevenlabs: content.backend.elevenlabs,
+  google: content.setup.googleChirp,
+  chatterbox: content.backend.chatterbox
 };
 
 const STATUS_LABELS = {
-  up: 'Online',
-  down: 'Unreachable',
-  unconfigured: 'Not configured',
-  checking: 'Checking...',
-  error: 'Error'
+  up: content.setup.online,
+  down: content.setup.unreachable,
+  unconfigured: content.setup.notConfigured,
+  checking: content.backendStatus.checking,
+  error: content.setup.error
 };
 
 const REMEDIATION = {
-  kokoro: { down: 'Is Docker running? Start Docker Desktop, then: docker-compose up -d' },
-  piper: { down: 'Is the Piper server running? Check PIPER_SERVER in your server .env' },
-  elevenlabs: { down: 'API key may be expired or invalid. Renew at elevenlabs.io/account' },
-  google: { down: 'API key may be invalid. Check GOOGLE_TTS_API_KEY in your server .env' }
+  kokoro: { down: content.setup.remediation.kokoroDown },
+  piper: { down: content.setup.remediation.piperDown },
+  elevenlabs: { down: content.setup.remediation.elevenlabsDown },
+  google: { down: content.setup.remediation.googleDown }
 };
 
 async function authHeaders(method, path) {
@@ -94,7 +96,7 @@ export default function SetupPanel({ health, agents, onAgentUpdate }) {
   return (
     <div className="setup-panel">
       {/* Backend cards */}
-      <h2 className="setup-panel__section-title">Backends</h2>
+      <h2 className="setup-panel__section-title">{content.setup.backends}</h2>
       <div className="setup-panel__backends">
         {BACKENDS.map(backend => {
           const info = backendStatus(backend);
@@ -122,7 +124,7 @@ export default function SetupPanel({ health, agents, onAgentUpdate }) {
       {/* Agent health */}
       {agents && agents.length > 0 && (
         <>
-          <h2 className="setup-panel__section-title">Agent Health</h2>
+          <h2 className="setup-panel__section-title">{content.setup.agentHealth}</h2>
           <div className="setup-panel__agents">
             {agents.map(agent => {
               const info = backendStatus(agent.backend);
@@ -136,15 +138,15 @@ export default function SetupPanel({ health, agents, onAgentUpdate }) {
                   <span className="setup-panel__agent-backend">{BACKEND_LABELS[agent.backend]} / {agent.voice}</span>
                   {isDown && agent.backend !== 'edge' && (
                     <>
-                      <span className="setup-panel__agent-warning">Backend down</span>
+                      <span className="setup-panel__agent-warning">{content.setup.backendDown}</span>
                       <button
                         className="setup-panel__switch-btn"
                         type="button"
                         onClick={() => handleSwitchToEdge(agent)}
-                        aria-label={`Switch ${agent.name} to Edge TTS`}
-                        title={`Switch ${agent.name} to Edge TTS with default Jenny voice`}
+                        aria-label={`${content.setup.switchToEdge} — ${agent.name}`}
+                        title={`${content.setup.switchToEdge} — ${agent.name}`}
                       >
-                        Switch to Edge
+                        {content.setup.switchToEdge}
                       </button>
                     </>
                   )}
@@ -156,7 +158,7 @@ export default function SetupPanel({ health, agents, onAgentUpdate }) {
       )}
 
       {/* Connection test */}
-      <h2 className="setup-panel__section-title">Connection</h2>
+      <h2 className="setup-panel__section-title">{content.setup.connection}</h2>
       <div className="setup-panel__test-row">
         <button
           className="setup-panel__test-btn"
@@ -164,7 +166,7 @@ export default function SetupPanel({ health, agents, onAgentUpdate }) {
           onClick={handleTestConnection}
           disabled={testing}
         >
-          {testing ? 'Testing...' : 'Test connection'}
+          {testing ? content.setup.testing : content.setup.testConnection}
         </button>
         <span role="status" aria-live="polite" className={testResult ? `setup-panel__test-result ${testResult.ok ? 'setup-panel__test-result--ok' : 'setup-panel__test-result--fail'}` : ''}>
           {testResult ? testResult.message : ''}
