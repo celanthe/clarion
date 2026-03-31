@@ -4,11 +4,12 @@ import { saveAgent } from '../../services/storage/agent-storage.js';
 import { createAgent } from '../../core/domain/agent.js';
 import { VOICES, LANG_LABELS, groupByLang } from '../../core/voices.js';
 import Waveform from './Waveform.jsx';
+import content from '../../content/en.json';
 import './VoiceAudition.css';
 
-const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
+const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google', 'chatterbox'];
 
-const DEFAULT_TEXT = "The pattern holds. We're moving forward.";
+const DEFAULT_TEXT = content.audition.defaultText;
 
 /**
  * Voice audition view — paste an agent's dialogue, hear each voice read it,
@@ -97,15 +98,14 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
     <div className="audition">
       <div className="audition__intro">
         <p className="audition__desc">
-          Paste your agent's dialogue below. Each voice will read their words —
-          find the one that fits, then save it as a profile.
+          {content.audition.description}
         </p>
       </div>
 
       {/* Dialogue input */}
       <div className="audition__text-section">
         <label className="audition__label" htmlFor="audition-text">
-          Agent dialogue
+          {content.audition.dialogueLabel}
         </label>
         <textarea
           id="audition-text"
@@ -118,8 +118,7 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
           maxLength={2000}
         />
         <p className="audition__hint">
-          Paste a few lines. Short, characteristic sentences work best —
-          the kind your agent actually says.
+          {content.audition.hint}
           {(text.length > 0) && (
             <>{' '}<span className="audition__char-count">{text.length}/2000</span></>
           )}
@@ -138,24 +137,24 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
               disabled={!available}
               type="button"
               aria-pressed={backend === b}
-              title={!available ? `${b} not configured or unreachable` : undefined}
+              title={!available ? `${b} ${content.audition.backendUnavailable}` : undefined}
             >
               {b}
-              {!available && <span className="audition__backend-status">offline</span>}
+              {!available && <span className="audition__backend-status">{content.audition.offlineStatus}</span>}
             </button>
           );
         })}
       </div>
 
       {backend === 'kokoro' && (
-        <p className="audition__backend-hint">Kokoro may take a moment on the first request while the model warms up.</p>
+        <p className="audition__backend-hint">{content.audition.kokoroWarmup}</p>
       )}
 
       {/* Speed knob (hidden for piper and elevenlabs — no speed support) */}
       {backend !== 'piper' && backend !== 'elevenlabs' && (
         <div className="audition__speed">
           <label className="audition__label" htmlFor="audition-speed">
-            Speed
+            {content.audition.speed}
             <span className="audition__speed-value">{speed.toFixed(2)}×</span>
           </label>
           <input
@@ -185,7 +184,7 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
       {saveTarget && (
         <form className="audition__save-form" onSubmit={handleSaveAgent}>
           <p className="audition__save-prompt">
-            Save <strong>{saveTarget.label}</strong> ({LANG_LABELS[saveTarget.lang] || saveTarget.lang}) as an agent:
+            {content.audition.savePromptPrefix} <strong>{saveTarget.label}</strong> ({LANG_LABELS[saveTarget.lang] || saveTarget.lang}) {content.audition.savePromptSuffix}
           </p>
           <div className="audition__save-row">
             <input
@@ -195,12 +194,12 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
               type="text"
               value={agentName}
               onChange={e => setAgentName(e.target.value)}
-              placeholder="Agent name"
-              aria-label="Agent name"
+              placeholder={content.audition.agentNamePlaceholder}
+              aria-label={content.audition.agentNamePlaceholder}
               required
             />
-            <button className="audition__save-btn" type="submit">Save</button>
-            <button className="audition__cancel-btn" type="button" onClick={handleCancelSave}>Cancel</button>
+            <button className="audition__save-btn" type="submit">{content.audition.save}</button>
+            <button className="audition__cancel-btn" type="button" onClick={handleCancelSave}>{content.audition.cancel}</button>
           </div>
         </form>
       )}
@@ -209,17 +208,17 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
       {saved && (
         <div className="audition__saved-notice" role="status">
           <span className="audition__saved-check" aria-hidden="true">✓</span>
-          {' '}Saved as <strong>{saved.label}</strong> — {saved.voice.label} ({LANG_LABELS[saved.voice.lang] || saved.voice.lang}).
+          {' '}{content.audition.savedAs} <strong>{saved.label}</strong> — {saved.voice.label} ({LANG_LABELS[saved.voice.lang] || saved.voice.lang}).
           <div className="audition__saved-actions">
             <button
               className="audition__saved-goto"
               type="button"
               onClick={() => { setSaved(null); onGoToAgents?.(); }}
             >
-              Go to Agents →
+              {content.audition.goToAgents} →
             </button>
-            <button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)} aria-label="Dismiss">
-              Dismiss
+            <button className="audition__saved-dismiss" type="button" onClick={() => setSaved(null)} aria-label={content.audition.dismiss}>
+              {content.audition.dismiss}
             </button>
           </div>
         </div>
@@ -229,7 +228,7 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
       <div className="audition__voices">
         {!backendAvailable(backend) ? (
           <p className="audition__offline">
-            {backend} is offline — start your server to audition these voices.
+            {backend} {content.audition.offline}
           </p>
         ) : Object.entries(groups).map(([lang, langVoices]) => (
           <div key={lang} className="audition__group">
@@ -254,7 +253,7 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
                   </button>
                   <div className="audition__voice-info">
                     <span className="audition__voice-name">{voice.label}</span>
-                    <span className="audition__voice-gender">{voice.gender === 'F' ? 'Female' : voice.gender === 'M' ? 'Male' : voice.gender || ''}</span>
+                    <span className="audition__voice-gender">{voice.gender === 'F' ? content.audition.female : voice.gender === 'M' ? content.audition.male : voice.gender || ''}</span>
                   </div>
                   <button
                     className="audition__use-btn"
@@ -262,7 +261,7 @@ export default function VoiceAudition({ onSave, onGoToAgents, health }) {
                     type="button"
                     aria-label={`Use ${voice.label}`}
                   >
-                    Use this voice
+                    {content.audition.useThisVoice}
                   </button>
                 </div>
               ))}

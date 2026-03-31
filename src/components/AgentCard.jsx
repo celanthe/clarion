@@ -3,17 +3,18 @@ import { createAgent, slugify, defaultVoice } from '../../core/domain/agent.js';
 import { saveAgent, deleteAgent, exportAgents } from '../../services/storage/agent-storage.js';
 import { speakAsAgent, stop, onSpeakingChange, muteAgent, unmuteAgent, isMuted } from '../../services/tts.js';
 import VoiceSelector from './VoiceSelector.jsx';
+import content from '../../content/en.json';
 import './AgentCard.css';
 
 const BACKENDS = [
-  { id: 'edge',       label: 'Edge TTS',    desc: 'Free, zero config' },
-  { id: 'kokoro',     label: 'Kokoro',      desc: 'Natural voices, self-hosted' },
-  { id: 'piper',      label: 'Piper',       desc: 'Local, lightweight' },
-  { id: 'elevenlabs', label: 'ElevenLabs',  desc: 'Premium voices, requires API key' },
-  { id: 'google',     label: 'Google',      desc: 'Chirp 3 HD, requires API key' }
+  { id: 'edge',       label: content.backend.edge,       desc: content.backend.edgeDesc },
+  { id: 'kokoro',     label: content.backend.kokoro,     desc: content.backend.kokoroDesc },
+  { id: 'piper',      label: content.backend.piper,      desc: content.backend.piperDesc },
+  { id: 'elevenlabs', label: content.backend.elevenlabs, desc: content.backend.elevenlabsDesc },
+  { id: 'google',     label: content.backend.google,     desc: content.backend.googleDesc }
 ];
 
-const DEFAULT_TEST = "The pattern holds. We're moving forward.";
+const DEFAULT_TEST = content.agentCard.defaultTestText;
 
 export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   const [agent, setAgent] = useState(initialAgent);
@@ -89,9 +90,9 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
       // Humanize common errors
       let msg = err.message;
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        msg = `Can't reach server. Is Clarion running? (${agent.backend})`;
+        msg = `${content.agentCard.cantReachServer} (${agent.backend})`;
       } else if (msg.includes('not configured')) {
-        msg = `${agent.backend} backend is not configured on this server.`;
+        msg = `${agent.backend} ${content.agentCard.backendNotConfigured}`;
       }
       setError(msg);
     } finally {
@@ -130,14 +131,14 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
     return (
       <article className="agent-card agent-card--confirming" role="alertdialog" aria-label={`Confirm deletion of ${agent.name}`}>
         <p className="agent-card__confirm-text">
-          Delete <strong>{agent.name}</strong>? This cannot be undone.
+          {content.agentCard.delete} <strong>{agent.name}</strong>? {content.agentCard.confirmDelete}
         </p>
         <div className="agent-card__confirm-actions">
           <button className="agent-card__btn agent-card__btn--ghost" onClick={handleDeleteCancel} type="button" ref={cancelRef}>
-            Cancel
+            {content.agentCard.cancel}
           </button>
           <button className="agent-card__btn agent-card__btn--delete-confirm" onClick={handleDeleteConfirm} type="button">
-            Delete
+            {content.agentCard.delete}
           </button>
         </div>
       </article>
@@ -152,19 +153,19 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
           type="text"
           value={agent.name}
           onChange={handleNameChange}
-          placeholder="Who's speaking?"
-          aria-label="Agent name"
+          placeholder={content.agentCard.namePlaceholder}
+          aria-label={content.agentCard.agentName}
         />
         <span className="agent-card__id" title="Agent ID (used by CLI)">{agent.id}</span>
       </header>
 
       <p className="agent-card__unsaved" role="status">
-        {!saved ? 'Unsaved changes' : ''}
+        {!saved ? content.agentCard.unsavedChanges : ''}
       </p>
 
       <div className="agent-card__body">
         <fieldset className="agent-card__field">
-          <legend className="agent-card__label">Backend</legend>
+          <legend className="agent-card__label">{content.agentCard.backend}</legend>
           <div className="agent-card__backends">
             {BACKENDS.map(b => (
               <button
@@ -182,7 +183,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         </fieldset>
 
         <div className="agent-card__field">
-          <label className="agent-card__label">Voice</label>
+          <label className="agent-card__label">{content.agentCard.voice}</label>
           <VoiceSelector
             backend={agent.backend}
             value={agent.voice}
@@ -193,7 +194,7 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
         {agent.backend !== 'piper' && (
           <div className="agent-card__field">
             <label className="agent-card__label" htmlFor={`agent-card-speed-${agent.id}`}>
-              Speed
+              {content.agentCard.speed}
               <span className="agent-card__speed-value">{agent.speed.toFixed(2)}×</span>
             </label>
             <div className="agent-card__speed-wrap">
@@ -228,14 +229,14 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
             onChange={e => update({ proseOnly: e.target.checked })}
           />
           <label className="agent-card__label agent-card__label--inline" htmlFor={`agent-card-prose-only-${agent.id}`}>
-            Prose only — skip code blocks and lists
+            {content.agentCard.proseOnly}
           </label>
         </div>
 
         {/* Custom test text */}
         {showTestInput && (
           <div className="agent-card__field">
-            <label className="agent-card__label" htmlFor={`agent-card-test-text-${agent.id}`}>Test text</label>
+            <label className="agent-card__label" htmlFor={`agent-card-test-text-${agent.id}`}>{content.agentCard.testText}</label>
             <textarea
               id={`agent-card-test-text-${agent.id}`}
               className="agent-card__test-input"
@@ -260,14 +261,14 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
             onClick={testing ? () => { stop(); setTesting(false); } : handleTest}
             type="button"
           >
-            {testing ? '■ Stop' : 'Test'}
+            {testing ? `■ ${content.agentCard.stop}` : content.agentCard.test}
           </button>
           <button
             className={`agent-card__btn agent-card__btn--ghost agent-card__btn--tiny ${showTestInput ? 'agent-card__btn--ghost-active' : ''}`}
             onClick={() => setShowTestInput(v => !v)}
             type="button"
-            title="Customize test text"
-            aria-label="Customize test text"
+            title={content.agentCard.customizeTestText}
+            aria-label={content.agentCard.customizeTestText}
           >
             {showTestInput ? '↑' : '✎'}
           </button>
@@ -275,8 +276,8 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
             className={`agent-card__btn agent-card__btn--ghost agent-card__btn--tiny agent-card__mute-btn${muted ? ' agent-card__mute-btn--muted' : ''}`}
             onClick={handleMuteToggle}
             type="button"
-            title={muted ? 'Unmute agent' : 'Mute agent'}
-            aria-label={muted ? 'Unmute agent' : 'Mute agent'}
+            title={muted ? content.agentCard.unmuteAgent : content.agentCard.muteAgent}
+            aria-label={muted ? content.agentCard.unmuteAgent : content.agentCard.muteAgent}
             aria-pressed={muted}
           >
             {muted ? '🔇' : '🔊'}
@@ -288,23 +289,23 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
             className="agent-card__btn agent-card__btn--ghost"
             onClick={handleExport}
             type="button"
-            title="Export as JSON"
+            title={content.agentCard.exportTitle}
           >
-            Export
+            {content.agentCard.export}
           </button>
           <button
             className="agent-card__btn agent-card__btn--ghost agent-card__btn--danger"
             onClick={handleDeleteClick}
             type="button"
           >
-            Delete
+            {content.agentCard.delete}
           </button>
           <button
             className={`agent-card__btn agent-card__btn--save ${saved ? 'agent-card__btn--saved' : ''}`}
             onClick={handleSave}
             type="button"
           >
-            {saved ? 'Saved' : 'Save'}
+            {saved ? content.agentCard.saved : content.agentCard.save}
           </button>
         </div>
       </footer>

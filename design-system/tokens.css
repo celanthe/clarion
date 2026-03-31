@@ -22,6 +22,17 @@
   --font-size-xl:  1.375rem;
   --font-size-xxl: 1.75rem;
 
+  /* Line height */
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* Font weight */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
   /* Borders */
   --radius-sm:   4px;
   --radius-md:   8px;

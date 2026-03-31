@@ -8,7 +8,7 @@
  * Parent processes (Electron, scripts) can parse this to know the server is up.
  *
  * Required env vars for paid backends:
- *   ELEVENLABS_API_KEY, GOOGLE_TTS_API_KEY, KOKORO_SERVER, PIPER_SERVER
+ *   ELEVENLABS_API_KEY, GOOGLE_TTS_API_KEY, KOKORO_SERVER, PIPER_SERVER, CHATTERBOX_SERVER
  */
 
 import { serve } from '@hono/node-server';
@@ -16,6 +16,7 @@ import { createServer } from 'net';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { timingSafeEqual as _nodeTimingSafeEqual } from 'crypto';
 import app from './index.js';
 
 // Auto-load .dev.vars or .env from the server directory (same keys Wrangler reads)
@@ -44,6 +45,7 @@ const port = parseInt(process.env.PORT || '8080', 10);
 const env = {
   KOKORO_SERVER:      process.env.KOKORO_SERVER,
   PIPER_SERVER:       process.env.PIPER_SERVER,
+  CHATTERBOX_SERVER:  process.env.CHATTERBOX_SERVER || '',
   ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
   GOOGLE_TTS_API_KEY: process.env.GOOGLE_TTS_API_KEY,
   API_KEY:            process.env.API_KEY,
@@ -55,10 +57,23 @@ const env = {
 const originalFetch = app.fetch.bind(app);
 const patchedFetch = (request, e) => originalFetch(request, { ...env, ...(e || {}) });
 
-// TODO: Use crypto.timingSafeEqual from Node's native 'crypto' module as an override
-// for the custom timingSafeEqual in index.js. Node's native implementation is constant-time
-// at the C++ level and more robust. This would require index.js to accept an injectable
-// comparison function or exporting/re-wiring the auth middleware.
+// Use Node's native crypto.timingSafeEqual for constant-time comparison.
+// Handles different-length strings by padding to equal length before comparison.
+/**
+ * Constant-time string comparison using Node's native crypto.timingSafeEqual.
+ * Pads shorter input to match lengths so timingSafeEqual doesn't throw on mismatched sizes.
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+export function timingSafeEqual(a, b) {
+  const maxLen = Math.max(a.length, b.length);
+  const bufA = Buffer.alloc(maxLen, 0);
+  const bufB = Buffer.alloc(maxLen, 0);
+  Buffer.from(a).copy(bufA);
+  Buffer.from(b).copy(bufB);
+  return a.length === b.length && _nodeTimingSafeEqual(bufA, bufB);
+}
 
 // --- Port conflict detection ---
 function checkPort(p) {

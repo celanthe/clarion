@@ -25,6 +25,7 @@ body {
   background: var(--color-background);
   color: var(--color-text-primary);
   min-height: 100dvh;
+  overscroll-behavior-y: contain;
   padding:
     env(safe-area-inset-top, 0)
     env(safe-area-inset-right, 0)

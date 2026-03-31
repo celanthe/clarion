@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/celanthe/clarion)](https://github.com/celanthe/clarion/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/celanthe/clarion)](https://github.com/celanthe/clarion/commits/main)
-[![Version](https://img.shields.io/badge/version-0.6.0-green)](https://github.com/celanthe/clarion)
+[![Version](https://img.shields.io/badge/version-0.7.0-green)](https://github.com/celanthe/clarion)
 
 Self-hosted TTS proxy and voice manager. Audition voices against your agent's actual dialogue, pick one, and pipe responses through it from the browser or CLI.
 
@@ -66,6 +66,14 @@ Most TTS tools give you an API. Clarion gives you a workflow.
 - **Live voice** — `clarion-watch` speaks during the session, not after
 - **Six backends** — swap from free (Edge) to premium (ElevenLabs) without changing a line of agent code
 - **Multi-agent crews** — each agent gets its own voice, concurrent responses queue automatically
+
+---
+
+## Architecture
+
+![Clarion architecture — Browser UI and CLI tools connect through the services layer to the Clarion server, which routes to six TTS backends](docs/img/clarion-architecture.svg)
+
+Six layers: **UI** (React SPA), **Services** (TTS client, HMAC crypto, localStorage), **Server** (Hono on Cloudflare Workers or Node), **Domain** (agent model, voice lists), **CLI** (watch, speak, stream, doctor), and **Design System** (CSS tokens). The server proxies to six TTS backends — Edge TTS is always available as a zero-config fallback.
 
 ---
 

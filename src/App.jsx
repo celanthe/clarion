@@ -8,13 +8,14 @@ import { loadAgents, importAgents, exportAgents, getServerUrl, setServerUrl, has
 import { migrateApiKey } from '../services/crypto.js';
 import { stop, getCurrentSpeakingAgentId } from '../services/tts.js';
 import { createAgent } from '../core/domain/agent.js';
+import content from '../content/en.json';
 import './App.css';
 
 const TABS = [
-  { id: 'agents',   label: 'Agents' },
-  { id: 'audition', label: 'Audition' },
-  { id: 'log',      label: 'Log' },
-  { id: 'setup',    label: 'Setup' },
+  { id: 'agents',   label: content.tabs.agents },
+  { id: 'audition', label: content.tabs.audition },
+  { id: 'log',      label: content.tabs.log },
+  { id: 'setup',    label: content.tabs.setup },
 ];
 
 export default function App() {
@@ -34,7 +35,7 @@ export default function App() {
   const serverConfigRef = useRef(null);
 
   function handleNewAgent() {
-    const agent = createAgent({ name: 'New Agent' });
+    const agent = createAgent({ name: content.agents.new });
     setAgents(prev => {
       // Avoid duplicate IDs
       if (prev.some(a => a.id === agent.id)) {
@@ -109,13 +110,13 @@ export default function App() {
     try {
       const parsed = new URL(url);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-        setUrlError('URL must start with http:// or https://');
+        setUrlError(content.serverConfig.urlErrorProtocol);
       } else {
         setUrlError(null);
         setServerUrl(url);
       }
     } catch {
-      setUrlError('Enter a valid URL (e.g. http://localhost:8787)');
+      setUrlError(content.serverConfig.urlErrorInvalid);
     }
   }
 
@@ -154,11 +155,11 @@ export default function App() {
 
   return (
     <div className="app">
-      <a href="#main-content" className="skip-link">Skip to content</a>
+      <a href="#main-content" className="skip-link">{content.app.skipToContent}</a>
       <header className="app-header">
         <div className="app-header__left">
-          <h1 className="app-header__title">Clarion</h1>
-          <p className="app-header__tagline">Give your agent a voice</p>
+          <h1 className="app-header__title">{content.app.title}</h1>
+          <p className="app-header__tagline">{content.app.tagline}</p>
         </div>
         <div className="app-header__right">
           <BackendStatus serverUrl={serverUrl} onHealthChange={setHealth} />
@@ -166,7 +167,7 @@ export default function App() {
             className="app-header__config-btn"
             onClick={() => setShowServerConfig(v => !v)}
             type="button"
-            aria-label="Server settings"
+            aria-label={content.app.serverSettings}
             aria-expanded={showServerConfig}
             aria-controls="server-config-panel"
           >
@@ -197,9 +198,37 @@ export default function App() {
       </header>
 
       {showServerConfig && (
-        <div className="app-server-config" id="server-config-panel" ref={serverConfigRef} tabIndex="-1">
-          <label className="app-server-config__label" htmlFor="server-url">
-            Clarion server URL
+        <div
+          className="app-server-config"
+          id="server-config-panel"
+          ref={serverConfigRef}
+          tabIndex="-1"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="server-config-heading"
+          onKeyDown={(e) => {
+            if (e.key !== 'Tab') return;
+            const focusable = serverConfigRef.current?.querySelectorAll(
+              'input, button, [tabindex]:not([tabindex="-1"])'
+            );
+            if (!focusable || focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey) {
+              if (document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+              }
+            } else {
+              if (document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+              }
+            }
+          }}
+        >
+          <label className="app-server-config__label" id="server-config-heading" htmlFor="server-url">
+            {content.serverConfig.label}
           </label>
           <input
             id="server-url"
@@ -207,27 +236,27 @@ export default function App() {
             type="url"
             value={serverUrl}
             onChange={handleServerUrlChange}
-            placeholder="http://localhost:8787"
+            placeholder={content.serverConfig.placeholder}
             aria-describedby="server-url-hint"
           />
           {urlError && (
             <p className="app-server-config__url-error" role="alert">{urlError}</p>
           )}
           <p className="app-server-config__hint" id="server-url-hint">
-            Point this at your Clarion server (<code>node server/src/node-server.js</code> or Cloudflare Worker).
+            {content.serverConfig.hint}
           </p>
           <label className="app-server-config__label" htmlFor="api-key">
-            API key <span className="app-server-config__optional">(optional)</span>
+            {content.serverConfig.apiKeyLabel} <span className="app-server-config__optional">{content.serverConfig.apiKeyOptional}</span>
           </label>
           {apiKeyConfigured ? (
             <div className="app-server-config__key-status">
-              <span className="app-server-config__key-set">Key configured — requests are HMAC-signed</span>
+              <span className="app-server-config__key-set">{content.serverConfig.keyConfigured}</span>
               <button
                 className="app-server-config__key-clear"
                 type="button"
                 onClick={handleClearApiKey}
               >
-                Clear
+                {content.serverConfig.keyClear}
               </button>
             </div>
           ) : (
@@ -239,7 +268,7 @@ export default function App() {
                 value={newApiKey}
                 onChange={e => setNewApiKey(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSetApiKey(); }}
-                placeholder="Enter API key to configure"
+                placeholder={content.serverConfig.keyPlaceholder}
                 autoComplete="off"
               />
               <button
@@ -248,32 +277,32 @@ export default function App() {
                 onClick={handleSetApiKey}
                 disabled={!newApiKey.trim()}
               >
-                Set
+                {content.serverConfig.keySet}
               </button>
             </div>
           )}
           <p className="app-server-config__hint">
-            Stored securely in your browser — the key never leaves your device. Requests are signed with HMAC-SHA256.
+            {content.serverConfig.keyHint}
           </p>
           <button
             className="app-server-config__done"
             onClick={() => setShowServerConfig(false)}
             type="button"
           >
-            Done
+            {content.serverConfig.done}
           </button>
         </div>
       )}
 
       {health !== null && health?.edge === 'error' && (
         <div className="app-offline-banner" role="alert">
-          Can't reach server at <code>{serverUrl}</code>.{' '}
+          {content.offlineBanner.cantReach} <code>{serverUrl}</code>.{' '}
           <button
             className="app-offline-banner__action"
             type="button"
             onClick={() => setShowServerConfig(true)}
           >
-            Check configuration
+            {content.offlineBanner.checkConfig}
           </button>
         </div>
       )}
@@ -312,13 +341,13 @@ export default function App() {
                   <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                   <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                 </svg>
-                <p className="app-empty__headline">Give your agent a voice.</p>
+                <p className="app-empty__headline">{content.agents.emptyHeadline}</p>
                 <p className="app-empty__hint">
-                  Go to <button className="app-empty__tab-link" onClick={() => setTab('audition')} type="button">Audition</button> — paste a few lines of your agent's dialogue, hear each voice read them, and save the one that fits.
+                  Go to <button className="app-empty__tab-link" onClick={() => setTab('audition')} type="button">{content.tabs.audition}</button> — {content.agents.emptyHint}
                 </p>
-                <p className="app-empty__hint">Or create a profile directly and pick a voice from the list.</p>
+                <p className="app-empty__hint">{content.agents.emptyHintAlt}</p>
                 <button className="app-new-btn" onClick={handleNewAgent} type="button">
-                  Create an agent
+                  {content.agents.createAgent}
                 </button>
               </div>
             ) : (
@@ -341,16 +370,16 @@ export default function App() {
         <footer className="app-footer">
           <div className="app-footer__actions">
             <button className="app-new-btn" onClick={handleNewAgent} type="button">
-              + New agent
+              {content.agents.newAgent}
             </button>
 
             <button
               className="app-import-label"
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              aria-label="Import agent profiles from JSON"
+              aria-label={content.agents.importLabel}
             >
-              Import
+              {content.agents.import}
             </button>
             <input
               ref={fileInputRef}
@@ -362,7 +391,7 @@ export default function App() {
 
             {agents.length > 0 && (
               <button className="app-import-label" onClick={() => exportAgents()} type="button">
-                Export all
+                {content.agents.exportAll}
               </button>
             )}
 

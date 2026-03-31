@@ -1,33 +1,68 @@
 {
   "app": {
     "title": "Clarion",
-    "tagline": "Give your agent a voice"
+    "tagline": "Give your agent a voice",
+    "skipToContent": "Skip to content",
+    "serverSettings": "Server settings"
+  },
+  "tabs": {
+    "agents": "Agents",
+    "audition": "Audition",
+    "log": "Log",
+    "setup": "Setup"
   },
   "agents": {
     "empty": "No agents yet. Create one to get started.",
     "new": "New agent",
-    "defaultName": "My Agent"
+    "defaultName": "My Agent",
+    "emptyHeadline": "Give your agent a voice.",
+    "emptyHint": "paste a few lines of your agent's dialogue, hear each voice read them, and save the one that fits.",
+    "emptyHintAlt": "Or create a profile directly and pick a voice from the list.",
+    "createAgent": "Create an agent",
+    "newAgent": "+ New agent",
+    "import": "Import",
+    "importLabel": "Import agent profiles from JSON",
+    "exportAll": "Export all"
   },
   "agentCard": {
     "name": "Name",
     "backend": "Backend",
     "voice": "Voice",
     "speed": "Speed",
-    "test": "Test voice",
+    "test": "Test",
+    "stop": "Stop",
     "testing": "Playing...",
     "save": "Save",
     "saved": "Saved",
     "delete": "Delete",
-    "export": "Export JSON",
-    "namePlaceholder": "Agent name (e.g. Aria)"
+    "cancel": "Cancel",
+    "export": "Export",
+    "exportTitle": "Export as JSON",
+    "namePlaceholder": "Who's speaking?",
+    "agentName": "Agent name",
+    "unsavedChanges": "Unsaved changes",
+    "confirmDelete": "This cannot be undone.",
+    "testText": "Test text",
+    "customizeTestText": "Customize test text",
+    "proseOnly": "Prose only — skip code blocks and lists",
+    "defaultTestText": "The pattern holds. We're moving forward.",
+    "cantReachServer": "Can't reach server. Is Clarion running?",
+    "backendNotConfigured": "backend is not configured on this server.",
+    "muteAgent": "Mute agent",
+    "unmuteAgent": "Unmute agent"
   },
   "backend": {
     "edge": "Edge TTS",
     "kokoro": "Kokoro",
     "piper": "Piper",
-    "edgeDesc": "Free, zero config. Microsoft voices.",
-    "kokoroDesc": "Natural voices. Requires your Kokoro server.",
-    "piperDesc": "Local, lightweight. Requires your Piper server."
+    "elevenlabs": "ElevenLabs",
+    "google": "Google",
+    "chatterbox": "Chatterbox",
+    "edgeDesc": "Free, zero config",
+    "kokoroDesc": "Natural voices, self-hosted",
+    "piperDesc": "Local, lightweight",
+    "elevenlabsDesc": "Premium voices, requires API key",
+    "googleDesc": "Chirp 3 HD, requires API key"
   },
   "backendStatus": {
     "title": "Backends",
@@ -37,11 +72,57 @@
     "checking": "Checking..."
   },
   "serverConfig": {
-    "label": "Server URL",
+    "label": "Clarion server URL",
     "placeholder": "http://localhost:8787",
-    "hint": "Your Clarion server address"
+    "hint": "Point this at your Clarion server (node server/src/node-server.js or Cloudflare Worker).",
+    "urlErrorProtocol": "URL must start with http:// or https://",
+    "urlErrorInvalid": "Enter a valid URL (e.g. http://localhost:8787)",
+    "apiKeyLabel": "API key",
+    "apiKeyOptional": "(optional)",
+    "keyConfigured": "Key configured — requests are HMAC-signed",
+    "keyClear": "Clear",
+    "keyPlaceholder": "Enter API key to configure",
+    "keySet": "Set",
+    "keyHint": "Stored securely in your browser — the key never leaves your device. Requests are signed with HMAC-SHA256.",
+    "done": "Done"
+  },
+  "offlineBanner": {
+    "cantReach": "Can't reach server at",
+    "checkConfig": "Check configuration"
   },
   "testText": "Hello. This is your agent speaking. The voice is configured and ready.",
+  "audition": {
+    "description": "Paste your agent's dialogue below. Each voice will read their words — find the one that fits, then save it as a profile.",
+    "dialogueLabel": "Agent dialogue",
+    "hint": "Paste a few lines. Short, characteristic sentences work best — the kind your agent actually says.",
+    "defaultText": "The pattern holds. We're moving forward.",
+    "kokoroWarmup": "Kokoro may take a moment on the first request while the model warms up.",
+    "speed": "Speed",
+    "offline": "is offline — start your server to audition these voices.",
+    "offlineStatus": "offline",
+    "backendUnavailable": "not configured or unreachable",
+    "useThisVoice": "Use this voice",
+    "savePromptPrefix": "Save",
+    "savePromptSuffix": "as an agent:",
+    "agentNamePlaceholder": "Agent name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "savedAs": "Saved as",
+    "goToAgents": "Go to Agents",
+    "dismiss": "Dismiss",
+    "female": "Female",
+    "male": "Male"
+  },
+  "crewLog": {
+    "filterAll": "All",
+    "clearPrefix": "Clear",
+    "clearAll": "all",
+    "loading": "Loading...",
+    "emptyTitle": "No voice activity yet",
+    "emptyHint": "Test an agent's voice from the Agents tab to see the log here.",
+    "replay": "Replay",
+    "replayTitle": "Replay this message"
+  },
   "setup": {
     "backends": "Backends",
     "agentHealth": "Agent Health",
@@ -52,6 +133,17 @@
     "backendDown": "Backend down",
     "online": "Online",
     "unreachable": "Unreachable",
-    "notConfigured": "Not configured"
+    "notConfigured": "Not configured",
+    "error": "Error",
+    "googleChirp": "Google Chirp",
+    "remediation": {
+      "kokoroDown": "Is Docker running? Start Docker Desktop, then: docker-compose up -d",
+      "piperDown": "Is the Piper server running? Check PIPER_SERVER in your server .env",
+      "elevenlabsDown": "API key may be expired or invalid. Renew at elevenlabs.io/account",
+      "googleDown": "API key may be invalid. Check GOOGLE_TTS_API_KEY in your server .env"
+    }
+  },
+  "footer": {
+    "github": "GitHub"
   }
 }
