@@ -41,7 +41,7 @@
     "namePlaceholder": "Who's speaking?",
     "agentName": "Agent name",
     "unsavedChanges": "Unsaved changes",
-    "confirmDelete": "This cannot be undone.",
+    "confirmDelete": "This will permanently remove this agent.",
     "testText": "Test text",
     "customizeTestText": "Customize test text",
     "proseOnly": "Prose only — skip code blocks and lists",
@@ -49,7 +49,9 @@
     "cantReachServer": "Can't reach server. Is Clarion running?",
     "backendNotConfigured": "backend is not configured on this server.",
     "muteAgent": "Mute agent",
-    "unmuteAgent": "Unmute agent"
+    "unmuteAgent": "Unmute agent",
+    "fallbackWarning": "{backend} is unavailable — using {fallback} fallback",
+    "dismissFallback": "Dismiss"
   },
   "backend": {
     "edge": "Edge TTS",
@@ -59,27 +61,29 @@
     "google": "Google",
     "chatterbox": "Chatterbox",
     "edgeDesc": "Free, zero config",
-    "kokoroDesc": "Natural voices, self-hosted",
+    "kokoroDesc": "Self-hosted, runs on CPU",
     "piperDesc": "Local, lightweight",
     "elevenlabsDesc": "Premium voices, requires API key",
-    "googleDesc": "Chirp 3 HD, requires API key"
+    "googleDesc": "Google Cloud voices (Chirp 3 HD), requires API key",
+    "chatterboxDesc": "High-quality, self-hosted (GPU required)"
   },
   "backendStatus": {
     "title": "Backends",
     "up": "Online",
     "down": "Unreachable",
     "unconfigured": "Not configured",
-    "checking": "Checking..."
+    "checking": "Checking...",
+    "error": "Error"
   },
   "serverConfig": {
     "label": "Clarion server URL",
-    "placeholder": "http://localhost:8787",
-    "hint": "Point this at your Clarion server (node server/src/node-server.js or Cloudflare Worker).",
+    "placeholder": "http://localhost:8080",
+    "hint": "Point this at your running Clarion server.",
     "urlErrorProtocol": "URL must start with http:// or https://",
-    "urlErrorInvalid": "Enter a valid URL (e.g. http://localhost:8787)",
+    "urlErrorInvalid": "Enter a valid URL (e.g. http://localhost:8080)",
     "apiKeyLabel": "API key",
     "apiKeyOptional": "(optional)",
-    "keyConfigured": "Key configured — requests are HMAC-signed",
+    "keyConfigured": "Key configured — requests are signed",
     "keyClear": "Clear",
     "keyPlaceholder": "Enter API key to configure",
     "keySet": "Set",
@@ -92,7 +96,7 @@
   },
   "testText": "Hello. This is your agent speaking. The voice is configured and ready.",
   "audition": {
-    "description": "Paste your agent's dialogue below. Each voice will read their words — find the one that fits, then save it as a profile.",
+    "description": "Paste your agent's dialogue below. Each voice will read their words — find the one that fits, then save it as an agent.",
     "dialogueLabel": "Agent dialogue",
     "hint": "Paste a few lines. Short, characteristic sentences work best — the kind your agent actually says.",
     "defaultText": "The pattern holds. We're moving forward.",
@@ -140,7 +144,8 @@
       "kokoroDown": "Is Docker running? Start Docker Desktop, then: docker-compose up -d",
       "piperDown": "Is the Piper server running? Check PIPER_SERVER in your server .env",
       "elevenlabsDown": "API key may be expired or invalid. Renew at elevenlabs.io/account",
-      "googleDown": "API key may be invalid. Check GOOGLE_TTS_API_KEY in your server .env"
+      "googleDown": "API key may be invalid. Check GOOGLE_TTS_API_KEY in your server .env",
+      "chatterboxDown": "Is the Chatterbox server running? Check CHATTERBOX_SERVER in your server .env. Requires an NVIDIA GPU."
     }
   },
   "footer": {

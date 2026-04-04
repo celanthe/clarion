@@ -1,8 +1,5 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { inject } from '@vercel/analytics';
-
-inject();
 import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import '@fontsource/space-grotesk/400.css';

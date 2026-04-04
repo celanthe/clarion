@@ -34,6 +34,9 @@ let _currentSpeakingAgentId = null;
 let _mutedAgents = new Set();
 let _speakingListeners = [];
 
+// Fallback state — notifies callers when a backend was unavailable and Edge TTS was used instead.
+let _fallbackListeners = [];
+
 function _notifySpeaking() {
   for (const fn of _speakingListeners) fn(_currentSpeakingAgentId);
 }
@@ -45,6 +48,34 @@ export function getCurrentSpeakingAgentId() { return _currentSpeakingAgentId; }
 export function onSpeakingChange(fn) {
   _speakingListeners.push(fn);
   return () => { _speakingListeners = _speakingListeners.filter(f => f !== fn); };
+}
+
+/**
+ * Subscribe to fallback events. Callback receives (agentId, originalBackend, fallbackBackend).
+ * Returns an unsubscribe function.
+ */
+export function onFallback(fn) {
+  _fallbackListeners.push(fn);
+  return () => { _fallbackListeners = _fallbackListeners.filter(f => f !== fn); };
+}
+
+function _notifyFallback(agentId, originalBackend, fallbackBackend) {
+  for (const fn of _fallbackListeners) fn(agentId, originalBackend, fallbackBackend);
+}
+
+/**
+ * Subscribe to fallback recovery — fires when a speak completes without fallback.
+ * Callback receives (agentId, backend).
+ */
+let _recoveryListeners = [];
+
+export function onFallbackRecovery(fn) {
+  _recoveryListeners.push(fn);
+  return () => { _recoveryListeners = _recoveryListeners.filter(f => f !== fn); };
+}
+
+function _notifyRecovery(agentId, backend) {
+  for (const fn of _recoveryListeners) fn(agentId, backend);
 }
 
 export function muteAgent(id)   { _mutedAgents.add(id); }
@@ -168,9 +199,9 @@ async function _speak(text, options = {}, onStart) {
     throw new Error(err.error || `Server error ${response.status}`);
   }
 
-  const fallback = response.headers.get('X-Clarion-Fallback');
-  if (fallback) {
-    console.warn(`[clarion] ${backend} unavailable, fell back to ${fallback}`);
+  const fallbackHeader = response.headers.get('X-Clarion-Fallback');
+  if (fallbackHeader) {
+    console.warn(`[clarion] ${backend} unavailable, fell back to ${fallbackHeader}`);
   }
 
   const blob = new Blob([await response.arrayBuffer()], { type: 'audio/mpeg' });
@@ -203,8 +234,10 @@ async function _speak(text, options = {}, onStart) {
     throw new Error(`Playback blocked: ${err.message}`);
   }
 
+  const fallbackInfo = fallbackHeader ? { originalBackend: backend, fallbackBackend: fallbackHeader } : null;
+
   return new Promise((resolve, reject) => {
-    audio.onended = () => { cleanup(); resolve(); };
+    audio.onended = () => { cleanup(); resolve(fallbackInfo); };
     audio.onerror = () => {
       const msg = audio.error?.message || 'unknown error';
       cleanup();
@@ -223,12 +256,17 @@ export async function speakAsAgent(text, agent) {
       _currentSpeakingAgentId = agent.id;
       _notifySpeaking();
       try {
-        await _speak(text, {
+        const fallbackInfo = await _speak(text, {
           backend:   agent.backend,
           voice:     agent.voice,
           speed:     agent.speed,
           proseOnly: agent.proseOnly ?? true,
         });
+        if (fallbackInfo) {
+          _notifyFallback(agent.id, fallbackInfo.originalBackend, fallbackInfo.fallbackBackend);
+        } else {
+          _notifyRecovery(agent.id, agent.backend);
+        }
         logCrewMessage(agent.id, text, { backend: agent.backend, voice: agent.voice });
       } finally {
         if (_currentSpeakingAgentId === agent.id) {

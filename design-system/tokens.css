@@ -67,6 +67,10 @@
   --color-status-unconfigured: #4a4860;  /* muted gray — never set up */
   --color-status-checking:     #8e88a8;
 
+  /* Warning */
+  --color-warning:      #c97c2e;
+  --color-warning-bg:   rgba(201, 124, 46, 0.08);
+
   /* Error / danger */
   --color-error:        #e06c75;
   --color-error-bg:     rgba(224, 108, 117, 0.08);

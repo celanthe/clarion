@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createAgent, slugify, defaultVoice } from '../../core/domain/agent.js';
 import { saveAgent, deleteAgent, exportAgents } from '../../services/storage/agent-storage.js';
-import { speakAsAgent, stop, onSpeakingChange, muteAgent, unmuteAgent, isMuted } from '../../services/tts.js';
+import { speakAsAgent, stop, onSpeakingChange, onFallback, onFallbackRecovery, muteAgent, unmuteAgent, isMuted } from '../../services/tts.js';
 import VoiceSelector from './VoiceSelector.jsx';
 import content from '../../content/en.json';
 import './AgentCard.css';
@@ -11,7 +11,8 @@ const BACKENDS = [
   { id: 'kokoro',     label: content.backend.kokoro,     desc: content.backend.kokoroDesc },
   { id: 'piper',      label: content.backend.piper,      desc: content.backend.piperDesc },
   { id: 'elevenlabs', label: content.backend.elevenlabs, desc: content.backend.elevenlabsDesc },
-  { id: 'google',     label: content.backend.google,     desc: content.backend.googleDesc }
+  { id: 'google',     label: content.backend.google,     desc: content.backend.googleDesc },
+  { id: 'chatterbox', label: content.backend.chatterbox, desc: content.backend.chatterboxDesc }
 ];
 
 const DEFAULT_TEST = content.agentCard.defaultTestText;
@@ -26,11 +27,26 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [muted, setMuted] = useState(() => isMuted(initialAgent.id));
+  const [fallbackWarning, setFallbackWarning] = useState(null);
   const previewTimerRef = useRef(null);
   const cancelRef = useRef(null);
 
   useEffect(() => {
     return onSpeakingChange((id) => setIsSpeaking(id === agent.id));
+  }, [agent.id]);
+
+  useEffect(() => {
+    const unsubFallback = onFallback((agentId, originalBackend, fallbackBackend) => {
+      if (agentId === agent.id) {
+        setFallbackWarning({ backend: originalBackend, fallback: fallbackBackend });
+      }
+    });
+    const unsubRecovery = onFallbackRecovery((agentId) => {
+      if (agentId === agent.id) {
+        setFallbackWarning(null);
+      }
+    });
+    return () => { unsubFallback(); unsubRecovery(); };
   }, [agent.id]);
 
   useEffect(() => () => clearTimeout(previewTimerRef.current), []);
@@ -162,6 +178,24 @@ export default function AgentCard({ agent: initialAgent, onSave, onDelete }) {
       <p className="agent-card__unsaved" role="status">
         {!saved ? content.agentCard.unsavedChanges : ''}
       </p>
+
+      {fallbackWarning && (
+        <div className="agent-card__fallback-warning" role="status">
+          <span>
+            {content.agentCard.fallbackWarning
+              .replace('{backend}', fallbackWarning.backend)
+              .replace('{fallback}', fallbackWarning.fallback)}
+          </span>
+          <button
+            className="agent-card__fallback-dismiss"
+            onClick={() => setFallbackWarning(null)}
+            type="button"
+            aria-label={content.agentCard.dismissFallback}
+          >
+            {content.agentCard.dismissFallback}
+          </button>
+        </div>
+      )}
 
       <div className="agent-card__body">
         <fieldset className="agent-card__field">

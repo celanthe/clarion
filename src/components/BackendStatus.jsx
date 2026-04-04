@@ -1,23 +1,25 @@
 import { useState, useEffect } from 'react';
 import { fetchHealth } from '../../services/tts.js';
+import content from '../../content/en.json';
 import './BackendStatus.css';
 
-const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google'];
+const BACKENDS = ['edge', 'kokoro', 'piper', 'elevenlabs', 'google', 'chatterbox'];
 
 const BACKEND_LABELS = {
-  edge: 'Edge TTS',
-  kokoro: 'Kokoro',
-  piper: 'Piper',
-  elevenlabs: 'ElevenLabs',
-  google: 'Google'
+  edge: content.backend.edge,
+  kokoro: content.backend.kokoro,
+  piper: content.backend.piper,
+  elevenlabs: content.backend.elevenlabs,
+  google: content.backend.google,
+  chatterbox: content.backend.chatterbox
 };
 
 const STATUS_LABEL = {
-  up:           'Online',
-  down:         'Unreachable',
-  unconfigured: 'Not configured',
-  checking:     'Checking...',
-  error:        'Error'
+  up:           content.backendStatus.up,
+  down:         content.backendStatus.down,
+  unconfigured: content.backendStatus.unconfigured,
+  checking:     content.backendStatus.checking,
+  error:        content.backendStatus.error || 'Error'
 };
 
 const HEALTH_TIMEOUT_MS = 6000;
@@ -36,7 +38,7 @@ function getAggregateAriaLabel(status) {
 }
 
 export default function BackendStatus({ serverUrl, onHealthChange }) {
-  const [status, setStatus] = useState({ edge: 'checking', kokoro: 'checking', piper: 'checking', elevenlabs: 'checking', google: 'checking' });
+  const [status, setStatus] = useState({ edge: 'checking', kokoro: 'checking', piper: 'checking', elevenlabs: 'checking', google: 'checking', chatterbox: 'checking' });
   const [lastChecked, setLastChecked] = useState(null);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
       // Timeout if health check hangs
       const timer = setTimeout(() => {
         if (!cancelled) {
-          const timedOut = { edge: 'error', kokoro: 'error', piper: 'error', elevenlabs: 'error', google: 'error' };
+          const timedOut = { edge: 'error', kokoro: 'error', piper: 'error', elevenlabs: 'error', google: 'error', chatterbox: 'error' };
           setStatus(timedOut);
           onHealthChange?.(timedOut);
           setLastChecked(new Date());
@@ -64,7 +66,7 @@ export default function BackendStatus({ serverUrl, onHealthChange }) {
       } catch {
         clearTimeout(timer);
         if (!cancelled) {
-          const err = { edge: 'error', kokoro: 'error', piper: 'error', elevenlabs: 'error', google: 'error' };
+          const err = { edge: 'error', kokoro: 'error', piper: 'error', elevenlabs: 'error', google: 'error', chatterbox: 'error' };
           setStatus(err);
           onHealthChange?.(err);
           setLastChecked(new Date());

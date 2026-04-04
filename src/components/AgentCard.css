@@ -196,6 +196,48 @@
   border-left: 2px solid var(--color-error);
 }
 
+/* Fallback warning */
+.agent-card__fallback-warning {
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-warning-bg);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--color-warning);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.agent-card__fallback-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family);
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.agent-card__fallback-dismiss:hover {
+  color: var(--color-text-primary);
+}
+
+.agent-card__fallback-dismiss:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* Unsaved indicator — subtle dot + text inline */
 .agent-card__unsaved {
   font-size: var(--font-size-xs);

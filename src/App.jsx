@@ -19,11 +19,9 @@ const TABS = [
 ];
 
 export default function App() {
-  const [agents, setAgents] = useState(() => loadAgents());
-  const [tab, setTab] = useState(() => {
-    const initial = loadAgents();
-    return initial.length === 0 ? 'audition' : 'agents';
-  });
+  const [initialAgents] = useState(() => loadAgents());
+  const [agents, setAgents] = useState(initialAgents);
+  const [tab, setTab] = useState(initialAgents.length === 0 ? 'audition' : 'agents');
   const [serverUrl, setServerUrlState] = useState(() => getServerUrl());
   const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const [newApiKey, setNewApiKey] = useState('');

@@ -11,7 +11,9 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('[clarion] Uncaught render error:', error, info.componentStack);
+    if (import.meta.env.DEV) {
+      console.error('[clarion] Uncaught render error:', error, info.componentStack);
+    }
   }
 
   handleReload = () => {
@@ -31,7 +33,7 @@ export default class ErrorBoundary extends Component {
           <p style={styles.message}>
             Your agent profiles are safe — they are stored in your browser.
           </p>
-          {this.state.error && (
+          {import.meta.env.DEV && this.state.error && (
             <pre style={styles.detail}>{this.state.error.message}</pre>
           )}
           <button
